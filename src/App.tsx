@@ -9,11 +9,6 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Clients />} />
-          {/* Redirect other old paths to the main Clientes view to keep the application bulletproof */}
-          <Route path="contacts" element={<Navigate to="/" replace />} />
-          <Route path="deals" element={<Navigate to="/" replace />} />
-          <Route path="marketing" element={<Navigate to="/" replace />} />
-          <Route path="settings" element={<Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
