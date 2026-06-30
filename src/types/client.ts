@@ -15,6 +15,9 @@ export interface Client {
   iban: string;
   observaciones: string;
   estado: 'Activo' | 'Inactivo' | 'Potencial';
+  fuenteLead: 'Showroom' | 'Web' | 'WhatsApp' | 'Telefono' | 'Instagram' | 'Referido' | 'Otro';
+  consentimientoRGPD: boolean;
+  fechaConsentimiento: string | null;
   createdAt: string;
 }
 

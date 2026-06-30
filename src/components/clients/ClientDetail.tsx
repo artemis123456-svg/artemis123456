@@ -512,6 +512,47 @@ export default function ClientDetail({
                 </div>
               </div>
 
+              {/* RGPD & Origen */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+                {/* Fuente de Captación */}
+                <div className="space-y-3">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 border-b border-slate-100 pb-1">
+                    <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
+                    Origen y Captación
+                  </h4>
+                  <ul className="space-y-3 text-xs">
+                    <li className="flex items-center gap-3">
+                      <span className="font-semibold text-slate-400 w-36">Fuente del Lead:</span>
+                      <span className="text-slate-800 font-medium">{client.fuenteLead || 'Otro'}</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Consentimiento RGPD */}
+                <div className="space-y-3">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 border-b border-slate-100 pb-1">
+                    <FileText className="h-3.5 w-3.5 text-indigo-500" />
+                    Consentimiento RGPD
+                  </h4>
+                  <ul className="space-y-3 text-xs">
+                    <li className="flex items-center gap-3">
+                      <span className="font-semibold text-slate-400 w-36">Estado:</span>
+                      <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold ring-1 ring-inset ${client.consentimientoRGPD ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/10' : 'bg-red-50 text-red-700 ring-red-600/10'}`}>
+                        {client.consentimientoRGPD ? 'Sí (Aceptado)' : 'No (Pendiente)'}
+                      </span>
+                    </li>
+                    {client.consentimientoRGPD && client.fechaConsentimiento && (
+                      <li className="flex items-center gap-3">
+                        <span className="font-semibold text-slate-400 w-36">Fecha de consentimiento:</span>
+                        <span className="text-slate-700 font-medium">
+                          {new Date(client.fechaConsentimiento).toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short' })}
+                        </span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              </div>
+
               {/* Remarks */}
               <div className="space-y-2 pt-4 border-t border-slate-100">
                 <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">

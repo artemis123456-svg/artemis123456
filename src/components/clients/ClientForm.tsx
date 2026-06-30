@@ -27,6 +27,9 @@ export default function ClientForm({ clientToEdit, onSave, onCancel }: ClientFor
   const [iban, setIban] = useState('');
   const [observaciones, setObservaciones] = useState('');
   const [estado, setEstado] = useState<'Activo' | 'Inactivo' | 'Potencial'>('Activo');
+  const [fuenteLead, setFuenteLead] = useState<'Showroom' | 'Web' | 'WhatsApp' | 'Telefono' | 'Instagram' | 'Referido' | 'Otro'>('Otro');
+  const [consentimientoRGPD, setConsentimientoRGPD] = useState(false);
+  const [fechaConsentimiento, setFechaConsentimiento] = useState<string | null>(null);
 
   // Load client data if editing
   useEffect(() => {
@@ -45,6 +48,9 @@ export default function ClientForm({ clientToEdit, onSave, onCancel }: ClientFor
       setIban(clientToEdit.iban || '');
       setObservaciones(clientToEdit.observaciones || '');
       setEstado(clientToEdit.estado || 'Activo');
+      setFuenteLead(clientToEdit.fuenteLead || 'Otro');
+      setConsentimientoRGPD(clientToEdit.consentimientoRGPD || false);
+      setFechaConsentimiento(clientToEdit.fechaConsentimiento || null);
     } else {
       // Reset form
       setNombre('');
@@ -61,6 +67,9 @@ export default function ClientForm({ clientToEdit, onSave, onCancel }: ClientFor
       setIban('');
       setObservaciones('');
       setEstado('Activo');
+      setFuenteLead('Otro');
+      setConsentimientoRGPD(false);
+      setFechaConsentimiento(null);
     }
   }, [clientToEdit]);
 
@@ -85,7 +94,10 @@ export default function ClientForm({ clientToEdit, onSave, onCancel }: ClientFor
       provincia: provincia.trim(),
       iban: iban.trim().toUpperCase().replace(/\s+/g, ''),
       observaciones: observaciones.trim(),
-      estado
+      estado,
+      fuenteLead,
+      consentimientoRGPD,
+      fechaConsentimiento
     };
 
     onSave(clientData);
@@ -195,6 +207,55 @@ export default function ClientForm({ clientToEdit, onSave, onCancel }: ClientFor
                     onChange={(e) => setNifCif(e.target.value)}
                     className="text-xs h-9"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-600">
+                    Fuente del lead
+                  </label>
+                  <select
+                    value={fuenteLead}
+                    onChange={(e) => setFuenteLead(e.target.value as any)}
+                    className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                  >
+                    <option value="Showroom">Showroom</option>
+                    <option value="Web">Web</option>
+                    <option value="WhatsApp">WhatsApp</option>
+                    <option value="Telefono">Teléfono</option>
+                    <option value="Instagram">Instagram</option>
+                    <option value="Referido">Referido</option>
+                    <option value="Otro">Otro</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5 flex flex-col justify-end pb-1.5">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="consentimientoRGPD"
+                      checked={consentimientoRGPD}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setConsentimientoRGPD(checked);
+                        if (checked) {
+                          setFechaConsentimiento(new Date().toISOString());
+                        } else {
+                          setFechaConsentimiento(null);
+                        }
+                      }}
+                      className="h-4 w-4 rounded border-slate-350 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <label htmlFor="consentimientoRGPD" className="text-xs font-semibold text-slate-700 cursor-pointer select-none">
+                      El cliente acepta recibir comunicaciones comerciales (RGPD)
+                    </label>
+                  </div>
+                  {consentimientoRGPD && (
+                    <span className="text-[10px] text-indigo-600 font-medium pl-6">
+                      Aceptado el: {fechaConsentimiento ? new Date(fechaConsentimiento).toLocaleDateString('es-ES') : new Date().toLocaleDateString('es-ES')}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

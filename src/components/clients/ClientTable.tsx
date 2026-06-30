@@ -186,6 +186,38 @@ export default function ClientTable({
     }
   };
 
+  // Lead source badges mapping
+  const renderLeadSourceBadge = (fuente: Client['fuenteLead']) => {
+    const styles: Record<Client['fuenteLead'], string> = {
+      Showroom: 'bg-purple-50 text-purple-700 ring-purple-600/10',
+      Web: 'bg-blue-50 text-blue-700 ring-blue-600/10',
+      WhatsApp: 'bg-green-50 text-green-700 ring-green-600/10',
+      Telefono: 'bg-cyan-50 text-cyan-700 ring-cyan-600/10',
+      Instagram: 'bg-pink-50 text-pink-700 ring-pink-600/10',
+      Referido: 'bg-indigo-50 text-indigo-700 ring-indigo-600/10',
+      Otro: 'bg-slate-50 text-slate-700 ring-slate-600/10',
+    };
+
+    const labelMap: Record<Client['fuenteLead'], string> = {
+      Showroom: 'Showroom',
+      Web: 'Web',
+      WhatsApp: 'WhatsApp',
+      Telefono: 'Teléfono',
+      Instagram: 'Instagram',
+      Referido: 'Referido',
+      Otro: 'Otro',
+    };
+
+    const currentStyle = styles[fuente] || styles.Otro;
+    const currentLabel = labelMap[fuente] || labelMap.Otro;
+
+    return (
+      <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${currentStyle}`}>
+        {currentLabel}
+      </span>
+    );
+  };
+
   // Sort Icon Renderer
   const renderSortIcon = (field: SortField) => {
     if (sortField !== field) return <ArrowUpDown className="ml-1 h-3.5 w-3.5 text-slate-400" />;
@@ -331,6 +363,9 @@ export default function ClientTable({
                   <TableHead className="text-xs font-semibold text-slate-600 py-3.5 px-4">
                     Email
                   </TableHead>
+                  <TableHead className="text-xs font-semibold text-slate-600 py-3.5 px-4">
+                    Origen Lead
+                  </TableHead>
                   <TableHead 
                     onClick={() => handleSort('ciudad')}
                     className="cursor-pointer hover:bg-slate-100 transition-colors text-xs font-semibold text-slate-600 py-3.5 px-4 select-none"
@@ -405,6 +440,11 @@ export default function ClientTable({
                     {/* Email */}
                     <TableCell className="px-4 py-3 text-xs text-slate-500 font-sans">
                       {client.email || '-'}
+                    </TableCell>
+
+                    {/* Origen Lead */}
+                    <TableCell className="px-4 py-3 text-xs">
+                      {renderLeadSourceBadge(client.fuenteLead)}
                     </TableCell>
 
                     {/* Ciudad */}

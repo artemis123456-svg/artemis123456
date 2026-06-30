@@ -20,6 +20,9 @@ const INITIAL_CLIENTS: Client[] = [
     iban: 'ES2100491500051234567890',
     observaciones: 'Cliente preferente de cuentas corporativas. Requiere facturación agrupada por obra.',
     estado: 'Activo',
+    fuenteLead: 'Showroom',
+    consentimientoRGPD: true,
+    fechaConsentimiento: '2026-01-15T09:30:00.000Z',
     createdAt: '2026-01-15T09:30:00.000Z'
   },
   {
@@ -39,6 +42,9 @@ const INITIAL_CLIENTS: Client[] = [
     iban: 'ES9800811000089876543210',
     observaciones: 'Interesados en reformas de locales de retail para su posterior alquiler.',
     estado: 'Activo',
+    fuenteLead: 'Web',
+    consentimientoRGPD: true,
+    fechaConsentimiento: '2026-02-20T11:15:00.000Z',
     createdAt: '2026-02-20T11:15:00.000Z'
   },
   {
@@ -58,6 +64,9 @@ const INITIAL_CLIENTS: Client[] = [
     iban: 'ES4500730100021122334455',
     observaciones: 'Nueva franquicia en expansión. Pendiente de aprobación de presupuesto para tercer local.',
     estado: 'Potencial',
+    fuenteLead: 'Instagram',
+    consentimientoRGPD: false,
+    fechaConsentimiento: null,
     createdAt: '2026-05-10T14:45:00.000Z'
   },
   {
@@ -77,6 +86,9 @@ const INITIAL_CLIENTS: Client[] = [
     iban: 'ES3300811500078899001122',
     observaciones: 'Reforma integral de cocina finalizada con éxito. Muy satisfecha con los plazos.',
     estado: 'Inactivo',
+    fuenteLead: 'Referido',
+    consentimientoRGPD: true,
+    fechaConsentimiento: '2026-03-05T17:20:00.000Z',
     createdAt: '2026-03-05T17:20:00.000Z'
   }
 ];
