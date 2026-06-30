@@ -12,7 +12,7 @@ import {
   HelpCircle,
   TrendingUp
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/src/components/ui/button';
 
 interface SidebarProps {
   isOpen: boolean;

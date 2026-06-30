@@ -12,7 +12,7 @@ import {
   TrendingUp,
   Sliders
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/src/components/ui/button';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -20,8 +20,8 @@ import {
   DropdownMenuLabel, 
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
+} from '@/src/components/ui/dropdown-menu';
+import { Input } from '@/src/components/ui/input';
 
 interface TopbarProps {
   onMenuToggle: () => void;

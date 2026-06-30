@@ -8,9 +8,9 @@ import {
   Nota, 
   HistorialEntry 
 } from '../../types/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
+import { Badge } from '@/src/components/ui/badge';
 import { 
   Dialog, 
   DialogContent, 
@@ -18,7 +18,7 @@ import {
   DialogTitle, 
   DialogFooter,
   DialogDescription 
-} from '@/components/ui/dialog';
+} from '@/src/components/ui/dialog';
 import {
   Table,
   TableHeader,
@@ -26,7 +26,7 @@ import {
   TableRow,
   TableCell,
   TableHead
-} from '@/components/ui/table';
+} from '@/src/components/ui/table';
 import { 
   ArrowLeft, 
   Pencil, 

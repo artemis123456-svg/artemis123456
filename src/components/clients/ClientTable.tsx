@@ -7,10 +7,10 @@ import {
   TableRow, 
   TableCell, 
   TableHead 
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+} from '@/src/components/ui/table';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
+import { Badge } from '@/src/components/ui/badge';
 import { 
   Search, 
   Plus, 

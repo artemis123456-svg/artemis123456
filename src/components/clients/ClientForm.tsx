@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Client } from '../../types/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/src/components/ui/button';
+import { Input } from '@/src/components/ui/input';
+import { Card, CardHeader, CardTitle, CardContent } from '@/src/components/ui/card';
 import { User, Building, Phone, Mail, MapPin, Landmark, FileText, ArrowLeft, Save } from 'lucide-react';
 
 interface ClientFormProps {
