@@ -22,6 +22,7 @@ import {
   DropdownMenuTrigger 
 } from '@/src/components/ui/dropdown-menu';
 import { Input } from '@/src/components/ui/input';
+import { useAuth } from '../../context/AuthContext';
 
 interface TopbarProps {
   onMenuToggle: () => void;
@@ -29,6 +30,7 @@ interface TopbarProps {
 
 export default function Topbar({ onMenuToggle }: TopbarProps) {
   const [currentTime, setCurrentTime] = useState<string>('');
+  const { user, signOut } = useAuth();
   
   useEffect(() => {
     // Standard system time presentation for 2026-06-30
@@ -111,13 +113,13 @@ export default function Topbar({ onMenuToggle }: TopbarProps) {
           <DropdownMenuTrigger
             render={
               <button className="flex items-center gap-2 hover:opacity-90 outline-none">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 border border-slate-200 text-slate-600 font-semibold shadow-xs">
-                  U
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 border border-slate-200 text-slate-600 font-semibold shadow-xs uppercase">
+                  {user?.email?.[0] || 'U'}
                 </div>
                 <div className="hidden lg:flex flex-col text-left">
                   <span className="text-xs font-semibold text-slate-800 leading-tight">Usuario Verini</span>
                   <span className="text-[10px] text-slate-400 font-medium max-w-[120px] truncate">
-                    artemis123456@gmail.com
+                    {user?.email || 'email@ejemplo.com'}
                   </span>
                 </div>
               </button>
@@ -126,7 +128,7 @@ export default function Topbar({ onMenuToggle }: TopbarProps) {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel className="font-heading">Mi Cuenta</DropdownMenuLabel>
             <div className="px-2 pb-2 pt-0.5">
-              <p className="text-[11px] font-medium text-slate-400 truncate">artemis123456@gmail.com</p>
+              <p className="text-[11px] font-medium text-slate-400 truncate">{user?.email || 'email@ejemplo.com'}</p>
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="cursor-pointer gap-2 py-2">
@@ -134,7 +136,10 @@ export default function Topbar({ onMenuToggle }: TopbarProps) {
               <span>Mi Perfil</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer gap-2 py-2 text-rose-600 focus:text-rose-600 focus:bg-rose-50">
+            <DropdownMenuItem 
+              onClick={() => signOut()}
+              className="cursor-pointer gap-2 py-2 text-rose-600 focus:text-rose-600 focus:bg-rose-50"
+            >
               <LogOut className="h-4 w-4" />
               <span>Cerrar Sesión</span>
             </DropdownMenuItem>
