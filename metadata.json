@@ -1,0 +1,6 @@
+{
+  "name": "Verini CRM",
+  "description": "Módulo profesional e interactivo de Clientes para Verini CRM, diseñado con React, Tailwind CSS y componentes de shadcn/ui listo para su conexión futura con Supabase.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
