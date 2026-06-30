@@ -49,16 +49,16 @@ export default function Proveedores() {
     setViewState('create');
   };
 
-  const handleSaveForm = (provData: any) => {
+  const handleSaveForm = async (provData: any) => {
     if (viewState === 'edit' && proveedorToEdit) {
-      updateProveedor(proveedorToEdit.id, provData);
+      await updateProveedor(proveedorToEdit.id, provData);
       if (selectedProveedorId === proveedorToEdit.id) {
         setViewState('detail');
       } else {
         setViewState('list');
       }
     } else {
-      const created = addProveedor(provData);
+      const created = await addProveedor(provData);
       setSelectedProveedorId(created.id);
       setViewState('detail');
     }

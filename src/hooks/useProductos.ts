@@ -1,220 +1,115 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Producto, TarifaProducto, ImagenProducto } from '../types/producto';
+import { supabase } from '../lib/supabaseClient';
 
-const MOCK_PRODUCTOS: Producto[] = [
-  {
-    id: 'prd_1',
-    codigo: 'PRD-000001',
-    nombre: 'Azulejo Porcelánico Calacatta Gold 60x120 cm',
-    categoria: 'Azulejos',
-    descripcion: 'Gres porcelánico pulido rectificado imitación mármol Calacatta con vetas doradas. Ideal para pavimentos y revestimientos interiores de alta gama.',
-    proveedorId: 'prv_1', // Porcelánicos Cerámica Levantina S.A.
-    precioCompra: 18.50,
-    precioVenta: 39.90,
-    unidad: 'm2',
-    stock: 120,
-    stockMinimo: 40,
-    activo: true,
-    imagenUrl: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'prd_2',
-    codigo: 'PRD-000002',
-    nombre: 'Mampara de Ducha Frontal Corredera Aura 120cm',
-    categoria: 'Mamparas',
-    descripcion: 'Mampara de ducha de un fijo y una corredera. Vidrio templado de seguridad de 8 mm con tratamiento antical de doble cara y perfilería de aluminio cromado pulido.',
-    proveedorId: 'prv_2', // Saneamientos y Griferías del Turia
-    precioCompra: 145.00,
-    precioVenta: 295.00,
-    unidad: 'ud',
-    stock: 15,
-    stockMinimo: 5,
-    activo: true,
-    imagenUrl: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'prd_3',
-    codigo: 'PRD-000003',
-    nombre: 'Tira LED COB 24V Cálida 3000K (5 metros)',
-    categoria: 'Iluminación',
-    descripcion: 'Tira LED de alta densidad con tecnología COB que proporciona una iluminación lineal continua y homogénea sin puntos visibles. Consumo 15W/m. IP20.',
-    proveedorId: 'prv_3', // Sanz Instalaciones Eléctricas S.L.
-    precioCompra: 12.80,
-    precioVenta: 28.50,
-    unidad: 'ud',
-    stock: 45,
-    stockMinimo: 10,
-    activo: true,
-    imagenUrl: 'https://images.unsplash.com/photo-1565814636199-ae8133055c1c?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'prd_4',
-    codigo: 'PRD-000004',
-    nombre: 'Inodoro Suspendido Rimless Compacto Veneto',
-    categoria: 'Sanitarios',
-    descripcion: 'Inodoro suspendido fabricado en porcelana sanitaria de color blanco brillo. Diseño compacto con tecnología de descarga Rimless para máxima higiene y facilidad de limpieza. Asiento con caída amortiguada.',
-    proveedorId: 'prv_2', // Saneamientos y Griferías del Turia
-    precioCompra: 98.00,
-    precioVenta: 189.00,
-    unidad: 'ud',
-    stock: 4, // Alerta: menor que stock mínimo (5)
-    stockMinimo: 5,
-    activo: true,
-    imagenUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'prd_5',
-    codigo: 'PRD-000005',
-    nombre: 'Grifo Monomando Lavabo Negro Mate Velvet',
-    categoria: 'Grifería',
-    descripcion: 'Monomando de lavabo de diseño moderno con acabado negro mate de alta resistencia (pintura electroestática). Incluye cartucho cerámico de 35 mm y latiguillos flexibles de conexión.',
-    proveedorId: 'prv_2', // Saneamientos y Griferías del Turia
-    precioCompra: 32.50,
-    precioVenta: 74.90,
-    unidad: 'ud',
-    stock: 22,
-    stockMinimo: 8,
-    activo: true,
-    imagenUrl: 'https://images.unsplash.com/photo-1585144860131-245d551c77f6?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'prd_6',
-    codigo: 'PRD-000006',
-    nombre: 'Tarima Flotante Laminada Roble Nórdico AC5 (Caja)',
-    categoria: 'Carpintería',
-    descripcion: 'Suelo laminado de alta resistencia AC5, grosor 8mm con bisel a los 4 lados. Textura sincronizada imitación madera real con tonos grisáceos claros. Caja contiene 2.22 m2.',
-    proveedorId: 'prv_5', // Maderas y Tableros Alboraya S.L.
-    precioCompra: 14.20,
-    precioVenta: 24.95,
-    unidad: 'caja',
-    stock: 80,
-    stockMinimo: 20,
-    activo: true,
-    imagenUrl: 'https://images.unsplash.com/photo-1581858726788-75bc0f6a952d?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'prd_7',
-    codigo: 'PRD-000007',
-    nombre: 'Foco Downlight Empotrable Orientable Blanco 7W LED',
-    categoria: 'Iluminación',
-    descripcion: 'Downlight LED orientable redondo de aluminio lacado blanco mate. Chip COB Epistar, temperatura de color neutra (4000K), haz de luz de 60 grados. Driver incluido.',
-    proveedorId: 'prv_3', // Sanz Instalaciones Eléctricas S.L.
-    precioCompra: 4.90,
-    precioVenta: 12.00,
-    unidad: 'ud',
-    stock: 120,
-    stockMinimo: 30,
-    activo: true,
-    imagenUrl: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'prd_8',
-    codigo: 'PRD-000008',
-    nombre: 'Azulejo Revestimiento Metro Blanco Brillo 10x20',
-    categoria: 'Azulejos',
-    descripcion: 'Azulejo cerámico tipo metro con bisel pronunciado y acabado blanco brillo de alta luminosidad. Clásico vintage ideal para cocinas y baños con encanto.',
-    proveedorId: 'prv_1', // Porcelánicos Cerámica Levantina S.A.
-    precioCompra: 8.90,
-    precioVenta: 19.50,
-    unidad: 'm2',
-    stock: 3, // Alerta: menor que stock mínimo (15)
-    stockMinimo: 15,
-    activo: false, // Producto inactivo
-    imagenUrl: 'https://images.unsplash.com/photo-1502005229762-fc1b2381f0db?auto=format&fit=crop&w=600&q=80',
-  }
-];
+function prodFromRow(row: any): Producto {
+  return {
+    id: row.id,
+    codigo: row.codigo,
+    nombre: row.nombre,
+    categoria: row.categoria,
+    descripcion: row.descripcion,
+    proveedorId: row.proveedor_id,
+    precioCompra: Number(row.precio_compra),
+    precioVenta: Number(row.precio_venta),
+    unidad: row.unidad,
+    stock: Number(row.stock),
+    stockMinimo: Number(row.stock_minimo),
+    activo: !!row.activo,
+    imagenUrl: row.imagen_url || ''
+  };
+}
 
-const MOCK_TARIFAS: TarifaProducto[] = [
-  {
-    id: 'trf_1',
-    productoId: 'prd_1',
-    nombre: 'Tarifa General PVP',
-    precio: 39.90,
-    fechaVigencia: '2026-01-01',
-  },
-  {
-    id: 'trf_2',
-    productoId: 'prd_1',
-    nombre: 'Tarifa Profesional Gremios',
-    precio: 32.50,
-    fechaVigencia: '2026-01-01',
-  },
-  {
-    id: 'trf_3',
-    productoId: 'prd_2',
-    nombre: 'Tarifa General PVP',
-    precio: 295.00,
-    fechaVigencia: '2026-01-01',
-  },
-  {
-    id: 'trf_4',
-    productoId: 'prd_2',
-    nombre: 'Tarifa Promocional Verano',
-    precio: 265.00,
-    fechaVigencia: '2026-06-01',
-  },
-  {
-    id: 'trf_5',
-    productoId: 'prd_3',
-    nombre: 'Tarifa General PVP',
-    precio: 28.50,
-    fechaVigencia: '2026-01-01',
-  },
-  {
-    id: 'trf_6',
-    productoId: 'prd_5',
-    nombre: 'Tarifa General PVP',
-    precio: 74.90,
-    fechaVigencia: '2026-01-01',
-  },
-  {
-    id: 'trf_7',
-    productoId: 'prd_6',
-    nombre: 'Tarifa Obra Completa (>100m2)',
-    precio: 21.00,
-    fechaVigencia: '2026-02-15',
-  }
-];
+function prodToRow(prod: Partial<Producto>): any {
+  const row: any = {};
+  if (prod.id !== undefined) row.id = prod.id;
+  if (prod.codigo !== undefined) row.codigo = prod.codigo;
+  if (prod.nombre !== undefined) row.nombre = prod.nombre;
+  if (prod.categoria !== undefined) row.categoria = prod.categoria;
+  if (prod.descripcion !== undefined) row.descripcion = prod.descripcion;
+  if (prod.proveedorId !== undefined) row.proveedor_id = prod.proveedorId;
+  if (prod.precioCompra !== undefined) row.precio_compra = prod.precioCompra;
+  if (prod.precioVenta !== undefined) row.precio_venta = prod.precioVenta;
+  if (prod.unidad !== undefined) row.unidad = prod.unidad;
+  if (prod.stock !== undefined) row.stock = prod.stock;
+  if (prod.stockMinimo !== undefined) row.stock_minimo = prod.stockMinimo;
+  if (prod.activo !== undefined) row.activo = prod.activo;
+  if (prod.imagenUrl !== undefined) row.imagen_url = prod.imagenUrl;
+  return row;
+}
 
-const MOCK_IMAGENES: ImagenProducto[] = [
-  { id: 'img_1_1', productoId: 'prd_1', url: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=600&q=80', esPrincipal: true },
-  { id: 'img_1_2', productoId: 'prd_1', url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80', esPrincipal: false },
-  { id: 'img_2_1', productoId: 'prd_2', url: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=600&q=80', esPrincipal: true },
-  { id: 'img_3_1', productoId: 'prd_3', url: 'https://images.unsplash.com/photo-1565814636199-ae8133055c1c?auto=format&fit=crop&w=600&q=80', esPrincipal: true },
-  { id: 'img_4_1', productoId: 'prd_4', url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=600&q=80', esPrincipal: true },
-  { id: 'img_5_1', productoId: 'prd_5', url: 'https://images.unsplash.com/photo-1585144860131-245d551c77f6?auto=format&fit=crop&w=600&q=80', esPrincipal: true },
-  { id: 'img_6_1', productoId: 'prd_6', url: 'https://images.unsplash.com/photo-1581858726788-75bc0f6a952d?auto=format&fit=crop&w=600&q=80', esPrincipal: true },
-  { id: 'img_7_1', productoId: 'prd_7', url: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=600&q=80', esPrincipal: true },
-  { id: 'img_8_1', productoId: 'prd_8', url: 'https://images.unsplash.com/photo-1502005229762-fc1b2381f0db?auto=format&fit=crop&w=600&q=80', esPrincipal: true }
-];
+function tarifaFromRow(row: any): TarifaProducto {
+  return {
+    id: row.id,
+    productoId: row.producto_id,
+    nombre: row.nombre,
+    precio: Number(row.precio),
+    fechaVigencia: row.fecha_vigencia
+  };
+}
+
+function tarifaToRow(tarifa: Partial<TarifaProducto>): any {
+  const row: any = {};
+  if (tarifa.id !== undefined) row.id = tarifa.id;
+  if (tarifa.productoId !== undefined) row.producto_id = tarifa.productoId;
+  if (tarifa.nombre !== undefined) row.nombre = tarifa.nombre;
+  if (tarifa.precio !== undefined) row.precio = tarifa.precio;
+  if (tarifa.fechaVigencia !== undefined) row.fecha_vigencia = tarifa.fechaVigencia;
+  return row;
+}
+
+function imgFromRow(row: any): ImagenProducto {
+  return {
+    id: row.id,
+    productoId: row.producto_id,
+    url: row.url,
+    esPrincipal: !!row.es_principal
+  };
+}
+
+function imgToRow(img: Partial<ImagenProducto>): any {
+  const row: any = {};
+  if (img.id !== undefined) row.id = img.id;
+  if (img.productoId !== undefined) row.producto_id = img.productoId;
+  if (img.url !== undefined) row.url = img.url;
+  if (img.esPrincipal !== undefined) row.es_principal = img.esPrincipal;
+  return row;
+}
 
 export function useProductos() {
-  const [productos, setProductos] = useState<Producto[]>(() => {
-    const saved = localStorage.getItem('verini_productos');
-    return saved ? JSON.parse(saved) : MOCK_PRODUCTOS;
-  });
+  const [productos, setProductos] = useState<Producto[]>([]);
+  const [tarifas, setTarifas] = useState<TarifaProducto[]>([]);
+  const [imagenes, setImagenes] = useState<ImagenProducto[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [tarifas, setTarifas] = useState<TarifaProducto[]>(() => {
-    const saved = localStorage.getItem('verini_productos_tarifas');
-    return saved ? JSON.parse(saved) : MOCK_TARIFAS;
-  });
+  const fetchAllData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [prodRes, tarifaRes, imgRes] = await Promise.all([
+        supabase.from('productos').select('*').order('created_at', { ascending: false }),
+        supabase.from('tarifas_producto').select('*').order('id', { ascending: true }),
+        supabase.from('imagenes_producto').select('*').order('id', { ascending: true })
+      ]);
 
-  const [imagenes, setImagenes] = useState<ImagenProducto[]>(() => {
-    const saved = localStorage.getItem('verini_productos_imagenes');
-    return saved ? JSON.parse(saved) : MOCK_IMAGENES;
-  });
+      if (prodRes.error) throw prodRes.error;
+      if (tarifaRes.error) throw tarifaRes.error;
+      if (imgRes.error) throw imgRes.error;
+
+      if (prodRes.data) setProductos(prodRes.data.map(prodFromRow));
+      if (tarifaRes.data) setTarifas(tarifaRes.data.map(tarifaFromRow));
+      if (imgRes.data) setImagenes(imgRes.data.map(imgFromRow));
+    } catch (err: any) {
+      console.error('Error fetching products data:', err);
+      setError(err.message || 'Error al cargar los productos');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem('verini_productos', JSON.stringify(productos));
-  }, [productos]);
-
-  useEffect(() => {
-    localStorage.setItem('verini_productos_tarifas', JSON.stringify(tarifas));
-  }, [tarifas]);
-
-  useEffect(() => {
-    localStorage.setItem('verini_productos_imagenes', JSON.stringify(imagenes));
-  }, [imagenes]);
+    fetchAllData();
+  }, [fetchAllData]);
 
   // Generar código automático PRD-XXXXXX
   const generateNextCodigo = (): string => {
@@ -232,160 +127,258 @@ export function useProductos() {
     return `PRD-${String(nextNum).padStart(6, '0')}`;
   };
 
-  const addProducto = (prodData: Omit<Producto, 'id' | 'codigo'>) => {
-    const newId = `prd_${Date.now()}`;
-    const newProd: Producto = {
-      ...prodData,
-      id: newId,
-      codigo: generateNextCodigo()
-    };
-    setProductos(prev => [newProd, ...prev]);
-
-    // Also add the default main image to the images state
-    if (prodData.imagenUrl) {
-      const newImg: ImagenProducto = {
-        id: `img_${Date.now()}`,
-        productoId: newId,
-        url: prodData.imagenUrl,
-        esPrincipal: true
+  const addProducto = async (prodData: Omit<Producto, 'id' | 'codigo'>) => {
+    try {
+      const newId = `prd_${Date.now()}`;
+      const nextCode = generateNextCodigo();
+      const newProd: Producto = {
+        ...prodData,
+        id: newId,
+        codigo: nextCode
       };
-      setImagenes(prev => [...prev, newImg]);
+
+      // 1. Insert product
+      const { error: err } = await supabase
+        .from('productos')
+        .insert([prodToRow(newProd)]);
+      if (err) throw err;
+
+      // 2. Insert main image if present
+      if (prodData.imagenUrl) {
+        const newImg: ImagenProducto = {
+          id: `img_${Date.now()}`,
+          productoId: newId,
+          url: prodData.imagenUrl,
+          esPrincipal: true
+        };
+        await supabase
+          .from('imagenes_producto')
+          .insert([imgToRow(newImg)]);
+      }
+
+      // 3. Create general PVP rate
+      const newTarifa: TarifaProducto = {
+        id: `trf_${Date.now()}`,
+        productoId: newId,
+        nombre: 'Tarifa General PVP',
+        precio: prodData.precioVenta,
+        fechaVigencia: new Date().toISOString().split('T')[0]
+      };
+      await supabase
+        .from('tarifas_producto')
+        .insert([tarifaToRow(newTarifa)]);
+
+      await fetchAllData();
+      return newProd;
+    } catch (err: any) {
+      console.error('Error adding product:', err);
+      setError(err.message || 'Error al añadir el producto');
+      throw err;
     }
-
-    // Also automatically create a general PVP rate
-    const newTarifa: TarifaProducto = {
-      id: `trf_${Date.now()}`,
-      productoId: newId,
-      nombre: 'Tarifa General PVP',
-      precio: prodData.precioVenta,
-      fechaVigencia: new Date().toISOString().split('T')[0]
-    };
-    setTarifas(prev => [...prev, newTarifa]);
-
-    return newProd;
   };
 
-  const updateProducto = (id: string, updatedFields: Partial<Producto>) => {
-    setProductos(prev =>
-      prev.map(p => (p.id === id ? { ...p, ...updatedFields } : p))
-    );
+  const updateProducto = async (id: string, updatedFields: Partial<Producto>) => {
+    try {
+      // 1. Update product main table
+      const { error: err } = await supabase
+        .from('productos')
+        .update(prodToRow(updatedFields))
+        .eq('id', id);
+      if (err) throw err;
 
-    // Update main image in the images array if changed
-    if (updatedFields.imagenUrl) {
-      setImagenes(prev => {
-        const filtered = prev.filter(img => !(img.productoId === id && img.esPrincipal));
-        return [
-          ...filtered,
-          {
+      // 2. Update main image if url changed
+      if (updatedFields.imagenUrl) {
+        // Find existing main image in our state or just upsert in DB
+        const existingMain = imagenes.find(img => img.productoId === id && img.esPrincipal);
+        if (existingMain) {
+          await supabase
+            .from('imagenes_producto')
+            .update({ url: updatedFields.imagenUrl })
+            .eq('id', existingMain.id);
+        } else {
+          const newImg: ImagenProducto = {
             id: `img_up_${Date.now()}`,
             productoId: id,
-            url: updatedFields.imagenUrl!,
+            url: updatedFields.imagenUrl,
             esPrincipal: true
-          }
-        ];
-      });
-    }
-
-    // Update or ensure general PVP rate exists and reflects updated priceVenta
-    if (updatedFields.precioVenta !== undefined) {
-      setTarifas(prev => {
-        const hasPvp = prev.some(t => t.productoId === id && t.nombre === 'Tarifa General PVP');
-        if (hasPvp) {
-          return prev.map(t => 
-            (t.productoId === id && t.nombre === 'Tarifa General PVP') 
-              ? { ...t, precio: updatedFields.precioVenta! } 
-              : t
-          );
-        } else {
-          return [
-            ...prev,
-            {
-              id: `trf_up_${Date.now()}`,
-              productoId: id,
-              nombre: 'Tarifa General PVP',
-              precio: updatedFields.precioVenta!,
-              fechaVigencia: new Date().toISOString().split('T')[0]
-            }
-          ];
-        }
-      });
-    }
-  };
-
-  const deleteProducto = (id: string) => {
-    setProductos(prev => prev.filter(p => p.id !== id));
-    setTarifas(prev => prev.filter(t => t.productoId !== id));
-    setImagenes(prev => prev.filter(img => img.productoId !== id));
-  };
-
-  const addTarifa = (tarifaData: Omit<TarifaProducto, 'id'>) => {
-    const newTarifa: TarifaProducto = {
-      ...tarifaData,
-      id: `trf_${Date.now()}`
-    };
-    setTarifas(prev => [...prev, newTarifa]);
-    return newTarifa;
-  };
-
-  const deleteTarifa = (id: string) => {
-    setTarifas(prev => prev.filter(t => t.id !== id));
-  };
-
-  const addImagenProducto = (imgData: Omit<ImagenProducto, 'id'>) => {
-    // If setting this one as principal, demote previous principal images
-    if (imgData.esPrincipal) {
-      setImagenes(prev =>
-        prev.map(img => 
-          img.productoId === imgData.productoId 
-            ? { ...img, esPrincipal: false } 
-            : img
-        )
-      );
-    }
-    const newImg: ImagenProducto = {
-      ...imgData,
-      id: `img_custom_${Date.now()}`
-    };
-    setImagenes(prev => [...prev, newImg]);
-
-    // If principal, update the main product image url
-    if (imgData.esPrincipal) {
-      setProductos(prev =>
-        prev.map(p => p.id === imgData.productoId ? { ...p, imagenUrl: imgData.url } : p)
-      );
-    }
-
-    return newImg;
-  };
-
-  const deleteImagenProducto = (id: string) => {
-    // Check if we are deleting the principal one, if so, we should promote another one
-    const imageToDelete = imagenes.find(img => img.id === id);
-    setImagenes(prev => {
-      const filtered = prev.filter(img => img.id !== id);
-      
-      if (imageToDelete?.esPrincipal) {
-        // Find another image of the same product
-        const remaining = filtered.filter(img => img.productoId === imageToDelete.productoId);
-        if (remaining.length > 0) {
-          // Promote the first remaining to principal
-          remaining[0].esPrincipal = true;
-          // Update the main product url too
-          setProductos(prods =>
-            prods.map(p => p.id === imageToDelete.productoId ? { ...p, imagenUrl: remaining[0].url } : p)
-          );
-        } else {
-          // No images left, clear product image url
-          setProductos(prods =>
-            prods.map(p => p.id === imageToDelete.productoId ? { ...p, imagenUrl: '' } : p)
-          );
+          };
+          await supabase
+            .from('imagenes_producto')
+            .insert([imgToRow(newImg)]);
         }
       }
-      return filtered;
-    });
+
+      // 3. Update or ensure general PVP rate matches updated precioVenta
+      if (updatedFields.precioVenta !== undefined) {
+        const pvpTarifa = tarifas.find(t => t.productoId === id && t.nombre === 'Tarifa General PVP');
+        if (pvpTarifa) {
+          await supabase
+            .from('tarifas_producto')
+            .update({ precio: updatedFields.precioVenta })
+            .eq('id', pvpTarifa.id);
+        } else {
+          const newTarifa: TarifaProducto = {
+            id: `trf_up_${Date.now()}`,
+            productoId: id,
+            nombre: 'Tarifa General PVP',
+            precio: updatedFields.precioVenta,
+            fechaVigencia: new Date().toISOString().split('T')[0]
+          };
+          await supabase
+            .from('tarifas_producto')
+            .insert([tarifaToRow(newTarifa)]);
+        }
+      }
+
+      await fetchAllData();
+    } catch (err: any) {
+      console.error('Error updating product:', err);
+      setError(err.message || 'Error al actualizar el producto');
+      throw err;
+    }
   };
 
-  // Helper derived calculation: Margin (precioVenta - precioCompra) & Margin percentage
+  const deleteProducto = async (id: string) => {
+    try {
+      // Delete child relations manually to avoid FK errors
+      await Promise.all([
+        supabase.from('tarifas_producto').delete().eq('producto_id', id),
+        supabase.from('imagenes_producto').delete().eq('producto_id', id)
+      ]);
+
+      const { error: err } = await supabase
+        .from('productos')
+        .delete()
+        .eq('id', id);
+      if (err) throw err;
+
+      await fetchAllData();
+    } catch (err: any) {
+      console.error('Error deleting product:', err);
+      setError(err.message || 'Error al eliminar el producto');
+      throw err;
+    }
+  };
+
+  const addTarifa = async (tarifaData: Omit<TarifaProducto, 'id'>) => {
+    try {
+      const newId = `trf_${Date.now()}`;
+      const newTarifa: TarifaProducto = {
+        ...tarifaData,
+        id: newId
+      };
+
+      const { error: err } = await supabase
+        .from('tarifas_producto')
+        .insert([tarifaToRow(newTarifa)]);
+      if (err) throw err;
+
+      await fetchAllData();
+      return newTarifa;
+    } catch (err: any) {
+      console.error('Error adding tariff:', err);
+      setError(err.message || 'Error al añadir la tarifa');
+      throw err;
+    }
+  };
+
+  const deleteTarifa = async (id: string) => {
+    try {
+      const { error: err } = await supabase
+        .from('tarifas_producto')
+        .delete()
+        .eq('id', id);
+      if (err) throw err;
+
+      await fetchAllData();
+    } catch (err: any) {
+      console.error('Error deleting tariff:', err);
+      setError(err.message || 'Error al eliminar la tarifa');
+      throw err;
+    }
+  };
+
+  const addImagenProducto = async (imgData: Omit<ImagenProducto, 'id'>) => {
+    try {
+      const newId = `img_custom_${Date.now()}`;
+      const newImg: ImagenProducto = {
+        ...imgData,
+        id: newId
+      };
+
+      // If setting this one as principal, demote previous principal images in DB
+      if (imgData.esPrincipal) {
+        await supabase
+          .from('imagenes_producto')
+          .update({ es_principal: false })
+          .eq('producto_id', imgData.productoId);
+      }
+
+      const { error: err } = await supabase
+        .from('imagenes_producto')
+        .insert([imgToRow(newImg)]);
+      if (err) throw err;
+
+      // If principal, update the main product image url
+      if (imgData.esPrincipal) {
+        await supabase
+          .from('productos')
+          .update({ imagen_url: imgData.url })
+          .eq('id', imgData.productoId);
+      }
+
+      await fetchAllData();
+      return newImg;
+    } catch (err: any) {
+      console.error('Error adding product image:', err);
+      setError(err.message || 'Error al añadir la imagen del producto');
+      throw err;
+    }
+  };
+
+  const deleteImagenProducto = async (id: string) => {
+    try {
+      const imageToDelete = imagenes.find(img => img.id === id);
+      if (!imageToDelete) return;
+
+      if (imageToDelete.esPrincipal) {
+        // Find another image of the same product
+        const remaining = imagenes.filter(img => img.productoId === imageToDelete.productoId && img.id !== id);
+        if (remaining.length > 0) {
+          // Promote the first remaining to principal
+          await supabase
+            .from('imagenes_producto')
+            .update({ es_principal: true })
+            .eq('id', remaining[0].id);
+          // Update product url too
+          await supabase
+            .from('productos')
+            .update({ imagen_url: remaining[0].url })
+            .eq('id', imageToDelete.productoId);
+        } else {
+          // No images left, clear product image url
+          await supabase
+            .from('productos')
+            .update({ imagen_url: '' })
+            .eq('id', imageToDelete.productoId);
+        }
+      }
+
+      const { error: err } = await supabase
+        .from('imagenes_producto')
+        .delete()
+        .eq('id', id);
+      if (err) throw err;
+
+      await fetchAllData();
+    } catch (err: any) {
+      console.error('Error deleting product image:', err);
+      setError(err.message || 'Error al eliminar la imagen del producto');
+      throw err;
+    }
+  };
+
+  // Helper derived calculation
   const getMargin = (producto: Producto) => {
     const diff = producto.precioVenta - producto.precioCompra;
     const pct = producto.precioCompra > 0 ? (diff / producto.precioCompra) * 100 : 0;
@@ -401,6 +394,8 @@ export function useProductos() {
     productos,
     tarifas,
     imagenes,
+    loading,
+    error,
     addProducto,
     updateProducto,
     deleteProducto,

@@ -57,9 +57,9 @@ export default function Clients() {
     setViewState('create');
   };
 
-  const handleSaveForm = (clientData: any) => {
+  const handleSaveForm = async (clientData: any) => {
     if (viewState === 'edit' && clientToEdit) {
-      updateClient(clientToEdit.id, clientData);
+      await updateClient(clientToEdit.id, clientData);
       // If we were viewing details of the edited client, return to details, else to list
       if (selectedClientId === clientToEdit.id) {
         setViewState('detail');
@@ -67,7 +67,7 @@ export default function Clients() {
         setViewState('list');
       }
     } else {
-      const created = addClient(clientData);
+      const created = await addClient(clientData);
       // Auto-open newly created client details to delight the user
       setSelectedClientId(created.id);
       setViewState('detail');

@@ -1,259 +1,155 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Proveedor, CompraProveedor, DocumentoProveedor, NotaProveedor } from '../types/proveedor';
+import { supabase } from '../lib/supabaseClient';
 
-const MOCK_PROVEEDORES: Proveedor[] = [
-  {
-    id: 'prv_1',
-    codigo: 'PRV-000001',
-    nombre: 'Porcelánicos Cerámica Levantina S.A.',
-    tipo: 'Materiales',
-    categoria: 'Azulejos y Pavimentos',
-    nifCif: 'A46123456',
-    personaContacto: 'Manuel Ortiz',
-    telefono: '963456789',
-    movil: '600111222',
-    email: 'comercial@levantinaporcelanicos.com',
-    direccion: 'Avenida del Mediterráneo 145',
-    codigoPostal: '46025',
-    ciudad: 'Valencia',
-    provincia: 'Valencia',
-    iban: 'ES2100491500021234567890',
-    observaciones: 'Proveedor preferente para baldosas porcelánicas de gran formato. Ofrece descuento del 15% por volumen.',
-    activo: true,
-  },
-  {
-    id: 'prv_2',
-    codigo: 'PRV-000002',
-    nombre: 'Saneamientos y Griferías del Turia',
-    tipo: 'Materiales',
-    categoria: 'Sanitarios y Grifería',
-    nifCif: 'B96987654',
-    personaContacto: 'Sofía Jiménez',
-    telefono: '961234567',
-    movil: '611222333',
-    email: 'info@saneamientosturia.es',
-    direccion: 'Calle de los Metalúrgicos 42',
-    codigoPostal: '46019',
-    ciudad: 'Paterna',
-    provincia: 'Valencia',
-    iban: 'ES8900811234567890123456',
-    observaciones: 'Plazos de entrega muy rápidos (24-48 horas si está en stock). Calidad media-alta.',
-    activo: true,
-  },
-  {
-    id: 'prv_3',
-    codigo: 'PRV-000003',
-    nombre: 'Sanz Instalaciones Eléctricas S.L.',
-    tipo: 'Subcontrata',
-    categoria: 'Electricidad',
-    nifCif: 'B46555666',
-    personaContacto: 'Javier Sanz',
-    telefono: '962334455',
-    movil: '622333444',
-    email: 'instalaciones_sanz@hotmail.com',
-    direccion: 'Calle Colón 15, Entresuelo',
-    codigoPostal: '46002',
-    ciudad: 'Valencia',
-    provincia: 'Valencia',
-    iban: 'ES4521000854321098765432',
-    observaciones: 'Subcontrata habitual de confianza para boletines eléctricos y obras integrales complejas.',
-    activo: true,
-  },
-  {
-    id: 'prv_4',
-    codigo: 'PRV-000004',
-    nombre: 'Climatizaciones y Fontanería Domenech',
-    tipo: 'Subcontrata',
-    categoria: 'Fontanería y Climatización',
-    nifCif: 'B97888777',
-    personaContacto: 'Roberto Domenech',
-    telefono: '964889900',
-    movil: '633444555',
-    email: 'contacto@domenechclima.com',
-    direccion: 'Avenida Real de Madrid 88',
-    codigoPostal: '46017',
-    ciudad: 'Valencia',
-    provincia: 'Valencia',
-    iban: 'ES6230050012345678901234',
-    observaciones: 'Especialistas en aerotermia, suelo radiante y conducciones de aire acondicionado.',
-    activo: true,
-  },
-  {
-    id: 'prv_5',
-    codigo: 'PRV-000005',
-    nombre: 'Maderas y Tableros Alboraya S.L.',
-    tipo: 'Materiales',
-    categoria: 'Carpintería de Madera',
-    nifCif: 'A46999000',
-    personaContacto: 'Andrés Albelda',
-    telefono: '961556677',
-    movil: '644555666',
-    email: 'ventas@maderas-alboraya.com',
-    direccion: 'Carretera de Tavernes Blanques s/n',
-    codigoPostal: '46120',
-    ciudad: 'Alboraya',
-    provincia: 'Valencia',
-    iban: 'ES1200750432109876543210',
-    observaciones: 'Suministro de puertas de paso lacadas, rodapiés, tableros y parquet laminado de alta resistencia.',
-    activo: true,
-  },
-  {
-    id: 'prv_6',
-    codigo: 'PRV-000006',
-    nombre: 'Pinturas y Decoraciones Ruzafa',
-    tipo: 'Subcontrata',
-    categoria: 'Pintura y Revestimientos',
-    nifCif: 'B46777111',
-    personaContacto: 'Vicente Mestre',
-    telefono: '963223344',
-    movil: '655666777',
-    email: 'v.mestre@pinturasruzafa.com',
-    direccion: 'Calle Cuba 12',
-    codigoPostal: '46006',
-    ciudad: 'Valencia',
-    provincia: 'Valencia',
-    iban: 'ES3100305555444433332222',
-    observaciones: 'Especialistas en papel pintado, alisado de gotelé y microcemento decorativo.',
-    activo: false,
-  }
-];
+function provFromRow(row: any): Proveedor {
+  return {
+    id: row.id,
+    codigo: row.codigo,
+    nombre: row.nombre,
+    tipo: row.tipo,
+    categoria: row.categoria,
+    nifCif: row.nif_cif,
+    personaContacto: row.persona_contacto,
+    telefono: row.telefono,
+    movil: row.movil,
+    email: row.email,
+    direccion: row.direccion,
+    codigoPostal: row.codigo_postal,
+    ciudad: row.ciudad,
+    provincia: row.provincia,
+    iban: row.iban,
+    observaciones: row.observaciones,
+    activo: !!row.activo
+  };
+}
 
-const MOCK_COMPRAS: CompraProveedor[] = [
-  {
-    id: 'cmp_1',
-    proveedorId: 'prv_1',
-    codigo: 'COM-2026-0001',
-    concepto: 'Azulejo Porcelánico Marfil 60x120 - Obra OBR-2026-001',
-    importe: 3250.75,
-    fecha: '2026-05-10',
-    estado: 'Pagado',
-  },
-  {
-    id: 'cmp_2',
-    proveedorId: 'prv_1',
-    codigo: 'COM-2026-0002',
-    concepto: 'Revestimiento cerámico baño - Obra OBR-2026-003',
-    importe: 1450.20,
-    fecha: '2026-05-24',
-    estado: 'Recibido',
-  },
-  {
-    id: 'cmp_3',
-    proveedorId: 'prv_2',
-    codigo: 'COM-2026-0003',
-    concepto: 'Inodoros suspendidos y grifería empotrada - Obra OBR-2026-001',
-    importe: 2180.00,
-    fecha: '2026-05-15',
-    estado: 'Pagado',
-  },
-  {
-    id: 'cmp_4',
-    proveedorId: 'prv_3',
-    codigo: 'COM-2026-0004',
-    concepto: 'Fase I Instalación Eléctrica Local - Obra OBR-2026-003',
-    importe: 4200.00,
-    fecha: '2026-05-18',
-    estado: 'Pendiente',
-  },
-  {
-    id: 'cmp_5',
-    proveedorId: 'prv_4',
-    codigo: 'COM-2026-0005',
-    concepto: 'Suministro e instalación Aerotermia Daikin - Obra OBR-2026-001',
-    importe: 8900.00,
-    fecha: '2026-05-20',
-    estado: 'Recibido',
-  },
-];
+function provToRow(prov: Partial<Proveedor>): any {
+  const row: any = {};
+  if (prov.id !== undefined) row.id = prov.id;
+  if (prov.codigo !== undefined) row.codigo = prov.codigo;
+  if (prov.nombre !== undefined) row.nombre = prov.nombre;
+  if (prov.tipo !== undefined) row.tipo = prov.tipo;
+  if (prov.categoria !== undefined) row.categoria = prov.categoria;
+  if (prov.nifCif !== undefined) row.nif_cif = prov.nifCif;
+  if (prov.personaContacto !== undefined) row.persona_contacto = prov.personaContacto;
+  if (prov.telefono !== undefined) row.telefono = prov.telefono;
+  if (prov.movil !== undefined) row.movil = prov.movil;
+  if (prov.email !== undefined) row.email = prov.email;
+  if (prov.direccion !== undefined) row.direccion = prov.direccion;
+  if (prov.codigoPostal !== undefined) row.codigo_postal = prov.codigoPostal;
+  if (prov.ciudad !== undefined) row.ciudad = prov.ciudad;
+  if (prov.provincia !== undefined) row.provincia = prov.provincia;
+  if (prov.iban !== undefined) row.iban = prov.iban;
+  if (prov.observaciones !== undefined) row.observaciones = prov.observaciones;
+  if (prov.activo !== undefined) row.activo = prov.activo;
+  return row;
+}
 
-const MOCK_DOCUMENTOS: DocumentoProveedor[] = [
-  {
-    id: 'doc_1',
-    proveedorId: 'prv_1',
-    nombre: 'Tarifa_Precios_Oficial_2026.pdf',
-    tipo: 'PDF',
-    fechaSubida: '2026-01-10',
-    tamano: '3.4 MB',
-  },
-  {
-    id: 'doc_2',
-    proveedorId: 'prv_1',
-    nombre: 'Certificado_Calidad_ISO9001.pdf',
-    tipo: 'PDF',
-    fechaSubida: '2026-01-15',
-    tamano: '1.2 MB',
-  },
-  {
-    id: 'doc_3',
-    proveedorId: 'prv_3',
-    nombre: 'Certificado_REBT_Registro_Industrial.pdf',
-    tipo: 'PDF',
-    fechaSubida: '2026-02-05',
-    tamano: '2.1 MB',
-  },
-  {
-    id: 'doc_4',
-    proveedorId: 'prv_4',
-    nombre: 'Seguro_Responsabilidad_Civil_2026.pdf',
-    tipo: 'PDF',
-    fechaSubida: '2026-02-28',
-    tamano: '1.8 MB',
-  }
-];
+function compraFromRow(row: any): CompraProveedor {
+  return {
+    id: row.id,
+    proveedorId: row.proveedor_id,
+    codigo: row.codigo,
+    concepto: row.concepto,
+    importe: Number(row.importe),
+    fecha: row.fecha,
+    estado: row.estado
+  };
+}
 
-const MOCK_NOTAS: NotaProveedor[] = [
-  {
-    id: 'not_1',
-    proveedorId: 'prv_1',
-    contenido: 'Negociado descuento adicional del 5% en la gama Premium para el segundo semestre del año.',
-    autor: 'Laura Domenech',
-    fecha: '2026-05-12T10:30:00Z',
-  },
-  {
-    id: 'not_2',
-    proveedorId: 'prv_3',
-    contenido: 'Trabajan muy bien, respetan los planos y plazos, pero hay que supervisar el remate de las canaletas.',
-    autor: 'Carlos Ibáñez',
-    fecha: '2026-04-20T17:15:00Z',
-  },
-];
+function compraToRow(compra: Partial<CompraProveedor>): any {
+  const row: any = {};
+  if (compra.id !== undefined) row.id = compra.id;
+  if (compra.proveedorId !== undefined) row.proveedor_id = compra.proveedorId;
+  if (compra.codigo !== undefined) row.codigo = compra.codigo;
+  if (compra.concepto !== undefined) row.concepto = compra.concepto;
+  if (compra.importe !== undefined) row.importe = compra.importe;
+  if (compra.fecha !== undefined) row.fecha = compra.fecha;
+  if (compra.estado !== undefined) row.estado = compra.estado;
+  return row;
+}
+
+function docFromRow(row: any): DocumentoProveedor {
+  return {
+    id: row.id,
+    proveedorId: row.proveedor_id,
+    nombre: row.nombre,
+    tipo: row.tipo,
+    fechaSubida: row.fecha_subida,
+    tamano: row.tamano
+  };
+}
+
+function docToRow(doc: Partial<DocumentoProveedor>): any {
+  const row: any = {};
+  if (doc.id !== undefined) row.id = doc.id;
+  if (doc.proveedorId !== undefined) row.proveedor_id = doc.proveedorId;
+  if (doc.nombre !== undefined) row.nombre = doc.nombre;
+  if (doc.tipo !== undefined) row.tipo = doc.tipo;
+  if (doc.fechaSubida !== undefined) row.fecha_subida = doc.fechaSubida;
+  if (doc.tamano !== undefined) row.tamano = doc.tamano;
+  return row;
+}
+
+function notaFromRow(row: any): NotaProveedor {
+  return {
+    id: row.id,
+    proveedorId: row.proveedor_id,
+    contenido: row.contenido,
+    autor: row.autor,
+    fecha: row.fecha
+  };
+}
+
+function notaToRow(nota: Partial<NotaProveedor>): any {
+  const row: any = {};
+  if (nota.id !== undefined) row.id = nota.id;
+  if (nota.proveedorId !== undefined) row.proveedor_id = nota.proveedorId;
+  if (nota.contenido !== undefined) row.contenido = nota.contenido;
+  if (nota.autor !== undefined) row.autor = nota.autor;
+  if (nota.fecha !== undefined) row.fecha = nota.fecha;
+  return row;
+}
 
 export function useProveedores() {
-  const [proveedores, setProveedores] = useState<Proveedor[]>(() => {
-    const saved = localStorage.getItem('verini_proveedores');
-    return saved ? JSON.parse(saved) : MOCK_PROVEEDORES;
-  });
+  const [proveedores, setProveedores] = useState<Proveedor[]>([]);
+  const [compras, setCompras] = useState<CompraProveedor[]>([]);
+  const [documentos, setDocumentos] = useState<DocumentoProveedor[]>([]);
+  const [notas, setNotas] = useState<NotaProveedor[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [compras, setCompras] = useState<CompraProveedor[]>(() => {
-    const saved = localStorage.getItem('verini_proveedores_compras');
-    return saved ? JSON.parse(saved) : MOCK_COMPRAS;
-  });
+  const fetchAllData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [provRes, compRes, docRes, notaRes] = await Promise.all([
+        supabase.from('proveedores').select('*').order('created_at', { ascending: false }),
+        supabase.from('compras_proveedor').select('*').order('fecha', { ascending: false }),
+        supabase.from('documentos_proveedor').select('*').order('fecha_subida', { ascending: false }),
+        supabase.from('notas_proveedor').select('*').order('fecha', { ascending: false })
+      ]);
 
-  const [documentos, setDocumentos] = useState<DocumentoProveedor[]>(() => {
-    const saved = localStorage.getItem('verini_proveedores_documentos');
-    return saved ? JSON.parse(saved) : MOCK_DOCUMENTOS;
-  });
+      if (provRes.error) throw provRes.error;
+      if (compRes.error) throw compRes.error;
+      if (docRes.error) throw docRes.error;
+      if (notaRes.error) throw notaRes.error;
 
-  const [notas, setNotas] = useState<NotaProveedor[]>(() => {
-    const saved = localStorage.getItem('verini_proveedores_notas');
-    return saved ? JSON.parse(saved) : MOCK_NOTAS;
-  });
+      if (provRes.data) setProveedores(provRes.data.map(provFromRow));
+      if (compRes.data) setCompras(compRes.data.map(compraFromRow));
+      if (docRes.data) setDocumentos(docRes.data.map(docFromRow));
+      if (notaRes.data) setNotas(notaRes.data.map(notaFromRow));
+    } catch (err: any) {
+      console.error('Error fetching suppliers data:', err);
+      setError(err.message || 'Error al cargar los datos de proveedores');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem('verini_proveedores', JSON.stringify(proveedores));
-  }, [proveedores]);
-
-  useEffect(() => {
-    localStorage.setItem('verini_proveedores_compras', JSON.stringify(compras));
-  }, [compras]);
-
-  useEffect(() => {
-    localStorage.setItem('verini_proveedores_documentos', JSON.stringify(documentos));
-  }, [documentos]);
-
-  useEffect(() => {
-    localStorage.setItem('verini_proveedores_notas', JSON.stringify(notas));
-  }, [notas]);
+    fetchAllData();
+  }, [fetchAllData]);
 
   // Generar código automático PRV-XXXXXX
   const generateNextCodigo = (): string => {
@@ -271,71 +167,184 @@ export function useProveedores() {
     return `PRV-${String(nextNum).padStart(6, '0')}`;
   };
 
-  const addProveedor = (prov: Omit<Proveedor, 'id' | 'codigo'>) => {
-    const newProv: Proveedor = {
-      ...prov,
-      id: `prv_${Date.now()}`,
-      codigo: generateNextCodigo()
-    };
-    setProveedores(prev => [newProv, ...prev]);
-    return newProv;
+  const addProveedor = async (prov: Omit<Proveedor, 'id' | 'codigo'>) => {
+    try {
+      const nextCode = generateNextCodigo();
+      const newId = `prv_${Date.now()}`;
+      const newProv: Proveedor = {
+        ...prov,
+        id: newId,
+        codigo: nextCode
+      };
+
+      const { error: err } = await supabase
+        .from('proveedores')
+        .insert([provToRow(newProv)]);
+      if (err) throw err;
+
+      await fetchAllData();
+      return newProv;
+    } catch (err: any) {
+      console.error('Error adding supplier:', err);
+      setError(err.message || 'Error al añadir el proveedor');
+      throw err;
+    }
   };
 
-  const updateProveedor = (id: string, updatedFields: Partial<Proveedor>) => {
-    setProveedores(prev =>
-      prev.map(p => (p.id === id ? { ...p, ...updatedFields } : p))
-    );
+  const updateProveedor = async (id: string, updatedFields: Partial<Proveedor>) => {
+    try {
+      const { error: err } = await supabase
+        .from('proveedores')
+        .update(provToRow(updatedFields))
+        .eq('id', id);
+      if (err) throw err;
+
+      await fetchAllData();
+    } catch (err: any) {
+      console.error('Error updating supplier:', err);
+      setError(err.message || 'Error al actualizar el proveedor');
+      throw err;
+    }
   };
 
-  const deleteProveedor = (id: string) => {
-    setProveedores(prev => prev.filter(p => p.id !== id));
-    setCompras(prev => prev.filter(c => c.proveedorId !== id));
-    setDocumentos(prev => prev.filter(d => d.proveedorId !== id));
-    setNotas(prev => prev.filter(n => n.proveedorId !== id));
+  const deleteProveedor = async (id: string) => {
+    try {
+      // Delete cascade relations manually to prevent foreign key errors if no cascade is on DB
+      await Promise.all([
+        supabase.from('compras_proveedor').delete().eq('proveedor_id', id),
+        supabase.from('documentos_proveedor').delete().eq('proveedor_id', id),
+        supabase.from('notas_proveedor').delete().eq('proveedor_id', id)
+      ]);
+
+      const { error: err } = await supabase
+        .from('proveedores')
+        .delete()
+        .eq('id', id);
+      if (err) throw err;
+
+      await fetchAllData();
+    } catch (err: any) {
+      console.error('Error deleting supplier:', err);
+      setError(err.message || 'Error al eliminar el proveedor');
+      throw err;
+    }
   };
 
-  const addCompra = (compraData: Omit<CompraProveedor, 'id' | 'codigo'>) => {
-    const nextNum = compras.length + 1;
-    const codigo = `COM-2026-${String(nextNum).padStart(4, '0')}`;
-    const newCompra: CompraProveedor = {
-      ...compraData,
-      id: `cmp_${Date.now()}`,
-      codigo
-    };
-    setCompras(prev => [newCompra, ...prev]);
-    return newCompra;
+  const addCompra = async (compraData: Omit<CompraProveedor, 'id' | 'codigo'>) => {
+    try {
+      const nextNum = compras.length + 1;
+      const codigo = `COM-2026-${String(nextNum).padStart(4, '0')}`;
+      const newId = `cmp_${Date.now()}`;
+      const newCompra: CompraProveedor = {
+        ...compraData,
+        id: newId,
+        codigo
+      };
+
+      const { error: err } = await supabase
+        .from('compras_proveedor')
+        .insert([compraToRow(newCompra)]);
+      if (err) throw err;
+
+      await fetchAllData();
+      return newCompra;
+    } catch (err: any) {
+      console.error('Error adding purchase:', err);
+      setError(err.message || 'Error al añadir la compra');
+      throw err;
+    }
   };
 
-  const addDocumento = (docData: Omit<DocumentoProveedor, 'id'>) => {
-    const newDoc: DocumentoProveedor = {
-      ...docData,
-      id: `doc_${Date.now()}`
-    };
-    setDocumentos(prev => [newDoc, ...prev]);
-    return newDoc;
+  const addDocumento = async (docData: Omit<DocumentoProveedor, 'id'>) => {
+    try {
+      const newId = `doc_${Date.now()}`;
+      const newDoc: DocumentoProveedor = {
+        ...docData,
+        id: newId
+      };
+
+      const { error: err } = await supabase
+        .from('documentos_proveedor')
+        .insert([docToRow(newDoc)]);
+      if (err) throw err;
+
+      await fetchAllData();
+      return newDoc;
+    } catch (err: any) {
+      console.error('Error adding document:', err);
+      setError(err.message || 'Error al añadir el documento');
+      throw err;
+    }
   };
 
-  const deleteDocumento = (id: string) => {
-    setDocumentos(prev => prev.filter(d => d.id !== id));
+  const deleteDocumento = async (id: string) => {
+    try {
+      const { error: err } = await supabase
+        .from('documentos_proveedor')
+        .delete()
+        .eq('id', id);
+      if (err) throw err;
+
+      await fetchAllData();
+    } catch (err: any) {
+      console.error('Error deleting document:', err);
+      setError(err.message || 'Error al eliminar el documento');
+      throw err;
+    }
   };
 
-  const addNota = (notaData: Omit<NotaProveedor, 'id'>) => {
-    const newNota: NotaProveedor = {
-      ...notaData,
-      id: `not_${Date.now()}`
-    };
-    setNotas(prev => [newNota, ...prev]);
-    return newNota;
+  const addNota = async (notaData: Omit<NotaProveedor, 'id'>) => {
+    try {
+      const newId = `not_${Date.now()}`;
+      const newNota: NotaProveedor = {
+        ...notaData,
+        id: newId
+      };
+
+      const { error: err } = await supabase
+        .from('notas_proveedor')
+        .insert([notaToRow(newNota)]);
+      if (err) throw err;
+
+      await fetchAllData();
+      return newNota;
+    } catch (err: any) {
+      console.error('Error adding note:', err);
+      setError(err.message || 'Error al añadir la nota');
+      throw err;
+    }
   };
 
-  const deleteNota = (id: string) => {
-    setNotas(prev => prev.filter(n => n.id !== id));
+  const deleteNota = async (id: string) => {
+    try {
+      const { error: err } = await supabase
+        .from('notas_proveedor')
+        .delete()
+        .eq('id', id);
+      if (err) throw err;
+
+      await fetchAllData();
+    } catch (err: any) {
+      console.error('Error deleting note:', err);
+      setError(err.message || 'Error al eliminar la nota');
+      throw err;
+    }
   };
 
-  const updateCompraStatus = (id: string, estado: CompraProveedor['estado']) => {
-    setCompras(prev =>
-      prev.map(c => (c.id === id ? { ...c, estado } : c))
-    );
+  const updateCompraStatus = async (id: string, estado: CompraProveedor['estado']) => {
+    try {
+      const { error: err } = await supabase
+        .from('compras_proveedor')
+        .update({ estado })
+        .eq('id', id);
+      if (err) throw err;
+
+      await fetchAllData();
+    } catch (err: any) {
+      console.error('Error updating purchase status:', err);
+      setError(err.message || 'Error al actualizar el estado de la compra');
+      throw err;
+    }
   };
 
   return {
@@ -343,6 +352,8 @@ export function useProveedores() {
     compras,
     documentos,
     notas,
+    loading,
+    error,
     addProveedor,
     updateProveedor,
     deleteProveedor,

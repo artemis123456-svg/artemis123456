@@ -1,151 +1,74 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Obra } from '../types/obra';
+import { supabase } from '../lib/supabaseClient';
 
-const INITIAL_OBRAS: Obra[] = [
-  {
-    id: 'obr_1',
-    codigo: 'OBR-000001',
-    titulo: 'Reforma Cocina y Baños',
-    clientId: 'cli_1',
-    tipoReforma: 'Integral',
-    metrosCuadrados: 85,
-    direccion: 'Avenida de Aragón 14, Valencia',
-    fechaInicioPrevista: '2026-02-15',
-    fechaInicioReal: '2026-02-18',
-    fechaFinPrevista: '2026-04-15',
-    fechaFinReal: '2026-04-20',
-    estado: 'En obra',
-    importe: 38500
-  },
-  {
-    id: 'obr_2',
-    codigo: 'OBR-000002',
-    titulo: 'Reforma Baño Principal',
-    clientId: 'cli_2',
-    tipoReforma: 'Baño',
-    metrosCuadrados: 12,
-    direccion: 'Calle Serrano 56, Madrid',
-    fechaInicioPrevista: '2026-05-10',
-    fechaInicioReal: '2026-05-12',
-    fechaFinPrevista: '2026-05-30',
-    fechaFinReal: '2026-05-28',
-    estado: 'Entregada',
-    importe: 9200
-  },
-  {
-    id: 'obr_3',
-    codigo: 'OBR-000003',
-    titulo: 'Reforma Local Comercial',
-    clientId: 'cli_3',
-    tipoReforma: 'Integral',
-    metrosCuadrados: 150,
-    direccion: 'Avenida de la Constitución 12, Sevilla',
-    fechaInicioPrevista: '2026-07-01',
-    fechaInicioReal: null,
-    fechaFinPrevista: '2026-09-15',
-    fechaFinReal: null,
-    estado: 'Presupuesto',
-    importe: 75000
-  },
-  {
-    id: 'obr_4',
-    codigo: 'OBR-000004',
-    titulo: 'Reforma Cocina Diseño',
-    clientId: 'cli_4',
-    tipoReforma: 'Cocina',
-    metrosCuadrados: 25,
-    direccion: 'Calle Balmes 45, Barcelona',
-    fechaInicioPrevista: '2026-06-01',
-    fechaInicioReal: '2026-06-03',
-    fechaFinPrevista: '2026-06-25',
-    fechaFinReal: null,
-    estado: 'En obra',
-    importe: 18000
-  },
-  {
-    id: 'obr_5',
-    codigo: 'OBR-000005',
-    titulo: 'Interiorismo Salón y Dormitorio',
-    clientId: 'cli_1',
-    tipoReforma: 'Otro',
-    metrosCuadrados: 45,
-    direccion: 'Paseo de la Alameda 8, Valencia',
-    fechaInicioPrevista: '2026-04-01',
-    fechaInicioReal: '2026-04-02',
-    fechaFinPrevista: '2026-04-20',
-    fechaFinReal: '2026-04-18',
-    estado: 'Aceptada',
-    importe: 12500
-  }
-];
+function fromRow(row: any): Obra {
+  return {
+    id: row.id,
+    codigo: row.codigo,
+    titulo: row.titulo,
+    clientId: row.cliente_id,
+    tipoReforma: row.tipo_reforma,
+    metrosCuadrados: Number(row.metros_cuadrados),
+    direccion: row.direccion,
+    fechaInicioPrevista: row.fecha_inicio_prevista,
+    fechaInicioReal: row.fecha_inicio_real,
+    fechaFinPrevista: row.fecha_fin_prevista,
+    fechaFinReal: row.fecha_fin_real,
+    estado: row.estado,
+    importe: Number(row.importe),
+  };
+}
+
+function toRow(obra: Partial<Obra>): any {
+  const row: any = {};
+  if (obra.id !== undefined) row.id = obra.id;
+  if (obra.codigo !== undefined) row.codigo = obra.codigo;
+  if (obra.titulo !== undefined) row.titulo = obra.titulo;
+  if (obra.clientId !== undefined) row.cliente_id = obra.clientId;
+  if (obra.tipoReforma !== undefined) row.tipo_reforma = obra.tipoReforma;
+  if (obra.metrosCuadrados !== undefined) row.metros_cuadrados = obra.metrosCuadrados;
+  if (obra.direccion !== undefined) row.direccion = obra.direccion;
+  if (obra.fechaInicioPrevista !== undefined) row.fecha_inicio_prevista = obra.fechaInicioPrevista;
+  if (obra.fechaInicioReal !== undefined) row.fecha_inicio_real = obra.fechaInicioReal;
+  if (obra.fechaFinPrevista !== undefined) row.fecha_fin_prevista = obra.fechaFinPrevista;
+  if (obra.fechaFinReal !== undefined) row.fecha_fin_real = obra.fechaFinReal;
+  if (obra.estado !== undefined) row.estado = obra.estado;
+  if (obra.importe !== undefined) row.importe = obra.importe;
+  return row;
+}
 
 export function useObras() {
   const [obras, setObras] = useState<Obra[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const storedObras = localStorage.getItem('verini_obras_v2');
-    if (storedObras) {
-      try {
-        setObras(JSON.parse(storedObras));
-      } catch (e) {
-        setObras(INITIAL_OBRAS);
+  const fetchObras = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data, error: err } = await supabase
+        .from('obras')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (err) throw err;
+      if (data) {
+        setObras(data.map(fromRow));
       }
-    } else {
-      // Check if there was old Obras from the original app and migrate them or use our INITIAL_OBRAS
-      const oldObras = localStorage.getItem('verini_obras');
-      if (oldObras) {
-        try {
-          const parsed = JSON.parse(oldObras);
-          // If they match the old type, we map them, otherwise we just use INITIAL_OBRAS
-          if (parsed.length > 0 && parsed[0].presupuestoEstimado !== undefined) {
-            const migrated: Obra[] = parsed.map((o: any, idx: number) => ({
-              id: o.id || `obr_${Date.now()}_${idx}`,
-              codigo: `OBR-${String(idx + 1).padStart(6, '0')}`,
-              titulo: o.titulo || 'Obra Sin Título',
-              clientId: o.clientId || 'cli_1',
-              tipoReforma: 'Integral',
-              metrosCuadrados: 90,
-              direccion: o.direccion || 'Dirección de obra',
-              fechaInicioPrevista: o.fechaInicio || '2026-01-01',
-              fechaInicioReal: o.fechaInicio || '2026-01-01',
-              fechaFinPrevista: null,
-              fechaFinReal: null,
-              estado: o.estado === 'En curso' ? 'En obra' : 'Presupuesto',
-              importe: o.presupuestoEstimado || 0,
-            }));
-            localStorage.setItem('verini_obras_v2', JSON.stringify(migrated));
-            setObras(migrated);
-            return;
-          }
-        } catch (err) {
-          // ignore error
-        }
-      }
-      
-      localStorage.setItem('verini_obras_v2', JSON.stringify(INITIAL_OBRAS));
-      setObras(INITIAL_OBRAS);
+    } catch (err: any) {
+      console.error('Error fetching obras:', err);
+      setError(err.message || 'Error al cargar las obras');
+    } finally {
+      setLoading(false);
     }
   }, []);
 
-  const saveToStorage = (updatedObras: Obra[]) => {
-    setObras(updatedObras);
-    localStorage.setItem('verini_obras_v2', JSON.stringify(updatedObras));
-    // Also save a fallback for any other files reading the old key
-    localStorage.setItem('verini_obras', JSON.stringify(updatedObras.map(o => ({
-      id: o.id,
-      clientId: o.clientId,
-      codigo: o.codigo,
-      titulo: o.titulo,
-      direccion: o.direccion,
-      presupuestoEstimado: o.importe,
-      estado: o.estado === 'En obra' ? 'En curso' : o.estado === 'Presupuesto' ? 'Planificación' : 'Finalizada',
-      fechaInicio: o.fechaInicioPrevista || ''
-    }))));
-  };
+  useEffect(() => {
+    fetchObras();
+  }, [fetchObras]);
 
   // Generate next OBR-XXXXXX code
-  const generateObraCode = (currentObras: Obra[]): string => {
-    const numbers = currentObras.map(o => {
+  const generateObraCode = (): string => {
+    const numbers = obras.map(o => {
       const match = o.codigo.match(/OBR-(\d+)/);
       return match ? parseInt(match[1], 10) : 0;
     });
@@ -155,60 +78,98 @@ export function useObras() {
   };
 
   // Create an Obra
-  const addObra = (obraFields: Omit<Obra, 'id' | 'codigo'>) => {
-    const code = generateObraCode(obras);
-    const newObra: Obra = {
-      ...obraFields,
-      id: `obr_${Date.now()}`,
-      codigo: code
-    };
+  const addObra = async (obraFields: Omit<Obra, 'id' | 'codigo'>) => {
+    try {
+      const code = generateObraCode();
+      const newId = `obr_${Date.now()}`;
+      const newObra: Obra = {
+        ...obraFields,
+        id: newId,
+        codigo: code
+      };
 
-    const updated = [...obras, newObra];
-    saveToStorage(updated);
-    return newObra;
+      const { error: err } = await supabase
+        .from('obras')
+        .insert([toRow(newObra)]);
+      if (err) throw err;
+
+      await fetchObras();
+      return newObra;
+    } catch (err: any) {
+      console.error('Error adding obra:', err);
+      setError(err.message || 'Error al añadir la obra');
+      throw err;
+    }
   };
 
   // Edit an Obra
-  const updateObra = (id: string, updatedFields: Partial<Obra>) => {
-    const updated = obras.map(o => {
-      if (o.id === id) {
-        return { ...o, ...updatedFields };
-      }
-      return o;
-    });
-    saveToStorage(updated);
+  const updateObra = async (id: string, updatedFields: Partial<Obra>) => {
+    try {
+      const { error: err } = await supabase
+        .from('obras')
+        .update(toRow(updatedFields))
+        .eq('id', id);
+      if (err) throw err;
+
+      await fetchObras();
+    } catch (err: any) {
+      console.error('Error updating obra:', err);
+      setError(err.message || 'Error al actualizar la obra');
+      throw err;
+    }
   };
 
   // Change Obra Kanban Phase
-  const updateObraStatus = (id: string, estado: Obra['estado']) => {
-    const updated = obras.map(o => {
-      if (o.id === id) {
-        let actualDates = {};
-        if (estado === 'En obra' && !o.fechaInicioReal) {
-          actualDates = { fechaInicioReal: new Date().toISOString().split('T')[0] };
-        }
-        if (estado === 'Entregada' && !o.fechaFinReal) {
-          actualDates = { fechaFinReal: new Date().toISOString().split('T')[0] };
-        }
-        return { ...o, estado, ...actualDates };
+  const updateObraStatus = async (id: string, estado: Obra['estado']) => {
+    try {
+      const current = obras.find(o => o.id === id);
+      let actualDates: Partial<Obra> = {};
+      if (estado === 'En obra' && current && !current.fechaInicioReal) {
+        actualDates.fechaInicioReal = new Date().toISOString().split('T')[0];
       }
-      return o;
-    });
-    saveToStorage(updated);
+      if (estado === 'Entregada' && current && !current.fechaFinReal) {
+        actualDates.fechaFinReal = new Date().toISOString().split('T')[0];
+      }
+
+      const { error: err } = await supabase
+        .from('obras')
+        .update(toRow({ estado, ...actualDates }))
+        .eq('id', id);
+      if (err) throw err;
+
+      await fetchObras();
+    } catch (err: any) {
+      console.error('Error updating obra status:', err);
+      setError(err.message || 'Error al cambiar estado de obra');
+      throw err;
+    }
   };
 
   // Delete an Obra
-  const deleteObra = (id: string) => {
-    const updated = obras.filter(o => o.id !== id);
-    saveToStorage(updated);
+  const deleteObra = async (id: string) => {
+    try {
+      const { error: err } = await supabase
+        .from('obras')
+        .delete()
+        .eq('id', id);
+      if (err) throw err;
+
+      await fetchObras();
+    } catch (err: any) {
+      console.error('Error deleting obra:', err);
+      setError(err.message || 'Error al eliminar obra');
+      throw err;
+    }
   };
 
   return {
     obras,
+    loading,
+    error,
     addObra,
     updateObra,
     updateObraStatus,
     deleteObra,
-    generateObraCode: () => generateObraCode(obras)
+    generateObraCode
   };
 }

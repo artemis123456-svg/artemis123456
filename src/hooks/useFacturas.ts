@@ -1,197 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Factura, LineaFactura } from '../types/factura';
-
-const MOCK_FACTURAS: Factura[] = [
-  {
-    id: 'fac_1',
-    numero: 'FAC-2026-0001',
-    clientId: 'cli_1',
-    obraId: 'obr_1',
-    fechaEmision: '2026-03-10',
-    fechaVencimiento: '2026-04-10',
-    estado: 'Cobrada',
-    observaciones: 'Pago recibido por transferencia bancaria.',
-    lineas: [
-      {
-        id: 'lin_1_1',
-        tipo: 'producto',
-        productoId: 'prd_1',
-        concepto: 'Azulejo Porcelánico Calacatta Gold 60x120 cm',
-        cantidad: 20,
-        precioUnitario: 39.90,
-        ivaPorcentaje: 21
-      },
-      {
-        id: 'lin_1_2',
-        tipo: 'producto',
-        productoId: 'prd_5',
-        concepto: 'Grifo Monomando Lavabo Negro Mate Velvet',
-        cantidad: 2,
-        precioUnitario: 74.90,
-        ivaPorcentaje: 21
-      },
-      {
-        id: 'lin_1_3',
-        tipo: 'libre',
-        productoId: null,
-        concepto: 'Mano de obra colocación de azulejos y fontanería',
-        cantidad: 15,
-        precioUnitario: 25.00,
-        ivaPorcentaje: 10
-      }
-    ]
-  },
-  {
-    id: 'fac_2',
-    numero: 'FAC-2026-0002',
-    clientId: 'cli_2',
-    obraId: 'obr_2',
-    fechaEmision: '2026-05-15',
-    fechaVencimiento: '2026-06-15',
-    estado: 'Cobrada',
-    observaciones: 'Factura correspondiente a la reforma del baño principal.',
-    lineas: [
-      {
-        id: 'lin_2_1',
-        tipo: 'producto',
-        productoId: 'prd_2',
-        concepto: 'Mampara de Ducha Frontal Corredera Aura 120cm',
-        cantidad: 1,
-        precioUnitario: 295.00,
-        ivaPorcentaje: 21
-      },
-      {
-        id: 'lin_2_2',
-        tipo: 'producto',
-        productoId: 'prd_4',
-        concepto: 'Inodoro Suspendido Rimless Compacto Veneto',
-        cantidad: 1,
-        precioUnitario: 189.00,
-        ivaPorcentaje: 21
-      },
-      {
-        id: 'lin_2_3',
-        tipo: 'libre',
-        productoId: null,
-        concepto: 'Montaje de mampara e inodoro',
-        cantidad: 1,
-        precioUnitario: 150.00,
-        ivaPorcentaje: 10
-      }
-    ]
-  },
-  {
-    id: 'fac_3',
-    numero: 'FAC-2026-0003',
-    clientId: 'cli_1',
-    obraId: 'obr_5',
-    fechaEmision: '2026-04-05',
-    fechaVencimiento: '2026-05-05',
-    estado: 'Emitida',
-    observaciones: 'Trabajos de iluminación en salón y dormitorio.',
-    lineas: [
-      {
-        id: 'lin_3_1',
-        tipo: 'producto',
-        productoId: 'prd_3',
-        concepto: 'Tira LED COB 24V Cálida 3000K (5 metros)',
-        cantidad: 4,
-        precioUnitario: 28.50,
-        ivaPorcentaje: 21
-      },
-      {
-        id: 'lin_3_2',
-        tipo: 'libre',
-        productoId: null,
-        concepto: 'Instalación de perfiles de aluminio e integración de iluminación LED',
-        cantidad: 8,
-        precioUnitario: 30.00,
-        ivaPorcentaje: 21
-      }
-    ]
-  },
-  {
-    id: 'fac_4',
-    numero: 'FAC-2026-0004',
-    clientId: 'cli_4',
-    obraId: 'obr_4',
-    fechaEmision: '2026-06-10',
-    fechaVencimiento: '2026-07-10',
-    estado: 'Emitida',
-    observaciones: 'Materiales carpintería cocina.',
-    lineas: [
-      {
-        id: 'lin_4_1',
-        tipo: 'producto',
-        productoId: 'prd_6',
-        concepto: 'Tarima Flotante Laminada Roble Nórdico AC5 (Caja)',
-        cantidad: 15,
-        precioUnitario: 24.95,
-        ivaPorcentaje: 21
-      },
-      {
-        id: 'lin_4_2',
-        tipo: 'libre',
-        productoId: null,
-        concepto: 'Rodapié blanco a juego',
-        cantidad: 12,
-        precioUnitario: 4.50,
-        ivaPorcentaje: 21
-      }
-    ]
-  },
-  {
-    id: 'fac_5',
-    numero: 'FAC-2026-0005',
-    clientId: 'cli_3',
-    obraId: 'obr_3',
-    fechaEmision: '2026-06-25',
-    fechaVencimiento: '2026-07-25',
-    estado: 'Borrador',
-    observaciones: 'Borrador inicial para revisión del cliente.',
-    lineas: [
-      {
-        id: 'lin_5_1',
-        tipo: 'libre',
-        productoId: null,
-        concepto: 'Proyecto de interiorismo y renders 3D de local comercial',
-        cantidad: 1,
-        precioUnitario: 1200.00,
-        ivaPorcentaje: 21
-      },
-      {
-        id: 'lin_5_2',
-        tipo: 'libre',
-        productoId: null,
-        concepto: 'Asesoría de materiales en showroom',
-        cantidad: 1,
-        precioUnitario: 350.00,
-        ivaPorcentaje: 0
-      }
-    ]
-  },
-  {
-    id: 'fac_6',
-    numero: 'FAC-2026-0006',
-    clientId: 'cli_1',
-    obraId: 'obr_1',
-    fechaEmision: '2026-01-10',
-    fechaVencimiento: '2026-02-10',
-    estado: 'Vencida',
-    observaciones: 'Factura reclamada por email.',
-    lineas: [
-      {
-        id: 'lin_6_1',
-        tipo: 'libre',
-        productoId: null,
-        concepto: 'Demolición y retirada de escombros de cocina y baños',
-        cantidad: 1,
-        precioUnitario: 1800.00,
-        ivaPorcentaje: 10
-      }
-    ]
-  }
-];
+import { supabase } from '../lib/supabaseClient';
 
 export interface FacturaTotals {
   baseImponible: number;
@@ -239,22 +48,101 @@ export function calculateFacturaTotals(lineas: LineaFactura[]): FacturaTotals {
   };
 }
 
+function facturaFromRow(row: any, lineas: LineaFactura[]): Factura {
+  return {
+    id: row.id,
+    numero: row.numero,
+    clientId: row.cliente_id,
+    obraId: row.obra_id,
+    fechaEmision: row.fecha_emision,
+    fechaVencimiento: row.fecha_vencimiento,
+    estado: row.estado,
+    observaciones: row.observaciones || '',
+    lineas: lineas
+  };
+}
+
+function facturaToRow(fac: Partial<Factura>): any {
+  const row: any = {};
+  if (fac.id !== undefined) row.id = fac.id;
+  if (fac.numero !== undefined) row.numero = fac.numero;
+  if (fac.clientId !== undefined) row.cliente_id = fac.clientId;
+  if (fac.obraId !== undefined) row.obra_id = fac.obraId;
+  if (fac.fechaEmision !== undefined) row.fecha_emision = fac.fechaEmision;
+  if (fac.fechaVencimiento !== undefined) row.fecha_vencimiento = fac.fechaVencimiento;
+  if (fac.estado !== undefined) row.estado = fac.estado;
+  if (fac.observaciones !== undefined) row.observaciones = fac.observaciones;
+  return row;
+}
+
+function lineaFromRow(row: any): LineaFactura {
+  return {
+    id: row.id,
+    tipo: row.tipo,
+    productoId: row.producto_id,
+    concepto: row.concepto,
+    cantidad: Number(row.cantidad),
+    precioUnitario: Number(row.precio_unitario),
+    ivaPorcentaje: Number(row.iva_porcentaje) as 21 | 10 | 0
+  };
+}
+
+function lineaToRow(lin: LineaFactura, facturaId: string, orden: number): any {
+  return {
+    id: lin.id,
+    factura_id: facturaId,
+    tipo: lin.tipo,
+    producto_id: lin.productoId,
+    concepto: lin.concepto,
+    cantidad: lin.cantidad,
+    precio_unitario: lin.precioUnitario,
+    iva_porcentaje: lin.ivaPorcentaje,
+    orden: orden
+  };
+}
+
 export function useFacturas() {
-  const [facturas, setFacturas] = useState<Factura[]>(() => {
-    const saved = localStorage.getItem('verini_facturas_custom');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return MOCK_FACTURAS;
-      }
+  const [facturas, setFacturas] = useState<Factura[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchFacturas = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [facRes, lineasRes] = await Promise.all([
+        supabase.from('facturas').select('*').order('created_at', { ascending: false }),
+        supabase.from('lineas_factura').select('*').order('orden', { ascending: true })
+      ]);
+
+      if (facRes.error) throw facRes.error;
+      if (lineasRes.error) throw lineasRes.error;
+
+      const dbFacturas = facRes.data || [];
+      const dbLineas = lineasRes.data || [];
+
+      const lineasMap: { [key: string]: LineaFactura[] } = {};
+      dbLineas.forEach((row: any) => {
+        const fid = row.factura_id;
+        if (!lineasMap[fid]) lineasMap[fid] = [];
+        lineasMap[fid].push(lineaFromRow(row));
+      });
+
+      const mappedFacturas = dbFacturas.map((facRow: any) => {
+        return facturaFromRow(facRow, lineasMap[facRow.id] || []);
+      });
+
+      setFacturas(mappedFacturas);
+    } catch (err: any) {
+      console.error('Error fetching facturas:', err);
+      setError(err.message || 'Error al cargar las facturas');
+    } finally {
+      setLoading(false);
     }
-    return MOCK_FACTURAS;
-  });
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem('verini_facturas_custom', JSON.stringify(facturas));
-  }, [facturas]);
+    fetchFacturas();
+  }, [fetchFacturas]);
 
   // Generar código automático FAC-2026-XXXX
   const generateNextNumero = (): string => {
@@ -275,35 +163,121 @@ export function useFacturas() {
     return `${prefix}${String(nextNum).padStart(4, '0')}`;
   };
 
-  const addFactura = (facturaData: Omit<Factura, 'id' | 'numero'>) => {
-    const newId = `fac_${Date.now()}`;
-    const newFactura: Factura = {
-      ...facturaData,
-      id: newId,
-      numero: generateNextNumero()
-    };
-    setFacturas(prev => [newFactura, ...prev]);
-    return newFactura;
+  const addFactura = async (facturaData: Omit<Factura, 'id' | 'numero'>) => {
+    try {
+      const newId = `fac_${Date.now()}`;
+      const nextNumero = generateNextNumero();
+      const newFactura: Factura = {
+        ...facturaData,
+        id: newId,
+        numero: nextNumero
+      };
+
+      // 1. Insert parent
+      const { error: err } = await supabase
+        .from('facturas')
+        .insert([facturaToRow(newFactura)]);
+      if (err) throw err;
+
+      // 2. Insert lines
+      if (newFactura.lineas && newFactura.lineas.length > 0) {
+        const rowsToInsert = newFactura.lineas.map((l, index) => lineaToRow(l, newId, index));
+        const { error: lineasErr } = await supabase
+          .from('lineas_factura')
+          .insert(rowsToInsert);
+        if (lineasErr) throw lineasErr;
+      }
+
+      await fetchFacturas();
+      return newFactura;
+    } catch (err: any) {
+      console.error('Error adding factura:', err);
+      setError(err.message || 'Error al añadir la factura');
+      throw err;
+    }
   };
 
-  const updateFactura = (id: string, updatedFields: Partial<Factura>) => {
-    setFacturas(prev =>
-      prev.map(f => (f.id === id ? { ...f, ...updatedFields } : f))
-    );
+  const updateFactura = async (id: string, updatedFields: Partial<Factura>) => {
+    try {
+      const parentFields = { ...updatedFields };
+      delete parentFields.lineas;
+
+      if (Object.keys(parentFields).length > 0) {
+        const { error: parentErr } = await supabase
+          .from('facturas')
+          .update(facturaToRow(parentFields))
+          .eq('id', id);
+        if (parentErr) throw parentErr;
+      }
+
+      if (updatedFields.lineas) {
+        const { error: delErr } = await supabase
+          .from('lineas_factura')
+          .delete()
+          .eq('factura_id', id);
+        if (delErr) throw delErr;
+
+        if (updatedFields.lineas.length > 0) {
+          const rowsToInsert = updatedFields.lineas.map((l, index) => {
+            const lid = l.id.startsWith('lin_init_') || !l.id ? `lin_${Date.now()}_${index}` : l.id;
+            return lineaToRow({ ...l, id: lid }, id, index);
+          });
+          const { error: insErr } = await supabase
+            .from('lineas_factura')
+            .insert(rowsToInsert);
+          if (insErr) throw insErr;
+        }
+      }
+
+      await fetchFacturas();
+    } catch (err: any) {
+      console.error('Error updating factura:', err);
+      setError(err.message || 'Error al actualizar la factura');
+      throw err;
+    }
   };
 
-  const deleteFactura = (id: string) => {
-    setFacturas(prev => prev.filter(f => f.id !== id));
+  const deleteFactura = async (id: string) => {
+    try {
+      await supabase
+        .from('lineas_factura')
+        .delete()
+        .eq('factura_id', id);
+
+      const { error: err } = await supabase
+        .from('facturas')
+        .delete()
+        .eq('id', id);
+      if (err) throw err;
+
+      await fetchFacturas();
+    } catch (err: any) {
+      console.error('Error deleting factura:', err);
+      setError(err.message || 'Error al eliminar la factura');
+      throw err;
+    }
   };
 
-  const changeFacturaEstado = (id: string, estado: Factura['estado']) => {
-    setFacturas(prev =>
-      prev.map(f => (f.id === id ? { ...f, estado } : f))
-    );
+  const changeFacturaEstado = async (id: string, estado: Factura['estado']) => {
+    try {
+      const { error: err } = await supabase
+        .from('facturas')
+        .update({ estado })
+        .eq('id', id);
+      if (err) throw err;
+
+      await fetchFacturas();
+    } catch (err: any) {
+      console.error('Error changing factura state:', err);
+      setError(err.message || 'Error al cambiar el estado de la factura');
+      throw err;
+    }
   };
 
   return {
     facturas,
+    loading,
+    error,
     addFactura,
     updateFactura,
     deleteFactura,

@@ -1,146 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Client, Obra, Presupuesto, Factura, Documento, Nota, HistorialEntry } from '../types/client';
+import { supabase } from '../lib/supabaseClient';
 
-// Initial Mock Data
-const INITIAL_CLIENTS: Client[] = [
-  {
-    id: 'cli_1',
-    codigo: 'VER-000124',
-    nombre: 'Alejandro',
-    apellidos: 'Sanz Torres',
-    empresa: 'Construcciones Levantinas S.L.',
-    nifCif: 'B98765432',
-    telefono: '963456789',
-    movil: '600123456',
-    email: 'a.sanz@construccioneslevantinas.com',
-    direccion: 'Avenida del Puerto 45, Planta 3',
-    codigoPostal: '46021',
-    ciudad: 'Valencia',
-    provincia: 'Valencia',
-    iban: 'ES2100491500051234567890',
-    observaciones: 'Cliente preferente de cuentas corporativas. Requiere facturación agrupada por obra.',
-    estado: 'Activo',
-    fuenteLead: 'Showroom',
-    consentimientoRGPD: true,
-    fechaConsentimiento: '2026-01-15T09:30:00.000Z',
-    createdAt: '2026-01-15T09:30:00.000Z'
-  },
-  {
-    id: 'cli_2',
-    codigo: 'VER-000125',
-    nombre: 'Sofía',
-    apellidos: 'Gómez Ruiz',
-    empresa: 'Inmobiliaria Madrileña S.A.',
-    nifCif: 'A87654321',
-    telefono: '915678901',
-    movil: '622987654',
-    email: 'sofia.gomez@inmomadrid.es',
-    direccion: 'Paseo de la Castellana 112',
-    codigoPostal: '28046',
-    ciudad: 'Madrid',
-    provincia: 'Madrid',
-    iban: 'ES9800811000089876543210',
-    observaciones: 'Interesados en reformas de locales de retail para su posterior alquiler.',
-    estado: 'Activo',
-    fuenteLead: 'Web',
-    consentimientoRGPD: true,
-    fechaConsentimiento: '2026-02-20T11:15:00.000Z',
-    createdAt: '2026-02-20T11:15:00.000Z'
-  },
-  {
-    id: 'cli_3',
-    codigo: 'VER-000126',
-    nombre: 'Manuel',
-    apellidos: 'Benítez Ramos',
-    empresa: 'Restaurantes del Sur S.L.',
-    nifCif: 'B41098765',
-    telefono: '954123456',
-    movil: '655345678',
-    email: 'mbenitez@restaurantesdelsur.com',
-    direccion: 'Calle Betis 14',
-    codigoPostal: '41010',
-    ciudad: 'Sevilla',
-    provincia: 'Sevilla',
-    iban: 'ES4500730100021122334455',
-    observaciones: 'Nueva franquicia en expansión. Pendiente de aprobación de presupuesto para tercer local.',
-    estado: 'Potencial',
-    fuenteLead: 'Instagram',
-    consentimientoRGPD: false,
-    fechaConsentimiento: null,
-    createdAt: '2026-05-10T14:45:00.000Z'
-  },
-  {
-    id: 'cli_4',
-    codigo: 'VER-000127',
-    nombre: 'María',
-    apellidos: 'López Fernández',
-    empresa: 'Particular',
-    nifCif: '12345678Z',
-    telefono: '932112233',
-    movil: '611445566',
-    email: 'maria.lopez@gmail.com',
-    direccion: 'Carrer de Mallorca 234, 2º 1ª',
-    codigoPostal: '08008',
-    ciudad: 'Barcelona',
-    provincia: 'Barcelona',
-    iban: 'ES3300811500078899001122',
-    observaciones: 'Reforma integral de cocina finalizada con éxito. Muy satisfecha con los plazos.',
-    estado: 'Inactivo',
-    fuenteLead: 'Referido',
-    consentimientoRGPD: true,
-    fechaConsentimiento: '2026-03-05T17:20:00.000Z',
-    createdAt: '2026-03-05T17:20:00.000Z'
-  }
-];
-
-const INITIAL_OBRAS: Obra[] = [
-  {
-    id: 'obr_1',
-    clientId: 'cli_1',
-    codigo: 'OBR-2026-001',
-    titulo: 'Reforma Oficinas Centrales',
-    direccion: 'Polígono Industrial Fuente del Jarro, Calle 4, Paterna',
-    importe: 125000,
-    estado: 'En obra',
-    tipoReforma: 'Integral',
-    metrosCuadrados: 120,
-    fechaInicioPrevista: '2026-02-01',
-    fechaInicioReal: '2026-02-01',
-    fechaFinPrevista: null,
-    fechaFinReal: null
-  },
-  {
-    id: 'obr_2',
-    clientId: 'cli_1',
-    codigo: 'OBR-2026-002',
-    titulo: 'Habilitación de Almacén logístico',
-    direccion: 'Sector 3, Parcela 12, Loriguilla',
-    importe: 45000,
-    estado: 'Presupuesto',
-    tipoReforma: 'Otro',
-    metrosCuadrados: 350,
-    fechaInicioPrevista: '2026-07-15',
-    fechaInicioReal: null,
-    fechaFinPrevista: null,
-    fechaFinReal: null
-  },
-  {
-    id: 'obr_3',
-    clientId: 'cli_2',
-    codigo: 'OBR-2026-003',
-    titulo: 'Adecuación Local Comercial de Modas',
-    direccion: 'Calle Fuencarral 34, Madrid',
-    importe: 68000,
-    estado: 'Entregada',
-    tipoReforma: 'Integral',
-    metrosCuadrados: 85,
-    fechaInicioPrevista: '2026-03-10',
-    fechaInicioReal: '2026-03-10',
-    fechaFinPrevista: null,
-    fechaFinReal: null
-  }
-];
-
+// Initial Mock Data fallbacks if localStorage is empty
 const INITIAL_PRESUPUESTOS: Presupuesto[] = [
   {
     id: 'pre_1',
@@ -232,99 +94,156 @@ const INITIAL_FACTURAS: Factura[] = [
   }
 ];
 
-const INITIAL_DOCUMENTOS: Documento[] = [
-  {
-    id: 'doc_1',
-    clientId: 'cli_1',
-    nombre: 'Planos_Distribucion_Oficinas_V2.pdf',
-    tipo: 'PDF',
-    tamano: '3.4 MB',
-    fechaSubida: '2026-01-18'
-  },
-  {
-    id: 'doc_2',
-    clientId: 'cli_1',
-    nombre: 'Presupuesto_Firmado_Sello.pdf',
-    tipo: 'PDF',
-    tamano: '1.2 MB',
-    fechaSubida: '2026-02-02'
-  },
-  {
-    id: 'doc_3',
-    clientId: 'cli_2',
-    nombre: 'Fotografias_Estado_Previo_Fuencarral.zip',
-    tipo: 'ZIP',
-    tamano: '24.5 MB',
-    fechaSubida: '2026-03-08'
-  }
-];
+// Mappings between frontend types and Supabase snake_case tables
+function clientFromRow(row: any): Client {
+  return {
+    id: row.id,
+    codigo: row.codigo,
+    nombre: row.nombre,
+    apellidos: row.apellidos || '',
+    empresa: row.empresa || '',
+    nifCif: row.nif_cif || '',
+    telefono: row.telefono || '',
+    movil: row.movil || '',
+    email: row.email || '',
+    direccion: row.direccion || '',
+    codigoPostal: row.codigo_postal || '',
+    ciudad: row.ciudad || '',
+    provincia: row.provincia || '',
+    iban: row.iban || '',
+    observaciones: row.observaciones || '',
+    estado: row.estado || 'Activo',
+    fuenteLead: row.fuente_lead || 'Otro',
+    consentimientoRGPD: !!row.consentimiento_rgpd,
+    fechaConsentimiento: row.fecha_consentimiento || null,
+    createdAt: row.created_at || new Date().toISOString()
+  };
+}
 
-const INITIAL_NOTAS: Nota[] = [
-  {
-    id: 'not_1',
-    clientId: 'cli_1',
-    contenido: 'Reunión inicial con Alejandro. Tienen prisa por empezar la demolición para cumplir los plazos de traslado corporativo de su plantilla.',
-    fechaCreacion: '2026-01-16T10:00:00.000Z',
-    autor: 'Laura Domenech (Gestor de Proyectos)'
-  },
-  {
-    id: 'not_2',
-    clientId: 'cli_1',
-    contenido: 'Solicitan incluir luminarias LED de bajo consumo y regulación de intensidad domótica en la sala de juntas principal.',
-    fechaCreacion: '2026-01-22T16:45:00.000Z',
-    autor: 'Laura Domenech (Gestor de Proyectos)'
-  },
-  {
-    id: 'not_3',
-    clientId: 'cli_3',
-    contenido: 'Se ha enviado el proyecto técnico por email. Manuel comenta que lo revisará con su socio financiero antes del fin de semana.',
-    fechaCreacion: '2026-05-19T09:12:00.000Z',
-    autor: 'Carlos Ibáñez (Técnico)'
-  }
-];
+function clientToRow(c: Partial<Client>): any {
+  const row: any = {};
+  if (c.id !== undefined) row.id = c.id;
+  if (c.codigo !== undefined) row.codigo = c.codigo;
+  if (c.nombre !== undefined) row.nombre = c.nombre;
+  if (c.apellidos !== undefined) row.apellidos = c.apellidos;
+  if (c.empresa !== undefined) row.empresa = c.empresa;
+  if (c.nifCif !== undefined) row.nif_cif = c.nifCif;
+  if (c.telefono !== undefined) row.telefono = c.telefono;
+  if (c.movil !== undefined) row.movil = c.movil;
+  if (c.email !== undefined) row.email = c.email;
+  if (c.direccion !== undefined) row.direccion = c.direccion;
+  if (c.codigoPostal !== undefined) row.codigo_postal = c.codigoPostal;
+  if (c.ciudad !== undefined) row.ciudad = c.ciudad;
+  if (c.provincia !== undefined) row.provincia = c.provincia;
+  if (c.iban !== undefined) row.iban = c.iban;
+  if (c.observaciones !== undefined) row.observaciones = c.observaciones;
+  if (c.estado !== undefined) row.estado = c.estado;
+  if (c.fuenteLead !== undefined) row.fuente_lead = c.fuenteLead;
+  if (c.consentimientoRGPD !== undefined) row.consentimiento_rgpd = c.consentimientoRGPD;
+  if (c.fechaConsentimiento !== undefined) row.fecha_consentimiento = c.fechaConsentimiento;
+  if (c.createdAt !== undefined) row.created_at = c.createdAt;
+  return row;
+}
 
-const INITIAL_HISTORIAL: HistorialEntry[] = [
-  {
-    id: 'his_1',
-    clientId: 'cli_1',
-    accion: 'Creación de Cliente',
-    detalle: 'El cliente fue registrado con código VER-000124 en el sistema Verini CRM.',
-    fecha: '2026-01-15T09:30:00.000Z',
-    usuario: 'Laura Domenech'
-  },
-  {
-    id: 'his_2',
-    clientId: 'cli_1',
-    accion: 'Presupuesto Aceptado',
-    detalle: 'Aprobación del presupuesto PRE-2026-001 (Fase I: Demolición y Tabiquería) por importe de 35.000 €.',
-    fecha: '2026-01-20T12:00:00.000Z',
-    usuario: 'Laura Domenech'
-  },
-  {
-    id: 'his_3',
-    clientId: 'cli_1',
-    accion: 'Obra Iniciada',
-    detalle: 'Se cambia el estado de la obra "Reforma Oficinas Centrales" a "En curso".',
-    fecha: '2026-02-01T08:00:00.000Z',
-    usuario: 'Sistema'
-  },
-  {
-    id: 'his_4',
-    clientId: 'cli_1',
-    accion: 'Factura Emitida',
-    detalle: 'Emitida factura FAC-2026-012 por valor de 42.350 € (con IVA).',
-    fecha: '2026-02-15T10:15:00.000Z',
-    usuario: 'Administración'
-  },
-  {
-    id: 'his_5',
-    clientId: 'cli_1',
-    accion: 'Factura Cobrada',
-    detalle: 'Confirmado el ingreso bancario correspondiente a la factura FAC-2026-012.',
-    fecha: '2026-02-18T14:22:00.000Z',
-    usuario: 'Administración'
-  }
-];
+function docFromRow(row: any): Documento {
+  return {
+    id: row.id,
+    clientId: row.cliente_id,
+    nombre: row.nombre,
+    tipo: row.tipo,
+    tamano: row.tamano || '',
+    fechaSubida: row.fecha_subida
+  };
+}
+
+function docToRow(d: Partial<Documento>): any {
+  const row: any = {};
+  if (d.id !== undefined) row.id = d.id;
+  if (d.clientId !== undefined) row.cliente_id = d.clientId;
+  if (d.nombre !== undefined) row.nombre = d.nombre;
+  if (d.tipo !== undefined) row.tipo = d.tipo;
+  if (d.tamano !== undefined) row.tamano = d.tamano;
+  if (d.fechaSubida !== undefined) row.fecha_subida = d.fechaSubida;
+  return row;
+}
+
+function notaFromRow(row: any): Nota {
+  return {
+    id: row.id,
+    clientId: row.cliente_id,
+    contenido: row.contenido,
+    fechaCreacion: row.fecha_creacion,
+    autor: row.autor
+  };
+}
+
+function notaToRow(n: Partial<Nota>): any {
+  const row: any = {};
+  if (n.id !== undefined) row.id = n.id;
+  if (n.clientId !== undefined) row.cliente_id = n.clientId;
+  if (n.contenido !== undefined) row.contenido = n.contenido;
+  if (n.fechaCreacion !== undefined) row.fecha_creacion = n.fechaCreacion;
+  if (n.autor !== undefined) row.autor = n.autor;
+  return row;
+}
+
+function histFromRow(row: any): HistorialEntry {
+  return {
+    id: row.id,
+    clientId: row.cliente_id,
+    accion: row.accion,
+    detalle: row.detalle,
+    fecha: row.fecha,
+    usuario: row.usuario
+  };
+}
+
+function histToRow(h: Partial<HistorialEntry>): any {
+  const row: any = {};
+  if (h.id !== undefined) row.id = h.id;
+  if (h.clientId !== undefined) row.cliente_id = h.clientId;
+  if (h.accion !== undefined) row.accion = h.accion;
+  if (h.detalle !== undefined) row.detalle = h.detalle;
+  if (h.fecha !== undefined) row.fecha = h.fecha;
+  if (h.usuario !== undefined) row.usuario = h.usuario;
+  return row;
+}
+
+function obraFromRow(row: any): Obra {
+  return {
+    id: row.id,
+    codigo: row.codigo,
+    titulo: row.titulo,
+    clientId: row.cliente_id,
+    tipoReforma: row.tipo_reforma,
+    metrosCuadrados: Number(row.metros_cuadrados),
+    direccion: row.direccion,
+    fechaInicioPrevista: row.fecha_inicio_prevista,
+    fechaInicioReal: row.fecha_inicio_real,
+    fechaFinPrevista: row.fecha_fin_prevista,
+    fechaFinReal: row.fecha_fin_real,
+    estado: row.estado,
+    importe: Number(row.importe),
+  };
+}
+
+function obraToRow(obra: Partial<Obra>): any {
+  const row: any = {};
+  if (obra.id !== undefined) row.id = obra.id;
+  if (obra.codigo !== undefined) row.codigo = obra.codigo;
+  if (obra.titulo !== undefined) row.titulo = obra.titulo;
+  if (obra.clientId !== undefined) row.cliente_id = obra.clientId;
+  if (obra.tipoReforma !== undefined) row.tipo_reforma = obra.tipoReforma;
+  if (obra.metrosCuadrados !== undefined) row.metros_cuadrados = obra.metrosCuadrados;
+  if (obra.direccion !== undefined) row.direccion = obra.direccion;
+  if (obra.fechaInicioPrevista !== undefined) row.fecha_inicio_prevista = obra.fechaInicioPrevista;
+  if (obra.fechaInicioReal !== undefined) row.fecha_inicio_real = obra.fechaInicioReal;
+  if (obra.fechaFinPrevista !== undefined) row.fecha_fin_prevista = obra.fechaFinPrevista;
+  if (obra.fechaFinReal !== undefined) row.fecha_fin_real = obra.fechaFinReal;
+  if (obra.estado !== undefined) row.estado = obra.estado;
+  if (obra.importe !== undefined) row.importe = obra.importe;
+  return row;
+}
 
 export function useClients() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -334,166 +253,217 @@ export function useClients() {
   const [documentos, setDocumentos] = useState<Documento[]>([]);
   const [notas, setNotas] = useState<Nota[]>([]);
   const [historial, setHistorial] = useState<HistorialEntry[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load from LocalStorage or seed defaults
+  // Fetch all Supabase data
+  const fetchAllData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [cliRes, obrasRes, docsRes, notasRes, histRes] = await Promise.all([
+        supabase.from('clientes').select('*').order('created_at', { ascending: false }),
+        supabase.from('obras').select('*').order('created_at', { ascending: false }),
+        supabase.from('documentos_cliente').select('*').order('fecha_subida', { ascending: false }),
+        supabase.from('notas_cliente').select('*').order('fecha_creacion', { ascending: false }),
+        supabase.from('historial_cliente').select('*').order('fecha', { ascending: false })
+      ]);
+
+      if (cliRes.error) throw cliRes.error;
+      if (obrasRes.error) throw obrasRes.error;
+      if (docsRes.error) throw docsRes.error;
+      if (notasRes.error) throw notasRes.error;
+      if (histRes.error) throw histRes.error;
+
+      if (cliRes.data) setClients(cliRes.data.map(clientFromRow));
+      if (obrasRes.data) setObras(obrasRes.data.map(obraFromRow));
+      if (docsRes.data) setDocumentos(docsRes.data.map(docFromRow));
+      if (notasRes.data) setNotas(notasRes.data.map(notaFromRow));
+      if (histRes.data) setHistorial(histRes.data.map(histFromRow));
+    } catch (err: any) {
+      console.error('Error fetching clients data from Supabase:', err);
+      setError(err.message || 'Error al cargar los datos de clientes');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Initial load
   useEffect(() => {
-    const storedClients = localStorage.getItem('verini_clients');
-    const storedObras = localStorage.getItem('verini_obras');
+    fetchAllData();
+
+    // Budgets & Invoices local storage fallback (not in DB schema)
     const storedPresupuestos = localStorage.getItem('verini_presupuestos');
     const storedFacturas = localStorage.getItem('verini_facturas');
-    const storedDocumentos = localStorage.getItem('verini_documentos');
-    const storedNotas = localStorage.getItem('verini_notas');
-    const storedHistorial = localStorage.getItem('verini_historial');
 
-    if (storedClients) setClients(JSON.parse(storedClients));
-    else {
-      localStorage.setItem('verini_clients', JSON.stringify(INITIAL_CLIENTS));
-      setClients(INITIAL_CLIENTS);
-    }
-
-    if (storedObras) setObras(JSON.parse(storedObras));
-    else {
-      localStorage.setItem('verini_obras', JSON.stringify(INITIAL_OBRAS));
-      setObras(INITIAL_OBRAS);
-    }
-
-    if (storedPresupuestos) setPresupuestos(JSON.parse(storedPresupuestos));
-    else {
+    if (storedPresupuestos) {
+      setPresupuestos(JSON.parse(storedPresupuestos));
+    } else {
       localStorage.setItem('verini_presupuestos', JSON.stringify(INITIAL_PRESUPUESTOS));
       setPresupuestos(INITIAL_PRESUPUESTOS);
     }
 
-    if (storedFacturas) setFacturas(JSON.parse(storedFacturas));
-    else {
+    if (storedFacturas) {
+      setFacturas(JSON.parse(storedFacturas));
+    } else {
       localStorage.setItem('verini_facturas', JSON.stringify(INITIAL_FACTURAS));
       setFacturas(INITIAL_FACTURAS);
     }
+  }, [fetchAllData]);
 
-    if (storedDocumentos) setDocumentos(JSON.parse(storedDocumentos));
-    else {
-      localStorage.setItem('verini_documentos', JSON.stringify(INITIAL_DOCUMENTOS));
-      setDocumentos(INITIAL_DOCUMENTOS);
-    }
-
-    if (storedNotas) setNotas(JSON.parse(storedNotas));
-    else {
-      localStorage.setItem('verini_notas', JSON.stringify(INITIAL_NOTAS));
-      setNotas(INITIAL_NOTAS);
-    }
-
-    if (storedHistorial) setHistorial(JSON.parse(storedHistorial));
-    else {
-      localStorage.setItem('verini_historial', JSON.stringify(INITIAL_HISTORIAL));
-      setHistorial(INITIAL_HISTORIAL);
-    }
-  }, []);
-
-  const saveToStorage = (key: string, data: any) => {
-    localStorage.setItem(key, JSON.stringify(data));
-  };
-
-  // Helper to generate the next unique VER-XXXXXX client code
-  const generateClientCode = (currentClients: Client[]) => {
-    const codes = currentClients.map(c => {
+  // Helper to generate unique VER-XXXXXX client code
+  const generateClientCode = (): string => {
+    const codes = clients.map(c => {
       const match = c.codigo.match(/VER-(\d+)/);
       return match ? parseInt(match[1], 10) : 0;
     });
-    const maxCodeNum = codes.length > 0 ? Math.max(...codes) : 123; // Start from 123 if empty
+    const maxCodeNum = codes.length > 0 ? Math.max(...codes) : 123;
     const nextCodeNum = maxCodeNum + 1;
     return `VER-${nextCodeNum.toString().padStart(6, '0')}`;
   };
 
-  const addClient = (newClientFields: Omit<Client, 'id' | 'codigo' | 'createdAt'>) => {
-    const nextCode = generateClientCode(clients);
-    const newClient: Client = {
-      ...newClientFields,
-      id: `cli_${Date.now()}`,
-      codigo: nextCode,
-      createdAt: new Date().toISOString()
-    };
+  // Log into history
+  const addHistorialEntry = async (clientId: string, accion: string, detalle: string, usuario: string) => {
+    try {
+      const newEntry: HistorialEntry = {
+        id: `his_${Date.now()}`,
+        clientId,
+        accion,
+        detalle,
+        fecha: new Date().toISOString(),
+        usuario
+      };
 
-    const updated = [newClient, ...clients];
-    setClients(updated);
-    saveToStorage('verini_clients', updated);
+      const { error: err } = await supabase
+        .from('historial_cliente')
+        .insert([histToRow(newEntry)]);
+      if (err) throw err;
 
-    // Automatically log into history
-    addHistorialEntry(newClient.id, 'Creación de Cliente', `El cliente fue registrado con código ${newClient.codigo}.`, 'Administrador');
-
-    return newClient;
+      // Update local history array dynamically
+      const { data, error: fetchErr } = await supabase
+        .from('historial_cliente')
+        .select('*')
+        .order('fecha', { ascending: false });
+      if (!fetchErr && data) {
+        setHistorial(data.map(histFromRow));
+      }
+    } catch (err) {
+      console.error('Error adding history entry:', err);
+    }
   };
 
-  const updateClient = (id: string, updatedFields: Partial<Client>) => {
-    const updated = clients.map(c => {
-      if (c.id === id) {
-        // Log changes
+  const addClient = async (newClientFields: Omit<Client, 'id' | 'codigo' | 'createdAt'>) => {
+    try {
+      const nextCode = generateClientCode();
+      const newId = `cli_${Date.now()}`;
+      const newClient: Client = {
+        ...newClientFields,
+        id: newId,
+        codigo: nextCode,
+        createdAt: new Date().toISOString()
+      };
+
+      const { error: err } = await supabase
+        .from('clientes')
+        .insert([clientToRow(newClient)]);
+      if (err) throw err;
+
+      await addHistorialEntry(newId, 'Creación de Cliente', `El cliente fue registrado con código ${newClient.codigo}.`, 'Administrador');
+      await fetchAllData();
+      return newClient;
+    } catch (err: any) {
+      console.error('Error adding client:', err);
+      setError(err.message || 'Error al añadir el cliente');
+      throw err;
+    }
+  };
+
+  const updateClient = async (id: string, updatedFields: Partial<Client>) => {
+    try {
+      const current = clients.find(c => c.id === id);
+      if (current) {
         const changedFields: string[] = [];
         Object.keys(updatedFields).forEach(k => {
           const key = k as keyof Client;
-          if (c[key] !== updatedFields[key]) {
+          if (current[key] !== updatedFields[key]) {
             changedFields.push(k);
           }
         });
         if (changedFields.length > 0) {
-          addHistorialEntry(id, 'Actualización de Cliente', `Campos actualizados: ${changedFields.join(', ')}.`, 'Administrador');
+          await addHistorialEntry(id, 'Actualización de Cliente', `Campos actualizados: ${changedFields.join(', ')}.`, 'Administrador');
         }
-        return { ...c, ...updatedFields };
       }
-      return c;
-    });
 
-    setClients(updated);
-    saveToStorage('verini_clients', updated);
+      const { error: err } = await supabase
+        .from('clientes')
+        .update(clientToRow(updatedFields))
+        .eq('id', id);
+      if (err) throw err;
+
+      await fetchAllData();
+    } catch (err: any) {
+      console.error('Error updating client:', err);
+      setError(err.message || 'Error al actualizar el cliente');
+      throw err;
+    }
   };
 
-  const deleteClient = (id: string) => {
-    const target = clients.find(c => c.id === id);
-    const updatedClients = clients.filter(c => c.id !== id);
-    setClients(updatedClients);
-    saveToStorage('verini_clients', updatedClients);
+  const deleteClient = async (id: string) => {
+    try {
+      // Cascade delete client related items in database manually
+      await Promise.all([
+        supabase.from('documentos_cliente').delete().eq('cliente_id', id),
+        supabase.from('notas_cliente').delete().eq('cliente_id', id),
+        supabase.from('historial_cliente').delete().eq('cliente_id', id),
+        supabase.from('obras').delete().eq('cliente_id', id)
+      ]);
 
-    // Cascade delete linked entities (optional but good CRM behavior, or keep them)
-    // For simplicity, let's also clean them up or keep them in storage.
-    // Let's filter related entities to avoid phantom references
-    const updatedObras = obras.filter(o => o.clientId !== id);
-    setObras(updatedObras);
-    saveToStorage('verini_obras', updatedObras);
+      const { error: err } = await supabase
+        .from('clientes')
+        .delete()
+        .eq('id', id);
+      if (err) throw err;
 
-    const updatedPresupuestos = presupuestos.filter(p => p.clientId !== id);
-    setPresupuestos(updatedPresupuestos);
-    saveToStorage('verini_presupuestos', updatedPresupuestos);
+      // Clean up localStorage budgets and invoices
+      const updatedPresupuestos = presupuestos.filter(p => p.clientId !== id);
+      setPresupuestos(updatedPresupuestos);
+      localStorage.setItem('verini_presupuestos', JSON.stringify(updatedPresupuestos));
 
-    const updatedFacturas = facturas.filter(f => f.clientId !== id);
-    setFacturas(updatedFacturas);
-    saveToStorage('verini_facturas', updatedFacturas);
+      const updatedFacturas = facturas.filter(f => f.clientId !== id);
+      setFacturas(updatedFacturas);
+      localStorage.setItem('verini_facturas', JSON.stringify(updatedFacturas));
 
-    const updatedDocs = documentos.filter(d => d.clientId !== id);
-    setDocumentos(updatedDocs);
-    saveToStorage('verini_documentos', updatedDocs);
-
-    const updatedNotes = notas.filter(n => n.clientId !== id);
-    setNotas(updatedNotes);
-    saveToStorage('verini_notas', updatedNotes);
-
-    const updatedHist = historial.filter(h => h.clientId !== id);
-    setHistorial(updatedHist);
-    saveToStorage('verini_historial', updatedHist);
+      await fetchAllData();
+    } catch (err: any) {
+      console.error('Error deleting client:', err);
+      setError(err.message || 'Error al eliminar el cliente');
+      throw err;
+    }
   };
 
-  const addObra = (clientId: string, obraFields: Omit<Obra, 'id' | 'codigo' | 'clientId'>) => {
-    const nextIndex = obras.length + 1;
-    const code = `OBR-2026-${nextIndex.toString().padStart(3, '0')}`;
-    const newObra: Obra = {
-      ...obraFields,
-      id: `obr_${Date.now()}`,
-      clientId,
-      codigo: code
-    };
+  const addObra = async (clientId: string, obraFields: Omit<Obra, 'id' | 'codigo' | 'clientId'>) => {
+    try {
+      const nextIndex = obras.length + 1;
+      const code = `OBR-2026-${nextIndex.toString().padStart(3, '0')}`;
+      const newId = `obr_${Date.now()}`;
+      const newObra: Obra = {
+        ...obraFields,
+        id: newId,
+        clientId,
+        codigo: code
+      };
 
-    const updated = [...obras, newObra];
-    setObras(updated);
-    saveToStorage('verini_obras', updated);
+      const { error: err } = await supabase
+        .from('obras')
+        .insert([obraToRow(newObra)]);
+      if (err) throw err;
 
-    addHistorialEntry(clientId, 'Nueva Obra Creada', `Se registró la obra "${newObra.titulo}" con código ${newObra.codigo}.`, 'Gestor de Obras');
+      await addHistorialEntry(clientId, 'Nueva Obra Creada', `Se registró la obra "${newObra.titulo}" con código ${newObra.codigo}.`, 'Gestor de Obras');
+      await fetchAllData();
+    } catch (err: any) {
+      console.error('Error adding obra from clients:', err);
+      setError(err.message || 'Error al añadir la obra');
+      throw err;
+    }
   };
 
   const addPresupuesto = (clientId: string, presFields: Omit<Presupuesto, 'id' | 'codigo' | 'clientId'>) => {
@@ -508,11 +478,10 @@ export function useClients() {
 
     const updated = [...presupuestos, newPresupuesto];
     setPresupuestos(updated);
-    saveToStorage('verini_presupuestos', updated);
+    localStorage.setItem('verini_presupuestos', JSON.stringify(updated));
 
     addHistorialEntry(clientId, 'Presupuesto Creado', `Se generó el presupuesto ${newPresupuesto.codigo}: "${newPresupuesto.titulo}" por ${newPresupuesto.importe.toLocaleString('es-ES')} €.`, 'Administración');
     
-    // Also simulate creating an automatic invoice when a budget is ACCEPTED, just for completeness if they test
     if (newPresupuesto.estado === 'Aceptado') {
       createAutoInvoice(clientId, newPresupuesto);
     }
@@ -540,69 +509,77 @@ export function useClients() {
 
     const updatedFacturas = [...facturas, newFactura];
     setFacturas(updatedFacturas);
-    saveToStorage('verini_facturas', updatedFacturas);
+    localStorage.setItem('verini_facturas', JSON.stringify(updatedFacturas));
     addHistorialEntry(clientId, 'Factura Emitida', `Emitida de forma automática factura ${newFactura.codigo} por aceptación de presupuesto.`, 'Facturación Automática');
   };
 
-  const addDocumento = (clientId: string, docFields: Omit<Documento, 'id' | 'fechaSubida' | 'clientId'>) => {
-    const newDoc: Documento = {
-      ...docFields,
-      id: `doc_${Date.now()}`,
-      clientId,
-      fechaSubida: new Date().toISOString().split('T')[0]
-    };
+  const addDocumento = async (clientId: string, docFields: Omit<Documento, 'id' | 'fechaSubida' | 'clientId'>) => {
+    try {
+      const newId = `doc_${Date.now()}`;
+      const newDoc: Documento = {
+        ...docFields,
+        id: newId,
+        clientId,
+        fechaSubida: new Date().toISOString().split('T')[0]
+      };
 
-    const updated = [newDoc, ...documentos];
-    setDocumentos(updated);
-    saveToStorage('verini_documentos', updated);
+      const { error: err } = await supabase
+        .from('documentos_cliente')
+        .insert([docToRow(newDoc)]);
+      if (err) throw err;
 
-    addHistorialEntry(clientId, 'Documento Subido', `Se subió el archivo "${newDoc.nombre}" (${newDoc.tamano}).`, 'Usuario');
+      await addHistorialEntry(clientId, 'Documento Subido', `Se subió el archivo "${newDoc.nombre}" (${newDoc.tamano}).`, 'Usuario');
+      await fetchAllData();
+    } catch (err: any) {
+      console.error('Error adding client document:', err);
+      setError(err.message || 'Error al añadir el documento');
+      throw err;
+    }
   };
 
-  const addNota = (clientId: string, contenido: string, autor: string) => {
-    const newNota: Nota = {
-      id: `not_${Date.now()}`,
-      clientId,
-      contenido,
-      fechaCreacion: new Date().toISOString(),
-      autor
-    };
+  const addNota = async (clientId: string, contenido: string, autor: string) => {
+    try {
+      const newId = `not_${Date.now()}`;
+      const newNota: Nota = {
+        id: newId,
+        clientId,
+        contenido,
+        fechaCreacion: new Date().toISOString(),
+        autor
+      };
 
-    const updated = [newNota, ...notas];
-    setNotas(updated);
-    saveToStorage('verini_notas', updated);
+      const { error: err } = await supabase
+        .from('notas_cliente')
+        .insert([notaToRow(newNota)]);
+      if (err) throw err;
 
-    addHistorialEntry(clientId, 'Nota Añadida', `Añadida nueva anotación por ${autor}.`, autor);
+      await addHistorialEntry(clientId, 'Nota Añadida', `Añadida nueva anotación por ${autor}.`, autor);
+      await fetchAllData();
+    } catch (err: any) {
+      console.error('Error adding client note:', err);
+      setError(err.message || 'Error al añadir la nota');
+      throw err;
+    }
   };
 
-  const addHistorialEntry = (clientId: string, accion: string, detalle: string, usuario: string) => {
-    const newEntry: HistorialEntry = {
-      id: `his_${Date.now()}`,
-      clientId,
-      accion,
-      detalle,
-      fecha: new Date().toISOString(),
-      usuario
-    };
+  const updateObraStatus = async (id: string, estado: Obra['estado']) => {
+    try {
+      const current = obras.find(o => o.id === id);
+      const { error: err } = await supabase
+        .from('obras')
+        .update({ estado })
+        .eq('id', id);
+      if (err) throw err;
 
-    // We need to fetch and set historial, but since setHistorial runs asynchronously, we must handle updates correctly.
-    setHistorial(prev => {
-      const updated = [newEntry, ...prev];
-      saveToStorage('verini_historial', updated);
-      return updated;
-    });
-  };
-
-  const updateObraStatus = (id: string, estado: Obra['estado']) => {
-    const updated = obras.map(o => {
-      if (o.id === id) {
-        addHistorialEntry(o.clientId, 'Estado de Obra Actualizado', `La obra ${o.codigo} cambió su estado a "${estado}".`, 'Gestor de Obras');
-        return { ...o, estado };
+      if (current) {
+        await addHistorialEntry(current.clientId, 'Estado de Obra Actualizado', `La obra ${current.codigo} cambió su estado a "${estado}".`, 'Gestor de Obras');
       }
-      return o;
-    });
-    setObras(updated);
-    saveToStorage('verini_obras', updated);
+      await fetchAllData();
+    } catch (err: any) {
+      console.error('Error updating obra status:', err);
+      setError(err.message || 'Error al actualizar el estado de la obra');
+      throw err;
+    }
   };
 
   const updatePresupuestoStatus = (id: string, estado: Presupuesto['estado']) => {
@@ -618,7 +595,7 @@ export function useClients() {
     });
     setPresupuestos(prev => {
       const updatedList = updated(prev);
-      saveToStorage('verini_presupuestos', updatedList);
+      localStorage.setItem('verini_presupuestos', JSON.stringify(updatedList));
       return updatedList;
     });
   };
@@ -632,7 +609,7 @@ export function useClients() {
       return f;
     });
     setFacturas(updated);
-    saveToStorage('verini_facturas', updated);
+    localStorage.setItem('verini_facturas', JSON.stringify(updated));
   };
 
   return {
@@ -643,6 +620,8 @@ export function useClients() {
     documentos,
     notas,
     historial,
+    loading,
+    error,
     addClient,
     updateClient,
     deleteClient,
