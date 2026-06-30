@@ -127,7 +127,7 @@ export default function ClientDetail({
 
   // Derived client details
   const clientObras = useMemo(() => obras.filter(o => o.clientId === client.id), [obras, client.id]);
-  const clientPresupuestos = useMemo(() => budgets => budgets.filter(p => p.clientId === client.id), [presupuestos, client.id]);
+  const clientPresupuestos = useMemo(() => presupuestos.filter(p => p.clientId === client.id), [presupuestos, client.id]);
   const clientFacturas = useMemo(() => facturas.filter(f => f.clientId === client.id), [facturas, client.id]);
   const clientDocumentos = useMemo(() => documentos.filter(d => d.clientId === client.id), [documentos, client.id]);
   const clientNotas = useMemo(() => notas.filter(n => n.clientId === client.id), [notas, client.id]);
@@ -138,8 +138,8 @@ export default function ClientDetail({
     const totalInvoiced = clientFacturas.reduce((sum, f) => sum + f.total, 0);
     const totalCollected = clientFacturas.filter(f => f.estado === 'Cobrada').reduce((sum, f) => sum + f.total, 0);
     const pendingCollected = clientFacturas.filter(f => f.estado === 'Emitida' || f.estado === 'Vencida').reduce((sum, f) => sum + f.total, 0);
-    const totalBudgets = clientPresupuestos(presupuestos).reduce((sum, p) => sum + p.importe, 0);
-    const acceptedBudgets = clientPresupuestos(presupuestos).filter(p => p.estado === 'Aceptado').reduce((sum, p) => sum + p.importe, 0);
+    const totalBudgets = clientPresupuestos.reduce((sum, p) => sum + p.importe, 0);
+    const acceptedBudgets = clientPresupuestos.filter(p => p.estado === 'Aceptado').reduce((sum, p) => sum + p.importe, 0);
 
     return {
       totalInvoiced,
@@ -148,7 +148,7 @@ export default function ClientDetail({
       totalBudgets,
       acceptedBudgets
     };
-  }, [clientFacturas, clientPresupuestos, presupuestos]);
+  }, [clientFacturas, clientPresupuestos]);
 
   // Submit handlers
   const handleCreateObraSubmit = (e: React.FormEvent) => {
@@ -404,7 +404,7 @@ export default function ClientDetail({
           {[
             { id: 'generales', label: 'Datos generales', icon: Info },
             { id: 'obras', label: `Obras (${clientObras.length})`, icon: Building2 },
-            { id: 'presupuestos', label: `Presupuestos (${clientPresupuestos(presupuestos).length})`, icon: FileCheck },
+            { id: 'presupuestos', label: `Presupuestos (${clientPresupuestos.length})`, icon: FileCheck },
             { id: 'facturas', label: `Facturas (${clientFacturas.length})`, icon: Receipt },
             { id: 'documentos', label: `Documentos (${clientDocumentos.length})`, icon: FolderOpen },
             { id: 'notas', label: `Notas (${clientNotas.length})`, icon: MessageSquare },
@@ -627,7 +627,7 @@ export default function ClientDetail({
                 </Button>
               </div>
 
-              {clientPresupuestos(presupuestos).length > 0 ? (
+              {clientPresupuestos.length > 0 ? (
                 <div className="overflow-x-auto border border-slate-200 rounded-xl">
                   <Table className="w-full">
                     <TableHeader className="bg-slate-50 text-[11px] font-semibold text-slate-600 border-b border-slate-200">
@@ -642,7 +642,7 @@ export default function ClientDetail({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {clientPresupuestos(presupuestos).map(pres => {
+                      {clientPresupuestos.map(pres => {
                         const linkedObra = obras.find(o => o.id === pres.obraId);
                         return (
                           <TableRow key={pres.id} className="border-b border-slate-100 text-xs hover:bg-slate-50/50">
