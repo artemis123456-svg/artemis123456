@@ -12,7 +12,8 @@ import {
   HelpCircle,
   TrendingUp,
   Truck,
-  Package
+  Package,
+  FileText
 } from 'lucide-react';
 import { Button } from '@/src/components/ui/button';
 
@@ -27,6 +28,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     { name: 'Obras', path: '/obras', icon: Building2 },
     { name: 'Proveedores', path: '/proveedores', icon: Truck },
     { name: 'Productos', path: '/productos', icon: Package },
+    { name: 'Facturas', path: '/facturas', icon: FileText },
   ];
 
   return (

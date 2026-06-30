@@ -5,6 +5,7 @@ import Clients from './views/Clients';
 import Obras from './views/Obras';
 import Proveedores from './views/Proveedores';
 import Productos from './views/Productos';
+import Facturas from './views/Facturas';
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
           <Route path="obras" element={<Obras />} />
           <Route path="proveedores" element={<Proveedores />} />
           <Route path="productos" element={<Productos />} />
+          <Route path="facturas" element={<Facturas />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
