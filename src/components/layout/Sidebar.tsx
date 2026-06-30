@@ -10,7 +10,8 @@ import {
   Menu,
   Building2,
   HelpCircle,
-  TrendingUp
+  TrendingUp,
+  Truck
 } from 'lucide-react';
 import { Button } from '@/src/components/ui/button';
 
@@ -23,6 +24,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const menuItems = [
     { name: 'Clientes', path: '/', icon: Users },
     { name: 'Obras', path: '/obras', icon: Building2 },
+    { name: 'Proveedores', path: '/proveedores', icon: Truck },
   ];
 
   return (
