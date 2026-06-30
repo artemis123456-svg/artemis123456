@@ -21,16 +21,9 @@ export interface Client {
   createdAt: string;
 }
 
-export interface Obra {
-  id: string;
-  clientId: string;
-  codigo: string;
-  titulo: string;
-  direccion: string;
-  presupuestoEstimado: number;
-  estado: 'Planificación' | 'En curso' | 'Finalizada' | 'Pausada';
-  fechaInicio: string;
-}
+import { Obra as ObraNew } from './obra';
+
+export type Obra = ObraNew;
 
 export interface Presupuesto {
   id: string;

@@ -5,11 +5,11 @@ import ClientForm from '../components/clients/ClientForm';
 import ClientDetail from '../components/clients/ClientDetail';
 import { Client } from '../types/client';
 import { Users, TrendingUp } from 'lucide-react';
+import { useObras } from '../hooks/useObras';
 
 export default function Clients() {
   const {
     clients,
-    obras,
     presupuestos,
     facturas,
     documentos,
@@ -18,14 +18,18 @@ export default function Clients() {
     addClient,
     updateClient,
     deleteClient,
-    addObra,
     addPresupuesto,
     addDocumento,
     addNota,
-    updateObraStatus,
     updatePresupuestoStatus,
     updateFacturaStatus,
   } = useClients();
+
+  const {
+    obras,
+    addObra,
+    updateObraStatus
+  } = useObras();
 
   // Workflow state: 'list' | 'detail' | 'create' | 'edit'
   const [viewState, setViewState] = useState<'list' | 'detail' | 'create' | 'edit'>('list');
@@ -137,7 +141,7 @@ export default function Clients() {
           historial={historial}
           onBack={() => setViewState('list')}
           onEdit={handleEditClient}
-          onAddObra={addObra}
+          onAddObra={(clientId, obraData) => addObra({ ...obraData, clientId })}
           onAddPresupuesto={addPresupuesto}
           onAddDocumento={addDocumento}
           onAddNota={addNota}

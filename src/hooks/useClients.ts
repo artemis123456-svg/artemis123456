@@ -100,9 +100,14 @@ const INITIAL_OBRAS: Obra[] = [
     codigo: 'OBR-2026-001',
     titulo: 'Reforma Oficinas Centrales',
     direccion: 'Polígono Industrial Fuente del Jarro, Calle 4, Paterna',
-    presupuestoEstimado: 125000,
-    estado: 'En curso',
-    fechaInicio: '2026-02-01'
+    importe: 125000,
+    estado: 'En obra',
+    tipoReforma: 'Integral',
+    metrosCuadrados: 120,
+    fechaInicioPrevista: '2026-02-01',
+    fechaInicioReal: '2026-02-01',
+    fechaFinPrevista: null,
+    fechaFinReal: null
   },
   {
     id: 'obr_2',
@@ -110,9 +115,14 @@ const INITIAL_OBRAS: Obra[] = [
     codigo: 'OBR-2026-002',
     titulo: 'Habilitación de Almacén logístico',
     direccion: 'Sector 3, Parcela 12, Loriguilla',
-    presupuestoEstimado: 45000,
-    estado: 'Planificación',
-    fechaInicio: '2026-07-15'
+    importe: 45000,
+    estado: 'Presupuesto',
+    tipoReforma: 'Otro',
+    metrosCuadrados: 350,
+    fechaInicioPrevista: '2026-07-15',
+    fechaInicioReal: null,
+    fechaFinPrevista: null,
+    fechaFinReal: null
   },
   {
     id: 'obr_3',
@@ -120,9 +130,14 @@ const INITIAL_OBRAS: Obra[] = [
     codigo: 'OBR-2026-003',
     titulo: 'Adecuación Local Comercial de Modas',
     direccion: 'Calle Fuencarral 34, Madrid',
-    presupuestoEstimado: 68000,
-    estado: 'Finalizada',
-    fechaInicio: '2026-03-10'
+    importe: 68000,
+    estado: 'Entregada',
+    tipoReforma: 'Integral',
+    metrosCuadrados: 85,
+    fechaInicioPrevista: '2026-03-10',
+    fechaInicioReal: '2026-03-10',
+    fechaFinPrevista: null,
+    fechaFinReal: null
   }
 ];
 

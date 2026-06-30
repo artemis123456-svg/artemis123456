@@ -108,7 +108,8 @@ export default function ClientDetail({
   const [obraTitulo, setObraTitulo] = useState('');
   const [obraDireccion, setObraDireccion] = useState('');
   const [obraPresupuesto, setObraPresupuesto] = useState('');
-  const [obraEstado, setObraEstado] = useState<Obra['estado']>('En curso');
+  const [obraEstado, setObraEstado] = useState<Obra['estado']>('En obra');
+  const [obraTipoReforma, setObraTipoReforma] = useState<Obra['tipoReforma']>('Integral');
   const [obraFecha, setObraFecha] = useState('');
 
   // New Presupuesto Fields
@@ -158,16 +159,22 @@ export default function ClientDetail({
     onAddObra(client.id, {
       titulo: obraTitulo.trim(),
       direccion: obraDireccion.trim() || client.direccion,
-      presupuestoEstimado: Number(obraPresupuesto) || 0,
+      tipoReforma: obraTipoReforma,
+      metrosCuadrados: 0,
+      fechaInicioPrevista: obraFecha || new Date().toISOString().split('T')[0],
+      fechaInicioReal: null,
+      fechaFinPrevista: null,
+      fechaFinReal: null,
       estado: obraEstado,
-      fechaInicio: obraFecha || new Date().toISOString().split('T')[0]
+      importe: Number(obraPresupuesto) || 0
     });
 
     // Reset
     setObraTitulo('');
     setObraDireccion('');
     setObraPresupuesto('');
-    setObraEstado('En curso');
+    setObraEstado('En obra');
+    setObraTipoReforma('Integral');
     setObraFecha('');
     setIsObraModalOpen(false);
   };
@@ -591,9 +598,9 @@ export default function ClientDetail({
                           <h4 className="text-xs font-bold text-slate-950 leading-snug">{obra.titulo}</h4>
                         </div>
                         <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold leading-none
-                          ${obra.estado === 'En curso' ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/10' :
-                            obra.estado === 'Planificación' ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/10' :
-                            obra.estado === 'Pausada' ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-600/10' :
+                          ${obra.estado === 'En obra' ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/10' :
+                            obra.estado === 'Aceptada' ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/10' :
+                            obra.estado === 'Entregada' ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/10' :
                             'bg-slate-100 text-slate-600 ring-1 ring-slate-600/10'}`}
                         >
                           {obra.estado}
@@ -607,18 +614,18 @@ export default function ClientDetail({
                         </p>
                         <p className="flex items-center gap-1.5">
                           <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                          <span>Inicio: {new Date(obra.fechaInicio).toLocaleDateString('es-ES')}</span>
+                          <span>Inicio: {obra.fechaInicioPrevista ? new Date(obra.fechaInicioPrevista).toLocaleDateString('es-ES') : 'Sin fecha'}</span>
                         </p>
                         <p className="flex items-center gap-1.5 font-semibold text-slate-800">
                           <DollarSign className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                          <span>Ppto: {obra.presupuestoEstimado.toLocaleString('es-ES')} €</span>
+                          <span>Ppto: {obra.importe.toLocaleString('es-ES')} €</span>
                         </p>
                       </div>
 
                       {onUpdateObraStatus && (
                         <div className="flex items-center gap-1.5 justify-end border-t border-slate-100 pt-2.5 text-[11px]">
                           <span className="text-slate-400 text-[10px] font-medium mr-1">Cambiar estado:</span>
-                          {(['Planificación', 'En curso', 'Finalizada', 'Pausada'] as Obra['estado'][]).map((st) => (
+                          {(['Presupuesto', 'Aceptada', 'En obra', 'Entregada'] as Obra['estado'][]).map((st) => (
                             <button
                               key={st}
                               disabled={obra.estado === st}
@@ -1031,6 +1038,20 @@ export default function ClientDetail({
               </div>
 
               <div className="grid grid-cols-4 items-center gap-4">
+                <label className="text-right font-semibold text-slate-500">Tipo de Reforma</label>
+                <select 
+                  value={obraTipoReforma} 
+                  onChange={e => setObraTipoReforma(e.target.value as any)}
+                  className="col-span-3 text-xs rounded-lg border border-slate-200 bg-white p-2.5 outline-none focus:border-indigo-500"
+                >
+                  <option value="Cocina">Cocina</option>
+                  <option value="Baño">Baño</option>
+                  <option value="Integral">Integral</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
                 <label className="text-right font-semibold text-slate-500">Importe (€)</label>
                 <Input 
                   type="number"
@@ -1048,10 +1069,10 @@ export default function ClientDetail({
                   onChange={e => setObraEstado(e.target.value as any)}
                   className="col-span-3 text-xs rounded-lg border border-slate-200 bg-white p-2.5 outline-none focus:border-indigo-500"
                 >
-                  <option value="Planificación">Planificación</option>
-                  <option value="En curso">En curso</option>
-                  <option value="Finalizada">Finalizada</option>
-                  <option value="Pausada">Pausada</option>
+                  <option value="Presupuesto">Presupuesto</option>
+                  <option value="Aceptada">Aceptada</option>
+                  <option value="En obra">En obra</option>
+                  <option value="Entregada">Entregada</option>
                 </select>
               </div>
 
