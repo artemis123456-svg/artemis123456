@@ -127,6 +127,36 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             </ul>
           </div>
 
+          {/* Configuración (separado abajo del todo del área de navegación) */}
+          <div className="pt-4 border-t border-white/5">
+            {isOpen && (
+              <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-verini-grey">
+                Ajustes
+              </span>
+            )}
+            <ul className={`space-y-1 ${isOpen ? 'mt-3' : 'mt-5'}`}>
+              <li>
+                <NavLink
+                  to="/configuracion"
+                  className={({ isActive }) => `
+                    flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 relative overflow-hidden
+                    ${isActive 
+                      ? `bg-verini-charcoal text-white font-semibold border-l-4 border-slate-400` 
+                      : 'text-slate-400 hover:bg-white/5 hover:text-white'}
+                  `}
+                  onClick={() => {
+                    if (window.innerWidth < 1024) {
+                      setIsOpen(false);
+                    }
+                  }}
+                >
+                  <SettingsIcon className="h-5 w-5 shrink-0" />
+                  {isOpen && <span className="truncate">Configuración</span>}
+                </NavLink>
+              </li>
+            </ul>
+          </div>
+
         </div>
 
         {/* Footer Area */}
@@ -135,7 +165,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             <div className="rounded-xl bg-verini-charcoal p-3 border border-white/5">
               <div className="flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-verini-grey shrink-0" />
-                <span className="text-xs font-semibold text-white truncate">Verini Global S.L.</span>
+                <span className="text-xs font-semibold text-white truncate">Verini Espai Creatiu</span>
               </div>
               <p className="mt-1 text-[9px] text-verini-grey tracking-wider uppercase">CRM PREMIUM</p>
             </div>

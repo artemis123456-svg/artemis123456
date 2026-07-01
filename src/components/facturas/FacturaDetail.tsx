@@ -3,6 +3,7 @@ import { Factura } from '../../types/factura';
 import { Client } from '../../types/client';
 import { Obra } from '../../types/obra';
 import { calculateFacturaTotals } from '../../hooks/useFacturas';
+import { useDatosEmpresa } from '../../hooks/useDatosEmpresa';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { 
@@ -40,6 +41,8 @@ export default function FacturaDetail({
   onEdit,
   onChangeEstado
 }: FacturaDetailProps) {
+  const { datos: datosEmpresa } = useDatosEmpresa();
+
   // Find associated client and project
   const client = useMemo(() => clients.find(c => c.id === factura.clientId), [clients, factura.clientId]);
   const obra = useMemo(() => obras.find(o => o.id === factura.obraId), [obras, factura.obraId]);
@@ -178,24 +181,22 @@ export default function FacturaDetail({
               </div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Reformas, Diseño e Interiorismo</p>
               
-              {/* Bloque de datos fiscales del EMISOR (con advertencias muy evidentes de COMPLETAR) */}
-              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs max-w-md space-y-1">
-                <p className="font-extrabold text-amber-800 flex items-center gap-1 text-[11px] uppercase tracking-wider">
-                  <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 animate-pulse" />
-                  DATOS FISCALES DEL EMISOR
-                </p>
-                <div className="text-slate-700 space-y-1 pl-5">
-                  <p className="font-bold text-slate-900">Verini Espai Creatiu</p>
-                  <p className="text-amber-800 font-medium bg-amber-100/50 px-1.5 py-0.5 rounded border border-amber-200/40 inline-block">
-                    [⚠️ COMPLETAR: Nombre fiscal de Fran]
+              {/* Bloque de datos fiscales del EMISOR */}
+              <div className="mt-4 text-xs text-slate-600 space-y-0.5">
+                {datosEmpresa.nombreFiscal ? (
+                  <p className="font-extrabold text-slate-900">{datosEmpresa.nombreFiscal}</p>
+                ) : (
+                  <p className="font-extrabold text-slate-900">Verini Espai Creatiu</p>
+                )}
+                {datosEmpresa.nif && <p className="font-bold text-slate-800">NIF: {datosEmpresa.nif}</p>}
+                {datosEmpresa.direccion && <p>{datosEmpresa.direccion}</p>}
+                {(datosEmpresa.codigoPostal || datosEmpresa.ciudad || datosEmpresa.provincia) && (
+                  <p>
+                    {[datosEmpresa.codigoPostal, datosEmpresa.ciudad, datosEmpresa.provincia].filter(Boolean).join(', ')}
                   </p>
-                  <p className="text-amber-800 font-medium bg-amber-100/50 px-1.5 py-0.5 rounded border border-amber-200/40 block w-fit">
-                    [⚠️ COMPLETAR: NIF]
-                  </p>
-                  <p className="text-amber-800 font-medium bg-amber-100/50 px-1.5 py-0.5 rounded border border-amber-200/40 block w-fit">
-                    [⚠️ COMPLETAR: Dirección fiscal]
-                  </p>
-                </div>
+                )}
+                {datosEmpresa.telefono && <p>Tel: {datosEmpresa.telefono}</p>}
+                {datosEmpresa.email && <p>{datosEmpresa.email}</p>}
               </div>
             </div>
 

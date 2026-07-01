@@ -114,7 +114,7 @@ export default function Productos() {
         <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-slate-800/20 blur-2xl -ml-20 -mb-20" />
 
         <div className="relative space-y-1">
-          <span className="text-[10px] uppercase font-bold tracking-widest text-slate-300">Verini Reformas e Interiorismo S.L.</span>
+          <span className="text-[10px] uppercase font-bold tracking-widest text-slate-300">Verini Espai Creatiu</span>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Catálogo de Productos</h1>
           <p className="text-slate-400 text-xs max-w-xl">
             Gestión centralizada de mamparas de ducha, iluminación LED, azulejos, porcelánicos y sanitarios de gama alta. Sincronizado directamente con la base de subcontratas y proveedores.
