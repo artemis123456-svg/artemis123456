@@ -80,7 +80,8 @@ export default function Topbar({ onMenuToggle }: TopbarProps) {
 
         {/* Notifications Popover Dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger>
+          <DropdownMenuTrigger
+            render={
               <Button variant="ghost" size="icon" className="relative h-9 w-9 text-slate-500 hover:text-slate-900 hover:bg-slate-50 rounded-lg">
                 <Bell className="h-5 w-5" />
                 {proximos.length > 0 && (
@@ -89,7 +90,8 @@ export default function Topbar({ onMenuToggle }: TopbarProps) {
                   </span>
                 )}
               </Button>
-          </DropdownMenuTrigger>
+            }
+          />
           <DropdownMenuContent align="end" className="w-80 p-0 overflow-hidden">
             <div className="border-b border-slate-100 bg-slate-50 px-4 py-3">
               <div className="flex items-center justify-between">
@@ -156,7 +158,8 @@ export default function Topbar({ onMenuToggle }: TopbarProps) {
 
         {/* User Account Menu */}
         <DropdownMenu>
-          <DropdownMenuTrigger>
+          <DropdownMenuTrigger
+            render={
               <button className="flex items-center gap-2 hover:opacity-90 outline-none">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 border border-slate-200 text-slate-600 font-semibold shadow-xs uppercase">
                   {user?.email?.[0] || 'U'}
@@ -168,7 +171,8 @@ export default function Topbar({ onMenuToggle }: TopbarProps) {
                   </span>
                 </div>
               </button>
-          </DropdownMenuTrigger>
+            }
+          />
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel className="font-heading">Mi Cuenta</DropdownMenuLabel>
             <div className="px-2 pb-2 pt-0.5">
