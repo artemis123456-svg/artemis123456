@@ -180,8 +180,8 @@ export default function ProveedorTable({
       );
     } else {
       return (
-        <span className="inline-flex items-center gap-1 rounded bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-800 ring-1 ring-inset ring-indigo-600/20">
-          <Briefcase className="mr-1 h-3.5 w-3.5 text-indigo-600" />
+        <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-800 ring-1 ring-inset ring-slate-200">
+          <Briefcase className="mr-1 h-3.5 w-3.5 text-slate-500" />
           Subcontrata
         </span>
       );
@@ -192,8 +192,8 @@ export default function ProveedorTable({
   const renderSortIcon = (field: SortField) => {
     if (sortField !== field) return <ArrowUpDown className="ml-1 h-3.5 w-3.5 text-slate-400 inline-block" />;
     return sortOrder === 'asc' 
-      ? <ChevronUp className="ml-1 h-4 w-4 text-indigo-600 font-bold inline-block" />
-      : <ChevronDown className="ml-1 h-4 w-4 text-indigo-600 font-bold inline-block" />;
+      ? <ChevronUp className="ml-1 h-4 w-4 text-slate-850 font-bold inline-block" />
+      : <ChevronDown className="ml-1 h-4 w-4 text-slate-850 font-bold inline-block" />;
   };
 
   return (
@@ -207,7 +207,7 @@ export default function ProveedorTable({
             placeholder="Buscar por nombre, categoría, ciudad, contacto, email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 text-xs h-9 bg-slate-50/50 border-slate-200 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all rounded-lg"
+            className="pl-9 text-xs h-9 bg-slate-50/50 border-slate-200 focus:bg-white focus:ring-2 focus:ring-verini-black/20 focus:border-verini-black transition-all rounded-lg"
           />
           {searchQuery && (
             <button 
@@ -225,19 +225,19 @@ export default function ProveedorTable({
             variant="outline"
             size="sm"
             onClick={() => setShowFilters(!showFilters)}
-            className={`h-9 text-xs font-medium border-slate-200 rounded-lg transition-colors gap-1.5 ${showFilters ? 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 hover:text-indigo-800' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`h-9 text-xs font-medium border-slate-200 rounded-lg transition-colors gap-1.5 ${showFilters ? 'bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200 hover:text-slate-900' : 'text-slate-600 hover:bg-slate-50'}`}
           >
             <SlidersHorizontal className="h-3.5 w-3.5" />
             Filtros
             {(tipoFilter !== 'all' || statusFilter !== 'all' || cityFilter !== 'all') && (
-              <span className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse ml-0.5" />
+              <span className="h-2 w-2 rounded-full bg-verini-yellow animate-pulse ml-0.5" />
             )}
           </Button>
 
           {/* New Provider Button */}
           <Button
             onClick={onNewProveedor}
-            className="h-9 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm shadow-indigo-600/10 transition-all gap-1.5 px-3.5"
+            className="h-9 bg-verini-black hover:bg-black/90 text-white text-xs font-semibold rounded-lg shadow-xs transition-all gap-1.5 px-3.5 cursor-pointer"
           >
             <Plus className="h-4 w-4" />
             Nuevo Proveedor
@@ -253,7 +253,7 @@ export default function ProveedorTable({
             <select
               value={tipoFilter}
               onChange={(e) => setTipoFilter(e.target.value)}
-              className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+              className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-verini-black focus:ring-1 focus:ring-verini-black/20"
             >
               <option value="all">Todos los tipos</option>
               <option value="Materiales">Materiales</option>
@@ -266,7 +266,7 @@ export default function ProveedorTable({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+              className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-verini-black focus:ring-1 focus:ring-verini-black/20"
             >
               <option value="all">Todos los estados</option>
               <option value="activo">Activo</option>
@@ -279,7 +279,7 @@ export default function ProveedorTable({
             <select
               value={cityFilter}
               onChange={(e) => setCityFilter(e.target.value)}
-              className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+              className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-verini-black focus:ring-1 focus:ring-verini-black/20"
             >
               <option value="all">Todas las ciudades</option>
               {uniqueCities.map(city => (
@@ -476,7 +476,7 @@ export default function ProveedorTable({
                     key={page}
                     onClick={() => setCurrentPage(page)}
                     variant={currentPage === page ? 'default' : 'outline'}
-                    className={`h-8 w-8 p-0 text-xs ${currentPage === page ? 'bg-indigo-600 text-white' : 'border-slate-200 text-slate-600'}`}
+                    className={`h-8 w-8 p-0 text-xs ${currentPage === page ? 'bg-verini-black text-white hover:bg-black' : 'border-slate-200 text-slate-600'}`}
                   >
                     {page}
                   </Button>

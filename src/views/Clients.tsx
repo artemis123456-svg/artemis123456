@@ -98,7 +98,7 @@ export default function Clients() {
       {viewState === 'list' && (
         <div className="flex items-center justify-between border-b border-slate-100 pb-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700 shadow-sm">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-50 border border-slate-200 text-slate-800 shadow-xs">
               <Users className="h-6 w-6" />
             </div>
             <div>

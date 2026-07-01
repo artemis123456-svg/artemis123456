@@ -109,13 +109,13 @@ export default function Facturas() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 print:hidden">
         <div>
           <div className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-sm shadow-indigo-600/10">
+            <div className="h-9 w-9 rounded-xl bg-verini-black flex items-center justify-center text-white shadow-xs">
               <Receipt className="h-5 w-5" />
             </div>
             <div>
               <h1 className="text-xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
                 Módulo de Facturas
-                <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full uppercase">Ciclo Comercial</span>
+                <span className="text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full uppercase">Ciclo Comercial</span>
               </h1>
               <p className="text-xs text-slate-500">Gestión de facturación oficial, obras certificadas, líneas de catálogo e impuestos.</p>
             </div>
@@ -128,7 +128,7 @@ export default function Facturas() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 print:hidden">
           
           {/* Card 1: Total Issued Facturado */}
-          <Card className="border-slate-200/80 shadow-xs bg-white hover:border-indigo-200/60 transition-colors">
+          <Card className="border-slate-200/80 shadow-xs bg-white hover:border-slate-350 transition-colors">
             <CardContent className="p-5 flex items-center justify-between">
               <div className="space-y-1">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Facturado Emitido</p>
@@ -138,7 +138,7 @@ export default function Facturas() {
                   Suma oficial emitida
                 </p>
               </div>
-              <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+              <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-850">
                 <DollarSign className="h-5 w-5" />
               </div>
             </CardContent>

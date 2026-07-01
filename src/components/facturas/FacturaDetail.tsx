@@ -62,26 +62,26 @@ export default function FacturaDetail({
     switch (status) {
       case 'Cobrada':
         return {
-          bg: 'bg-emerald-50 text-emerald-800 ring-emerald-600/20',
-          dot: 'bg-emerald-500',
+          bg: 'bg-verini-teal/10 text-verini-teal ring-verini-teal/20',
+          dot: 'bg-verini-teal',
           text: 'Cobrada / Pagada'
         };
       case 'Emitida':
         return {
-          bg: 'bg-blue-50 text-blue-800 ring-blue-600/20',
-          dot: 'bg-blue-500',
+          bg: 'bg-verini-blue/10 text-verini-blue ring-verini-blue/20',
+          dot: 'bg-verini-blue',
           text: 'Emitida / Pendiente'
         };
       case 'Borrador':
         return {
-          bg: 'bg-slate-50 text-slate-800 ring-slate-600/20',
-          dot: 'bg-slate-400',
+          bg: 'bg-slate-100 text-slate-600 ring-slate-200',
+          dot: 'bg-verini-grey',
           text: 'Borrador'
         };
       case 'Vencida':
         return {
-          bg: 'bg-rose-50 text-rose-800 ring-rose-600/20',
-          dot: 'bg-rose-500',
+          bg: 'bg-verini-pink/10 text-verini-pink ring-verini-pink/20',
+          dot: 'bg-verini-pink',
           text: 'Vencida / Reclamar'
         };
     }
@@ -119,7 +119,7 @@ export default function FacturaDetail({
               variant={factura.estado === 'Emitida' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => onChangeEstado(factura.id, 'Emitida')}
-              className={`h-7 px-2 text-[11px] font-semibold rounded-md ${factura.estado === 'Emitida' ? 'bg-indigo-600 text-white shadow-xs hover:bg-indigo-700' : 'text-slate-500 hover:text-slate-800'}`}
+              className={`h-7 px-2 text-[11px] font-semibold rounded-md cursor-pointer ${factura.estado === 'Emitida' ? 'bg-verini-blue text-white shadow-xs hover:bg-verini-blue/90' : 'text-slate-500 hover:text-slate-800'}`}
             >
               Emitir
             </Button>
@@ -127,7 +127,7 @@ export default function FacturaDetail({
               variant={factura.estado === 'Cobrada' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => onChangeEstado(factura.id, 'Cobrada')}
-              className={`h-7 px-2 text-[11px] font-semibold rounded-md ${factura.estado === 'Cobrada' ? 'bg-emerald-600 text-white shadow-xs hover:bg-emerald-700' : 'text-slate-500 hover:text-slate-800'}`}
+              className={`h-7 px-2 text-[11px] font-semibold rounded-md cursor-pointer ${factura.estado === 'Cobrada' ? 'bg-verini-teal text-white shadow-xs hover:bg-verini-teal/90' : 'text-slate-500 hover:text-slate-800'}`}
             >
               Cobrada
             </Button>
@@ -135,7 +135,7 @@ export default function FacturaDetail({
               variant={factura.estado === 'Vencida' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => onChangeEstado(factura.id, 'Vencida')}
-              className={`h-7 px-2 text-[11px] font-semibold rounded-md ${factura.estado === 'Vencida' ? 'bg-rose-600 text-white shadow-xs hover:bg-rose-700 animate-pulse' : 'text-slate-500 hover:text-slate-800'}`}
+              className={`h-7 px-2 text-[11px] font-semibold rounded-md cursor-pointer ${factura.estado === 'Vencida' ? 'bg-verini-pink text-white shadow-xs hover:bg-verini-pink/90 animate-pulse' : 'text-slate-500 hover:text-slate-800'}`}
             >
               Vencida
             </Button>
@@ -173,7 +173,7 @@ export default function FacturaDetail({
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pb-8 border-b border-slate-100">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="h-7 w-7 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-extrabold text-sm tracking-tighter">V</span>
+                <span className="h-7 w-7 rounded-lg bg-verini-black flex items-center justify-center text-white font-extrabold text-sm tracking-tighter">V</span>
                 <span className="font-extrabold text-xl text-slate-900 tracking-tight">VERINI</span>
               </div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Reformas e Interiorismo</p>
@@ -186,11 +186,11 @@ export default function FacturaDetail({
             </div>
 
             <div className="text-left md:text-right space-y-2">
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-indigo-600 uppercase tracking-widest bg-indigo-50/50 px-2.5 py-1 rounded-md">
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-800 uppercase tracking-widest bg-slate-100 px-2.5 py-1 rounded-md">
                 Documento Comercial
               </span>
               <h1 className="text-3xl font-black text-slate-900 tracking-tight">FACTURA</h1>
-              <div className="font-mono font-bold text-sm text-indigo-600 flex items-center md:justify-end gap-1.5">
+              <div className="font-mono font-bold text-sm text-slate-900 flex items-center md:justify-end gap-1.5">
                 <FileText className="h-4 w-4" />
                 {factura.numero}
               </div>
@@ -232,7 +232,7 @@ export default function FacturaDetail({
               <p className="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Obra / Proyecto Asociado</p>
               {obra ? (
                 <div className="space-y-1 text-slate-600">
-                  <p className="font-bold text-slate-900 text-xs flex items-center gap-1"><Briefcase className="h-3.5 w-3.5 text-indigo-500" /> {obra.titulo}</p>
+                  <p className="font-bold text-slate-900 text-xs flex items-center gap-1"><Briefcase className="h-3.5 w-3.5 text-slate-400" /> {obra.titulo}</p>
                   <p><span className="font-semibold text-slate-800">Código Obra:</span> {obra.codigo}</p>
                   <p><span className="font-semibold text-slate-800">Tipo de Obra:</span> Reforma {obra.tipoReforma}</p>
                   <p className="flex items-start gap-1"><MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5" /> <span>{obra.direccion}</span></p>
@@ -270,7 +270,7 @@ export default function FacturaDetail({
                         <td className="py-3 px-4">
                           <p className="font-bold text-slate-900 text-xs">{linea.concepto}</p>
                           {linea.tipo === 'producto' && (
-                            <span className="inline-flex items-center gap-0.5 text-[9px] text-indigo-600 font-bold bg-indigo-50 px-1.5 py-0.5 rounded mt-1">
+                            <span className="inline-flex items-center gap-0.5 text-[9px] text-slate-700 font-bold bg-slate-100 px-1.5 py-0.5 rounded mt-1">
                               Catálogo: {linea.productoId}
                             </span>
                           )}
@@ -282,7 +282,7 @@ export default function FacturaDetail({
                           {formatCurrency(linea.precioUnitario)}
                         </td>
                         <td className="py-3 px-4 text-center">
-                          <span className={`inline-block px-1.5 py-0.5 text-[10px] font-bold rounded ${linea.ivaPorcentaje === 21 ? 'bg-amber-50 text-amber-700' : linea.ivaPorcentaje === 10 ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-100 text-slate-600'}`}>
+                          <span className={`inline-block px-1.5 py-0.5 text-[10px] font-bold rounded ${linea.ivaPorcentaje === 21 ? 'bg-amber-50 text-amber-700' : linea.ivaPorcentaje === 10 ? 'bg-slate-100 text-slate-800' : 'bg-slate-100 text-slate-600'}`}>
                             {linea.ivaPorcentaje}%
                           </span>
                         </td>
@@ -336,9 +336,9 @@ export default function FacturaDetail({
                 <span className="font-semibold text-slate-700">Suma Cuotas IVA:</span>
                 <span className="font-bold text-slate-900">{formatCurrency(totals.totalIva)}</span>
               </div>
-              <div className="flex justify-between py-3 text-slate-900 bg-indigo-50/50 px-4 rounded-lg border border-indigo-100">
+              <div className="flex justify-between py-3 text-slate-900 bg-slate-50 px-4 rounded-lg border border-slate-200">
                 <span className="text-sm font-black text-slate-900">Importe Total Neto:</span>
-                <span className="text-sm font-black text-indigo-600">{formatCurrency(totals.total)}</span>
+                <span className="text-sm font-black text-slate-950">{formatCurrency(totals.total)}</span>
               </div>
             </div>
           </div>

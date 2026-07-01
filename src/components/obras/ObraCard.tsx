@@ -43,7 +43,7 @@ export default function ObraCard({ obra, clientName, onClick, onDragStart }: Obr
 
       {/* Title */}
       <div className="space-y-1">
-        <h4 className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-2 leading-snug">
+        <h4 className="text-xs font-bold text-slate-900 group-hover:text-slate-950 transition-colors line-clamp-2 leading-snug">
           {obra.titulo}
         </h4>
         

@@ -95,10 +95,10 @@ export default function Obras() {
 
   // Kanban phases
   const phases: { id: Obra['estado']; label: string; color: string; border: string; bg: string }[] = [
-    { id: 'Presupuesto', label: 'Presupuesto', color: 'text-slate-600', border: 'border-slate-200', bg: 'bg-slate-50/50' },
-    { id: 'Aceptada', label: 'Aceptada', color: 'text-blue-600', border: 'border-blue-100', bg: 'bg-blue-50/30' },
-    { id: 'En obra', label: 'En obra', color: 'text-indigo-600', border: 'border-indigo-100', bg: 'bg-indigo-50/20' },
-    { id: 'Entregada', label: 'Entregada / Finalizada', color: 'text-emerald-600', border: 'border-emerald-100', bg: 'bg-emerald-50/15' },
+    { id: 'Presupuesto', label: 'Presupuesto', color: 'text-verini-grey', border: 'border-slate-200', bg: 'bg-slate-50/50' },
+    { id: 'Aceptada', label: 'Aceptada', color: 'text-verini-blue', border: 'border-verini-blue/15', bg: 'bg-verini-blue/5' },
+    { id: 'En obra', label: 'En obra', color: 'text-verini-yellow', border: 'border-verini-yellow/15', bg: 'bg-verini-yellow/5' },
+    { id: 'Entregada', label: 'Entregada / Finalizada', color: 'text-verini-teal', border: 'border-verini-teal/15', bg: 'bg-verini-teal/5' },
   ];
 
   return (
@@ -109,7 +109,7 @@ export default function Obras() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
             <div>
               <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                <FolderKanban className="h-6 w-6 text-indigo-600" />
+                <FolderKanban className="h-6 w-6 text-verini-black" />
                 Pipeline de Obras
               </h1>
               <p className="text-xs text-slate-500">
@@ -117,13 +117,13 @@ export default function Obras() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-1 text-[10px] uppercase tracking-widest font-bold text-indigo-500 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-lg">
-                <Sparkles className="h-3 w-3 animate-pulse" />
+              <div className="hidden sm:flex items-center gap-1 text-[10px] uppercase tracking-widest font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg">
+                <Sparkles className="h-3 w-3 animate-pulse text-verini-yellow" />
                 Tablero Interactivo
               </div>
               <Button
                 onClick={handleNewObra}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-9 gap-1.5 rounded-lg px-4 font-semibold"
+                className="bg-verini-black hover:bg-black/90 text-white text-xs h-9 gap-1.5 rounded-lg px-4 font-semibold shadow-xs cursor-pointer"
               >
                 <Plus className="h-4 w-4" />
                 Nueva Obra
@@ -148,10 +148,10 @@ export default function Obras() {
                   <div className="flex items-center justify-between pb-3 border-b border-slate-150 mb-4">
                     <div className="flex items-center gap-2">
                       <span className={`h-2.5 w-2.5 rounded-full ${
-                        phase.id === 'Presupuesto' ? 'bg-slate-400' :
-                        phase.id === 'Aceptada' ? 'bg-blue-500' :
-                        phase.id === 'En obra' ? 'bg-indigo-500' :
-                        'bg-emerald-500'
+                        phase.id === 'Presupuesto' ? 'bg-verini-grey' :
+                        phase.id === 'Aceptada' ? 'bg-verini-blue' :
+                        phase.id === 'En obra' ? 'bg-verini-yellow' :
+                        'bg-verini-teal'
                       }`} />
                       <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
                         {phase.label}

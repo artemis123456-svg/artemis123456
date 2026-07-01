@@ -104,7 +104,7 @@ export default function ObraForm({ obraToEdit, clients, onSave, onCancel }: Obra
           </Button>
           <div>
             <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-              <Building2 className="h-5 w-5 text-indigo-600" />
+              <Building2 className="h-5 w-5 text-verini-black" />
               {obraToEdit ? `Editar Obra: ${obraToEdit.codigo}` : 'Registrar Nueva Obra'}
             </h2>
             <p className="text-xs text-slate-500">
@@ -120,7 +120,7 @@ export default function ObraForm({ obraToEdit, clients, onSave, onCancel }: Obra
           {/* Section 1: Datos de la Obra */}
           <div className="space-y-4">
             <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-              <Sparkles className="h-4 w-4 text-indigo-500" />
+              <Sparkles className="h-4 w-4 text-verini-grey" />
               Datos Identificativos
             </h3>
 
@@ -144,7 +144,7 @@ export default function ObraForm({ obraToEdit, clients, onSave, onCancel }: Obra
                   required
                   value={clientId}
                   onChange={e => handleClientChange(e.target.value)}
-                  className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                  className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-slate-700 outline-none focus:border-verini-black focus:ring-1 focus:ring-verini-black/20"
                 >
                   <option value="" disabled>Selecciona un cliente...</option>
                   {clients.map(c => (
@@ -162,7 +162,7 @@ export default function ObraForm({ obraToEdit, clients, onSave, onCancel }: Obra
                   required
                   value={tipoReforma}
                   onChange={e => setTipoReforma(e.target.value as any)}
-                  className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                  className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-slate-700 outline-none focus:border-verini-black focus:ring-1 focus:ring-verini-black/20"
                 >
                   <option value="Cocina">Cocina</option>
                   <option value="Baño">Baño</option>
@@ -217,7 +217,7 @@ export default function ObraForm({ obraToEdit, clients, onSave, onCancel }: Obra
                   required
                   value={estado}
                   onChange={e => setEstado(e.target.value as any)}
-                  className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                  className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-slate-700 outline-none focus:border-verini-black focus:ring-1 focus:ring-verini-black/20"
                 >
                   <option value="Presupuesto">Presupuesto</option>
                   <option value="Aceptada">Aceptada</option>
@@ -296,7 +296,7 @@ export default function ObraForm({ obraToEdit, clients, onSave, onCancel }: Obra
 
           <Button
             type="submit"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-9 gap-1.5 w-full sm:w-auto px-5 rounded-lg"
+            className="bg-verini-black hover:bg-black/90 text-white text-xs h-9 gap-1.5 w-full sm:w-auto px-5 rounded-lg cursor-pointer"
           >
             <CheckCircle2 className="h-4 w-4" />
             {obraToEdit ? 'Guardar Cambios' : 'Registrar Obra'}

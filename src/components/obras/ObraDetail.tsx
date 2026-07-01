@@ -235,9 +235,9 @@ export default function ObraDetail({
   // Color mapping for Kanban states
   const badgeStyles: Record<Obra['estado'], string> = {
     Presupuesto: 'bg-slate-100 text-slate-800 ring-slate-600/10 border-slate-200',
-    Aceptada: 'bg-blue-50 text-blue-700 ring-blue-600/10 border-blue-200',
-    'En obra': 'bg-indigo-50 text-indigo-700 ring-indigo-600/10 border-indigo-200',
-    Entregada: 'bg-emerald-50 text-emerald-700 ring-emerald-600/10 border-emerald-200',
+    Aceptada: 'bg-verini-blue/10 text-verini-blue ring-verini-blue/20 border-verini-blue/10',
+    'En obra': 'bg-verini-yellow/10 text-verini-yellow ring-verini-yellow/20 border-verini-yellow/10',
+    Entregada: 'bg-verini-teal/10 text-verini-teal ring-verini-teal/20 border-verini-teal/10',
   };
 
   return (
@@ -326,10 +326,10 @@ export default function ObraDetail({
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Facturado</span>
             <FileText className="h-4 w-4 text-slate-400" />
           </div>
-          <p className="mt-2 text-xl font-bold text-indigo-600 font-mono">
+          <p className="mt-2 text-xl font-bold text-verini-black font-mono">
             {stats.invoiced.toLocaleString('es-ES')} €
           </p>
-          <p className="text-[10px] text-indigo-400 font-medium mt-0.5">Cobrado: {stats.collected.toLocaleString('es-ES')} €</p>
+          <p className="text-[10px] text-slate-500 font-medium mt-0.5">Cobrado: {stats.collected.toLocaleString('es-ES')} €</p>
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs">
@@ -362,12 +362,12 @@ export default function ObraDetail({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-5 py-3.5 text-xs font-semibold border-b-2 whitespace-nowrap transition-all outline-none
+                className={`flex items-center gap-2 px-5 py-3.5 text-xs font-semibold border-b-2 whitespace-nowrap transition-all outline-none cursor-pointer
                   ${isActive 
-                    ? 'border-indigo-600 text-indigo-700 bg-white font-bold' 
+                    ? 'border-verini-black text-verini-black bg-white font-bold' 
                     : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50/40'}`}
               >
-                <Icon className={`h-4 w-4 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`} />
+                <Icon className={`h-4 w-4 ${isActive ? 'text-verini-black' : 'text-slate-400'}`} />
                 {tab.label}
               </button>
             );
@@ -382,7 +382,7 @@ export default function ObraDetail({
               {client && (
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-slate-100 bg-slate-50/50">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 shadow-2xs">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 border border-slate-200 text-verini-black shadow-2xs">
                       <User className="h-5 w-5" />
                     </div>
                     <div>
@@ -405,7 +405,7 @@ export default function ObraDetail({
                 {/* Technical properties */}
                 <div className="space-y-4">
                   <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 border-b border-slate-100 pb-1">
-                    <Building2 className="h-3.5 w-3.5 text-indigo-500" />
+                    <Building2 className="h-3.5 w-3.5 text-slate-400" />
                     Ficha Técnica
                   </h4>
                   <ul className="space-y-3 text-xs">
@@ -423,7 +423,7 @@ export default function ObraDetail({
                     </li>
                     <li className="flex justify-between items-center py-0.5 border-t border-dashed border-slate-100 pt-3">
                       <span className="font-semibold text-slate-400">Presupuesto Cerrado:</span>
-                      <span className="font-mono font-bold text-indigo-600 text-sm">
+                      <span className="font-mono font-bold text-slate-900 text-sm">
                         {obra.importe.toLocaleString('es-ES')} €
                       </span>
                     </li>
@@ -433,7 +433,7 @@ export default function ObraDetail({
                 {/* Calendar timelines comparison */}
                 <div className="space-y-4">
                   <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 border-b border-slate-100 pb-1">
-                    <Clock className="h-3.5 w-3.5 text-indigo-500" />
+                    <Clock className="h-3.5 w-3.5 text-slate-400" />
                     Planificación Temporal e Hitos
                   </h4>
                   <div className="space-y-3 text-xs">
@@ -481,9 +481,9 @@ export default function ObraDetail({
                       key={st}
                       disabled={obra.estado === st}
                       onClick={() => onUpdateStatus(obra.id, st)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border cursor-pointer
                         ${obra.estado === st 
-                          ? 'bg-indigo-600 text-white border-indigo-600 font-bold shadow-xs' 
+                          ? 'bg-verini-black text-white border-verini-black font-bold shadow-xs' 
                           : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'}`}
                     >
                       {st}
@@ -592,17 +592,16 @@ export default function ObraDetail({
             <div className="space-y-5">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Expedientes de Obra</h3>
 
-              {/* Faux drag and drop block */}
               <div
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 className={`flex flex-col items-center justify-center py-8 px-4 text-center rounded-xl border-2 border-dashed transition-all duration-150 cursor-pointer
                   ${isDragging
-                    ? 'border-indigo-600 bg-indigo-50/50'
+                    ? 'border-verini-yellow bg-verini-yellow/5'
                     : 'border-slate-250 bg-slate-50 hover:bg-slate-100/50'}`}
               >
-                <Upload className={`h-8 w-8 mb-2 ${isDragging ? 'text-indigo-600 animate-bounce' : 'text-slate-400'}`} />
+                <Upload className={`h-8 w-8 mb-2 ${isDragging ? 'text-verini-yellow animate-bounce' : 'text-slate-400'}`} />
                 <p className="text-xs font-bold text-slate-700">Arrastra planos o fichas técnicas aquí</p>
                 <p className="text-[10px] text-slate-400 mt-1">O escribe el nombre del archivo abajo para añadirlo manualmente</p>
               </div>
@@ -615,7 +614,7 @@ export default function ObraDetail({
                   onChange={e => setNewDocName(e.target.value)}
                   className="text-xs h-9 bg-white"
                 />
-                <Button type="submit" className="bg-indigo-600 text-white text-xs h-9 px-4 gap-1 rounded-lg">
+                <Button type="submit" className="bg-verini-black hover:bg-black/90 text-white text-xs h-9 px-4 gap-1 rounded-lg cursor-pointer">
                   <Plus className="h-4 w-4" />
                   Añadir
                 </Button>
@@ -626,7 +625,7 @@ export default function ObraDetail({
                 {localDocs.map(doc => (
                   <div key={doc.id} className="flex items-center justify-between p-3 bg-white text-xs hover:bg-slate-50">
                     <div className="flex items-center gap-2.5">
-                      <div className="p-2 rounded bg-indigo-50 text-indigo-700 font-bold font-mono text-[10px]">
+                      <div className="p-2 rounded bg-slate-100 text-slate-800 font-bold font-mono text-[10px]">
                         {doc.tipo}
                       </div>
                       <div>
@@ -661,10 +660,10 @@ export default function ObraDetail({
                   placeholder="Escribe una actualización o nota sobre el estado de la obra..."
                   value={newNote}
                   onChange={e => setNewNote(e.target.value)}
-                  className="w-full text-xs rounded-xl border border-slate-200 bg-white p-3 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                  className="w-full text-xs rounded-xl border border-slate-200 bg-white p-3 text-slate-700 outline-none focus:border-verini-black focus:ring-1 focus:ring-verini-black/25"
                 />
                 <div className="flex justify-end">
-                  <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-9 px-4 gap-1 rounded-lg">
+                  <Button type="submit" className="bg-verini-black hover:bg-black/90 text-white text-xs h-9 px-4 gap-1 rounded-lg cursor-pointer">
                     <CheckCircle2 className="h-4 w-4" />
                     Añadir Nota de Avance
                   </Button>

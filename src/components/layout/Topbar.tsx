@@ -61,7 +61,7 @@ export default function Topbar({ onMenuToggle }: TopbarProps) {
 
         {/* Brand visual accent */}
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 select-none">
-          <span className="h-2 w-2 rounded-full bg-indigo-500" />
+          <span className="h-2 w-2 rounded-full bg-verini-yellow" />
           <span>Verini CRM Clientes</span>
         </div>
       </div>
@@ -70,7 +70,7 @@ export default function Topbar({ onMenuToggle }: TopbarProps) {
       <div className="flex items-center gap-2 md:gap-4">
         {/* Live system date badge */}
         <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-100 text-[11px] font-medium text-slate-500">
-          <Calendar className="h-3.5 w-3.5 text-indigo-500" />
+          <Calendar className="h-3.5 w-3.5 text-slate-400" />
           <span>{currentTime || '30 de junio de 2026'}</span>
         </div>
 
@@ -80,7 +80,7 @@ export default function Topbar({ onMenuToggle }: TopbarProps) {
             render={
               <Button variant="ghost" size="icon" className="relative h-9 w-9 text-slate-500 hover:text-slate-900 hover:bg-slate-50 rounded-lg">
                 <Bell className="h-5 w-5" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-indigo-500 ring-2 ring-white"></span>
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-verini-yellow ring-2 ring-white"></span>
               </Button>
             }
           />
@@ -88,12 +88,12 @@ export default function Topbar({ onMenuToggle }: TopbarProps) {
             <div className="border-b border-slate-100 bg-slate-50 px-4 py-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-800">Notificaciones</span>
-                <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold text-indigo-600">Nueva</span>
+                <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-700">Nueva</span>
               </div>
             </div>
             <div className="divide-y divide-slate-50 max-h-64 overflow-y-auto">
               <div className="flex gap-3 p-4 hover:bg-slate-50/50 transition-colors">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-700">
                   <CheckCircle className="h-4 w-4" />
                 </div>
                 <div className="flex flex-col">

@@ -46,6 +46,15 @@
     --radius-2xl: calc(var(--radius) * 1.8);
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
+    --color-verini-black: #0E0E0F;
+    --color-verini-charcoal: #1A1A1D;
+    --color-verini-white: #FFFFFF;
+    --color-verini-grey: #6B7280;
+    --color-verini-yellow: #F5B301;
+    --color-verini-pink: #E84A8A;
+    --color-verini-blue: #3B82C4;
+    --color-verini-teal: #2FA69A;
+    --color-verini-purple: #8B4A9C;
 }
 
 :root {

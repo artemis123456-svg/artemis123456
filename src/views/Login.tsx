@@ -45,59 +45,63 @@ export default function Login() {
   const displayedError = localError || authError;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen items-center justify-center bg-verini-black px-4 py-12 sm:px-6 lg:px-8 relative">
       {/* Decorative background visual elements */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[40%] -left-[20%] w-[80%] h-[80%] rounded-full bg-indigo-50/40 blur-3xl"></div>
-        <div className="absolute -bottom-[40%] -right-[20%] w-[80%] h-[80%] rounded-full bg-slate-100/60 blur-3xl"></div>
+        <div className="absolute -top-[30%] -left-[10%] w-[60%] h-[60%] rounded-full bg-verini-purple/5 blur-3xl"></div>
+        <div className="absolute -bottom-[30%] -right-[10%] w-[60%] h-[60%] rounded-full bg-verini-blue/5 blur-3xl"></div>
       </div>
 
       <motion.div
         className="w-full max-w-md z-10"
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
       >
-        <div className="flex flex-col items-center mb-8">
-          <motion.div
-            className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-xl shadow-indigo-600/20"
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-          >
-            <TrendingUp className="h-6 w-6" />
-          </motion.div>
-          <h1 className="mt-4 font-heading text-3xl font-extrabold tracking-tight text-slate-900">
-            Verini<span className="text-indigo-600">CRM</span>
+        <div className="flex flex-col items-center mb-10">
+          {/* Brand Signature Bars on top of the logo */}
+          <div className="flex gap-1 mb-3.5 h-1.5">
+            <div className="w-2.5 h-1.5 bg-[#F5B301] rounded-full"></div>
+            <div className="w-2.5 h-1.5 bg-[#E84A8A] rounded-full"></div>
+            <div className="w-2.5 h-1.5 bg-[#3B82C4] rounded-full"></div>
+            <div className="w-2.5 h-1.5 bg-[#2FA69A] rounded-full"></div>
+            <div className="w-2.5 h-1.5 bg-[#8B4A9C] rounded-full"></div>
+          </div>
+          
+          <h1 className="font-sans font-black tracking-[0.25em] text-4xl text-white select-none">
+            VERINI
           </h1>
-          <p className="mt-1.5 text-sm font-medium text-slate-500">
+          <p className="mt-2 text-xs font-semibold tracking-widest text-verini-grey uppercase">
+            ESPAI CREATIU
+          </p>
+          <p className="mt-1 text-[11px] text-slate-500 font-medium">
             Gestión de reformas e interiorismo
           </p>
         </div>
 
-        <Card className="border-slate-200/80 shadow-xl shadow-slate-100 bg-white rounded-2xl">
-          <CardHeader className="space-y-1 pb-6">
-            <CardTitle className="text-xl font-bold text-slate-900">Iniciar sesión</CardTitle>
-            <CardDescription className="text-xs text-slate-500">
+        <Card className="border-white/10 shadow-2xl bg-verini-charcoal rounded-2xl">
+          <CardHeader className="space-y-1 pb-6 border-b border-white/5">
+            <CardTitle className="text-xl font-bold text-white">Iniciar sesión</CardTitle>
+            <CardDescription className="text-xs text-slate-400">
               Acceso restringido para personal autorizado
             </CardDescription>
           </CardHeader>
 
           <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-6">
               {displayedError && (
                 <motion.div
-                  className="flex gap-2.5 rounded-xl bg-rose-50 border border-rose-100 p-3 text-xs font-medium text-rose-700"
+                  className="flex gap-2.5 rounded-xl bg-rose-950/30 border border-rose-900/50 p-3 text-xs font-medium text-rose-300"
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                 >
-                  <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
+                  <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
                   <span>{displayedError}</span>
                 </motion.div>
               )}
 
               <div className="space-y-1.5">
-                <label htmlFor="email" className="text-xs font-semibold text-slate-700">
+                <label htmlFor="email" className="text-xs font-semibold text-slate-300">
                   Email
                 </label>
                 <Input
@@ -108,14 +112,14 @@ export default function Login() {
                   disabled={isSubmitting}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="rounded-xl border-slate-200/80 focus:border-indigo-500 focus:ring-indigo-500"
+                  className="rounded-xl bg-verini-black border-white/10 text-white placeholder-slate-500 focus:border-white/30 focus:ring-white/20"
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label htmlFor="password" className="text-xs font-semibold text-slate-700">
+                  <label htmlFor="password" className="text-xs font-semibold text-slate-300">
                     Contraseña
                   </label>
                 </div>
@@ -128,14 +132,14 @@ export default function Login() {
                     disabled={isSubmitting}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="rounded-xl border-slate-200/80 pr-10 focus:border-indigo-500 focus:ring-indigo-500"
+                    className="rounded-xl bg-verini-black border-white/10 text-white placeholder-slate-500 pr-10 focus:border-white/30 focus:ring-white/20"
                     required
                   />
                   <button
                     type="button"
                     tabIndex={-1}
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 hover:text-slate-300"
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -147,24 +151,24 @@ export default function Login() {
               </div>
             </CardContent>
 
-            <CardFooter className="flex flex-col pt-2">
+            <CardFooter className="flex flex-col pt-4">
               <Button
                 type="submit"
-                className="w-full rounded-xl bg-indigo-600 py-2.5 font-semibold text-white shadow-lg shadow-indigo-600/10 hover:bg-indigo-700 hover:shadow-indigo-600/20 transition-all"
+                className="w-full rounded-xl bg-white text-verini-black font-semibold py-2.5 hover:bg-slate-100 transition-all cursor-pointer shadow-lg shadow-black/30"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin text-verini-black" />
                     Iniciando sesión...
                   </>
                 ) : (
                   'Iniciar sesión'
                 )}
               </Button>
-              <p className="mt-4 text-center text-xs text-slate-400 font-medium">
+              <p className="mt-4 text-center text-xs text-slate-500 font-medium">
                 ¿Problemas para acceder?{' '}
-                <span className="text-slate-500 font-semibold cursor-default">
+                <span className="text-slate-400 font-semibold cursor-default">
                   Contacta con el administrador.
                 </span>
               </p>

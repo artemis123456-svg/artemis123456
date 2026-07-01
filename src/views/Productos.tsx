@@ -110,11 +110,11 @@ export default function Productos() {
       {/* Top Welcome Brand Banner */}
       <div className="bg-slate-900 text-white rounded-2xl p-6 md:p-8 relative overflow-hidden shadow-md flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         {/* Decorative subtle ambient gradient glows */}
-        <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-indigo-600/10 blur-3xl -mr-16 -mt-16" />
+        <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-slate-800/20 blur-3xl -mr-16 -mt-16" />
         <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-slate-800/20 blur-2xl -ml-20 -mb-20" />
 
         <div className="relative space-y-1">
-          <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-400">Verini Reformas e Interiorismo S.L.</span>
+          <span className="text-[10px] uppercase font-bold tracking-widest text-slate-300">Verini Reformas e Interiorismo S.L.</span>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">Catálogo de Productos</h1>
           <p className="text-slate-400 text-xs max-w-xl">
             Gestión centralizada de mamparas de ducha, iluminación LED, azulejos, porcelánicos y sanitarios de gama alta. Sincronizado directamente con la base de subcontratas y proveedores.
@@ -123,7 +123,7 @@ export default function Productos() {
 
         {/* Quick totals badge */}
         <div className="relative bg-white/5 border border-white/10 rounded-xl px-4 py-3 shrink-0 backdrop-blur-xs flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-indigo-600/30 flex items-center justify-center text-indigo-400">
+          <div className="h-10 w-10 rounded-lg bg-white/10 flex items-center justify-center text-white">
             <Package className="h-5 w-5" />
           </div>
           <div>
@@ -140,7 +140,7 @@ export default function Productos() {
           {/* Total catalog items */}
           <Card className="border border-slate-200/80 shadow-xs rounded-xl bg-white">
             <CardContent className="p-4 flex items-center gap-4">
-              <div className="h-11 w-11 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
+              <div className="h-11 w-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 shrink-0">
                 <Package className="h-5.5 w-5.5" />
               </div>
               <div className="min-w-0 flex-1">
@@ -173,7 +173,7 @@ export default function Productos() {
           {/* Total unique categories */}
           <Card className="border border-slate-200/80 shadow-xs rounded-xl bg-white">
             <CardContent className="p-4 flex items-center gap-4">
-              <div className="h-11 w-11 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
+              <div className="h-11 w-11 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 shrink-0">
                 <Tags className="h-5.5 w-5.5" />
               </div>
               <div className="min-w-0 flex-1">

@@ -251,7 +251,7 @@ export default function FacturaForm({
           </Button>
           <Button
             type="submit"
-            className="h-9 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold gap-1.5 rounded-lg shadow-sm shadow-indigo-600/10 transition-all px-4"
+            className="h-9 bg-verini-black hover:bg-black/90 text-white text-xs font-semibold gap-1.5 rounded-lg shadow-xs transition-all px-4 cursor-pointer"
           >
             <Save className="h-4 w-4" />
             {factura ? 'Guardar Cambios' : 'Emitir / Guardar Factura'}
@@ -278,14 +278,14 @@ export default function FacturaForm({
                 {/* Invoice Number (Read only for display) */}
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                    <FileText className="h-3.5 w-3.5 text-indigo-500" />
+                    <FileText className="h-3.5 w-3.5 text-slate-400" />
                     Número de Factura
                   </label>
                   <Input
                     type="text"
                     value={factura ? factura.numero : `${nextNumero} (Borrador)`}
                     disabled
-                    className="h-9 text-xs bg-slate-50 border-slate-200 font-mono font-bold text-indigo-600"
+                    className="h-9 text-xs bg-slate-50 border-slate-200 font-mono font-bold text-slate-800"
                   />
                 </div>
 
@@ -295,7 +295,7 @@ export default function FacturaForm({
                   <select
                     value={estado}
                     onChange={(e) => setEstado(e.target.value as Factura['estado'])}
-                    className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                    className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-verini-black focus:ring-1 focus:ring-verini-black/20"
                   >
                     <option value="Borrador">Borrador</option>
                     <option value="Emitida">Emitida</option>
@@ -311,7 +311,7 @@ export default function FacturaForm({
                     value={clientId}
                     onChange={(e) => setClientId(e.target.value)}
                     disabled={!!factura} // Don't allow client modification on edit to maintain ledger consistency
-                    className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 disabled:bg-slate-50 disabled:text-slate-500"
+                    className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-verini-black focus:ring-1 focus:ring-verini-black/20 disabled:bg-slate-50 disabled:text-slate-500"
                   >
                     <option value="">-- Selecciona un cliente --</option>
                     {clients.map(c => (
@@ -329,7 +329,7 @@ export default function FacturaForm({
                     value={obraId}
                     onChange={(e) => setObraId(e.target.value)}
                     disabled={!clientId || !!factura}
-                    className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 disabled:bg-slate-50 disabled:text-slate-400"
+                    className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-verini-black focus:ring-1 focus:ring-verini-black/20 disabled:bg-slate-50 disabled:text-slate-400"
                   >
                     <option value="">
                       {!clientId ? 'Selecciona un cliente primero' : clientObras.length === 0 ? 'Sin obras registradas para este cliente' : '-- Selecciona una obra --'}
@@ -347,7 +347,7 @@ export default function FacturaForm({
                     type="date"
                     value={fechaEmision}
                     onChange={(e) => setFechaEmision(e.target.value)}
-                    className="h-9 text-xs border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    className="h-9 text-xs border-slate-200 focus:ring-2 focus:ring-verini-black/20 focus:border-verini-black"
                   />
                 </div>
 
@@ -357,7 +357,7 @@ export default function FacturaForm({
                     type="date"
                     value={fechaVencimiento}
                     onChange={(e) => setFechaVencimiento(e.target.value)}
-                    className="h-9 text-xs border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                    className="h-9 text-xs border-slate-200 focus:ring-2 focus:ring-verini-black/20 focus:border-verini-black"
                   />
                 </div>
               </div>
@@ -374,7 +374,7 @@ export default function FacturaForm({
                   variant="outline"
                   size="sm"
                   onClick={handleAddLine}
-                  className="h-8 border-indigo-200 bg-indigo-50/50 text-indigo-700 hover:bg-indigo-50 gap-1 text-[11px]"
+                  className="h-8 border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100/50 gap-1 text-[11px] cursor-pointer"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Añadir Línea
@@ -510,7 +510,7 @@ export default function FacturaForm({
                 type="button"
                 variant="ghost"
                 onClick={handleAddLine}
-                className="w-full h-9 border border-dashed border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-xs text-indigo-600 font-semibold rounded-xl flex items-center justify-center gap-1 mt-2"
+                className="w-full h-9 border border-dashed border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-xs text-slate-800 font-semibold rounded-xl flex items-center justify-center gap-1 mt-2 cursor-pointer"
               >
                 <Plus className="h-4 w-4" />
                 Añadir otro concepto o línea de artículo
@@ -524,7 +524,7 @@ export default function FacturaForm({
           <Card className="border-slate-200 shadow-xs bg-white lg:sticky lg:top-6">
             <CardContent className="p-6 space-y-6">
               <h3 className="font-bold text-slate-900 text-xs border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                <Calculator className="h-4 w-4 text-indigo-500" />
+                <Calculator className="h-4 w-4 text-slate-400" />
                 Resumen Económico (Real-time)
               </h3>
 
@@ -564,9 +564,9 @@ export default function FacturaForm({
                   </span>
                 </div>
 
-                <div className="flex justify-between py-3.5 bg-indigo-50/50 px-4 rounded-xl border border-indigo-100/50 text-indigo-950">
+                <div className="flex justify-between py-3.5 bg-slate-50 px-4 rounded-xl border border-slate-200 text-slate-900">
                   <span className="font-extrabold text-xs">Total Neto Facturado:</span>
-                  <span className="font-black text-sm text-indigo-600">
+                  <span className="font-black text-sm text-slate-950">
                     {totals.total.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
                   </span>
                 </div>
@@ -583,7 +583,7 @@ export default function FacturaForm({
                   onChange={(e) => setObservaciones(e.target.value)}
                   placeholder="Instrucciones especiales para el cobro o notas técnicas..."
                   rows={4}
-                  className="w-full text-xs rounded-lg border border-slate-200 bg-white p-2.5 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                  className="w-full text-xs rounded-lg border border-slate-200 bg-white p-2.5 text-slate-700 outline-none focus:border-verini-black focus:ring-1 focus:ring-verini-black/20"
                 />
               </div>
 

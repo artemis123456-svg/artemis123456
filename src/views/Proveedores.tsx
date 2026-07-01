@@ -102,7 +102,7 @@ export default function Proveedores() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-5 gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-              <Truck className="h-6 w-6 text-indigo-600" />
+              <Truck className="h-6 w-6 text-slate-800" />
               Gestión de Proveedores y Gremios
             </h1>
             <p className="text-xs text-slate-500">
@@ -111,7 +111,7 @@ export default function Proveedores() {
           </div>
 
           <div className="flex items-center gap-2.5 flex-wrap">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-lg">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg">
               <Sparkles className="h-3 w-3 animate-pulse" />
               {activeProveedoresCount} Activos
             </div>

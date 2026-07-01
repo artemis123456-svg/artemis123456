@@ -43,23 +43,29 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
       {/* Sidebar container */}
       <aside 
-        className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-slate-200 bg-white transition-all duration-300 ease-in-out lg:static lg:z-0
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-white/10 bg-verini-black text-white transition-all duration-300 ease-in-out lg:static lg:z-0
           ${isOpen ? 'w-64' : 'w-20 lg:w-20'} 
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         {/* Brand Header */}
-        <div className="flex h-16 items-center justify-between px-4 border-b border-slate-200">
+        <div className="flex h-16 items-center justify-between px-5 border-b border-white/10">
           <div className="flex items-center gap-3 overflow-hidden">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-600/20">
-              <TrendingUp className="h-5 w-5" />
+            <div className="flex flex-col shrink-0">
+              <span className="font-sans font-black tracking-[0.2em] text-white text-xl leading-none">
+                VERINI
+              </span>
+              <div className="flex gap-0.5 mt-1.5 h-1">
+                <div className="w-1.5 h-1 bg-[#F5B301] rounded-full"></div>
+                <div className="w-1.5 h-1 bg-[#E84A8A] rounded-full"></div>
+                <div className="w-1.5 h-1 bg-[#3B82C4] rounded-full"></div>
+                <div className="w-1.5 h-1 bg-[#2FA69A] rounded-full"></div>
+                <div className="w-1.5 h-1 bg-[#8B4A9C] rounded-full"></div>
+              </div>
             </div>
             {isOpen && (
-              <div className="flex flex-col">
-                <span className="font-heading text-lg font-bold tracking-tight text-slate-900">
-                  Verini<span className="text-indigo-600">CRM</span>
-                </span>
-                <span className="text-[10px] font-medium text-slate-400 uppercase tracking-widest leading-none">
-                  SaaS Core
+              <div className="flex flex-col ml-1">
+                <span className="text-[9px] font-semibold text-verini-grey uppercase tracking-widest leading-none">
+                  ESPAI CREATIU
                 </span>
               </div>
             )}
@@ -69,7 +75,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             variant="ghost"
             size="icon"
             onClick={() => setIsOpen(!isOpen)}
-            className="hidden h-8 w-8 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 hover:text-slate-900 lg:flex"
+            className="hidden h-8 w-8 rounded-lg border border-white/10 bg-verini-charcoal text-slate-400 hover:text-white hover:bg-white/10 lg:flex"
             id="sidebar-toggle-btn"
           >
             <ChevronLeft className={`h-4 w-4 transition-transform duration-200 ${!isOpen ? 'rotate-180' : ''}`} />
@@ -77,26 +83,30 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         </div>
 
         {/* Navigation Area */}
-        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-7">
+        <div className="flex-1 overflow-y-auto px-3 py-6 space-y-7">
           {/* Main Menu */}
           <div>
             {isOpen && (
-              <span className="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                Módulos Core
+              <span className="px-3 text-[10px] font-bold uppercase tracking-wider text-verini-grey">
+                MÓDULOS CRM
               </span>
             )}
-            <ul className={`space-y-1 ${isOpen ? 'mt-2' : 'mt-4'}`}>
-              {menuItems.map((item) => {
+            <ul className={`space-y-1 ${isOpen ? 'mt-3' : 'mt-5'}`}>
+              {menuItems.map((item, index) => {
                 const Icon = item.icon;
+                // Assign a subtle color bar to each item on active
+                const activeColors = ['border-[#F5B301]', 'border-[#E84A8A]', 'border-[#3B82C4]', 'border-[#2FA69A]', 'border-[#8B4A9C]'];
+                const accentBorder = activeColors[index % activeColors.length];
+                
                 return (
                   <li key={item.path}>
                     <NavLink
                       to={item.path}
                       className={({ isActive }) => `
-                        flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150
+                        flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150 relative overflow-hidden
                         ${isActive 
-                          ? 'bg-indigo-50 text-indigo-700 shadow-sm shadow-indigo-100' 
-                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}
+                          ? `bg-verini-charcoal text-white font-semibold border-l-4 ${accentBorder}` 
+                          : 'text-slate-400 hover:bg-white/5 hover:text-white'}
                       `}
                       onClick={() => {
                         // Close sidebar drawer on mobile after clicking
@@ -117,18 +127,18 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         </div>
 
         {/* Footer Area */}
-        <div className="p-4 border-t border-slate-200">
+        <div className="p-4 border-t border-white/10">
           {isOpen ? (
-            <div className="rounded-xl bg-slate-50 p-3 border border-slate-100">
+            <div className="rounded-xl bg-verini-charcoal p-3 border border-white/5">
               <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-slate-400 shrink-0" />
-                <span className="text-xs font-semibold text-slate-700 truncate">Verini Global S.L.</span>
+                <Building2 className="h-4 w-4 text-verini-grey shrink-0" />
+                <span className="text-xs font-semibold text-white truncate">Verini Global S.L.</span>
               </div>
-              <p className="mt-1 text-[10px] text-slate-400">Plan Profesional Activo</p>
+              <p className="mt-1 text-[9px] text-verini-grey tracking-wider uppercase">CRM PREMIUM</p>
             </div>
           ) : (
             <div className="flex justify-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 border border-slate-200 text-slate-400">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-verini-charcoal border border-white/10 text-slate-400">
                 <Building2 className="h-4 w-4" />
               </div>
             </div>
