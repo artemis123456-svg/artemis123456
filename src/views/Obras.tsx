@@ -15,7 +15,10 @@ export default function Obras() {
     addObra,
     updateObra,
     updateObraStatus,
-    deleteObra
+    deleteObra,
+    fetchHorasObra,
+    addHoraObra,
+    deleteHoraObra
   } = useObras();
 
   // Screen workflow state: 'list' | 'detail' | 'create' | 'edit'
@@ -206,6 +209,9 @@ export default function Obras() {
           onEdit={handleEditObra}
           onDelete={handleDeleteObra}
           onUpdateStatus={updateObraStatus}
+          fetchHorasObra={fetchHorasObra}
+          addHoraObra={addHoraObra}
+          deleteHoraObra={deleteHoraObra}
         />
       )}
 

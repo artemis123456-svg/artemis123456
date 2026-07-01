@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Obra } from '../../types/obra';
+import { Obra, HoraObra } from '../../types/obra';
 import { Client } from '../../types/client';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -30,9 +30,12 @@ interface ObraDetailProps {
   onEdit: (obra: Obra) => void;
   onDelete: (id: string) => void;
   onUpdateStatus: (id: string, status: Obra['estado']) => void;
+  fetchHorasObra: (obraId: string) => Promise<HoraObra[]>;
+  addHoraObra: (horaData: Omit<HoraObra, 'id'>) => Promise<HoraObra>;
+  deleteHoraObra: (id: string) => Promise<void>;
 }
 
-type TabType = 'generales' | 'presupuestos' | 'facturas' | 'documentos' | 'notas';
+type TabType = 'generales' | 'presupuestos' | 'facturas' | 'documentos' | 'notas' | 'horas';
 
 interface MockDocument {
   id: string;
@@ -55,7 +58,10 @@ export default function ObraDetail({
   onBack,
   onEdit,
   onDelete,
-  onUpdateStatus
+  onUpdateStatus,
+  fetchHorasObra,
+  addHoraObra,
+  deleteHoraObra
 }: ObraDetailProps) {
   const [activeTab, setActiveTab] = useState<TabType>('generales');
 
@@ -95,6 +101,67 @@ export default function ObraDetail({
   const [newNote, setNewNote] = useState('');
   const [newDocName, setNewDocName] = useState('');
   const [isDragging, setIsDragging] = useState(false);
+
+  // Hours tracking state
+  const [horasObraList, setHorasObraList] = useState<HoraObra[]>([]);
+  const [horasLoading, setHorasLoading] = useState(false);
+
+  // New hora form state
+  const [horaDate, setHoraDate] = useState(new Date().toISOString().split('T')[0]);
+  const [horaTrabajador, setHoraTrabajador] = useState('');
+  const [horaCantidad, setHoraCantidad] = useState('');
+  const [horaTarea, setHoraTarea] = useState('');
+
+  const loadHoras = React.useCallback(async () => {
+    try {
+      setHorasLoading(true);
+      const data = await fetchHorasObra(obra.id);
+      setHorasObraList(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setHorasLoading(false);
+    }
+  }, [obra.id, fetchHorasObra]);
+
+  React.useEffect(() => {
+    if (activeTab === 'horas') {
+      loadHoras();
+    }
+  }, [activeTab, loadHoras]);
+
+  const handleAddHoraSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!horaTrabajador.trim() || !horaCantidad || !horaTarea.trim()) {
+      alert('Por favor complete los campos obligatorios.');
+      return;
+    }
+    try {
+      await addHoraObra({
+        obraId: obra.id,
+        fecha: horaDate,
+        trabajador: horaTrabajador.trim(),
+        horas: Number(horaCantidad) || 0,
+        tarea: horaTarea.trim()
+      });
+      setHoraTrabajador('');
+      setHoraCantidad('');
+      setHoraTarea('');
+      loadHoras();
+    } catch (err) {
+      alert('Error al registrar las horas');
+    }
+  };
+
+  const handleDeleteHoraClick = async (id: string) => {
+    if (!confirm('¿Seguro que deseas eliminar este registro de horas?')) return;
+    try {
+      await deleteHoraObra(id);
+      loadHoras();
+    } catch (err) {
+      alert('Error al eliminar el registro de horas');
+    }
+  };
 
   // Generate mock budget list based on the project cost
   const mockPresupuestos = useMemo(() => {
@@ -352,6 +419,7 @@ export default function ObraDetail({
               { id: 'generales', label: 'Datos Generales', icon: Sparkles },
               { id: 'presupuestos', label: `Presupuestos (${mockPresupuestos.length})`, icon: DollarSign },
               { id: 'facturas', label: `Facturas (${mockFacturas.length})`, icon: FileText },
+              { id: 'horas', label: `Control de Horas (${horasObraList.length})`, icon: Clock },
               { id: 'documentos', label: `Documentación (${localDocs.length})`, icon: Upload },
               { id: 'notas', label: `Notas de Bitácora (${localNotes.length})`, icon: StickyNote }
             ] as const
@@ -687,6 +755,154 @@ export default function ObraDetail({
                 ) : (
                   <div className="text-center py-6 text-xs text-slate-400 italic">
                     No hay notas en la bitácora de seguimiento.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 6: CONTROL DE HORAS */}
+          {activeTab === 'horas' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Control de Horas de la Obra</h3>
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Registra y lleva un control de la mano de obra invertida en este proyecto.
+                  </p>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="bg-slate-50 border border-slate-200/60 rounded-xl px-4 py-2 text-center shrink-0">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Total Horas</span>
+                    <span className="text-sm font-extrabold font-mono text-slate-800">
+                      {horasObraList.reduce((sum, h) => sum + h.horas, 0)} h
+                    </span>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-200/60 rounded-xl px-4 py-2 text-center shrink-0">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Coste Mano de Obra</span>
+                    <span className="text-sm font-extrabold font-mono text-emerald-600">
+                      {(horasObraList.reduce((sum, h) => sum + h.horas, 0) * 20).toLocaleString('es-ES')} €
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Form to log hours */}
+              <form onSubmit={handleAddHoraSubmit} className="p-4 bg-slate-50 border border-slate-150 rounded-xl space-y-4">
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">Registrar Nueva Jornada de Trabajo</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase">Fecha <span className="text-red-500">*</span></label>
+                    <Input
+                      required
+                      type="date"
+                      value={horaDate}
+                      onChange={e => setHoraDate(e.target.value)}
+                      className="text-xs h-9 bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1 md:col-span-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase">Trabajador <span className="text-red-500">*</span></label>
+                    <Input
+                      required
+                      placeholder="ej. Carlos Ibáñez"
+                      value={horaTrabajador}
+                      onChange={e => setHoraTrabajador(e.target.value)}
+                      className="text-xs h-9 bg-white font-medium"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase">Horas Invertidas <span className="text-red-500">*</span></label>
+                    <Input
+                      required
+                      type="number"
+                      step="0.1"
+                      placeholder="ej. 8.5"
+                      value={horaCantidad}
+                      onChange={e => setHoraCantidad(e.target.value)}
+                      className="text-xs h-9 bg-white font-mono font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Tarea / Descripción de los trabajos <span className="text-red-500">*</span></label>
+                  <Input
+                    required
+                    placeholder="ej. Alicatado del baño secundario y colocación de sanitarios"
+                    value={horaTarea}
+                    onChange={e => setHoraTarea(e.target.value)}
+                    className="text-xs h-9 bg-white text-slate-900"
+                  />
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <Button type="submit" className="bg-verini-black hover:bg-black/95 text-white text-xs h-9 px-4 gap-1 rounded-lg font-semibold cursor-pointer">
+                    <Plus className="h-4 w-4" />
+                    Registrar Horas
+                  </Button>
+                </div>
+              </form>
+
+              {/* Hours Log History */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Historial de Partes de Trabajo</h4>
+                
+                {horasLoading ? (
+                  <div className="text-center py-6 text-xs text-slate-400 animate-pulse">
+                    Cargando partes de horas...
+                  </div>
+                ) : horasObraList.length > 0 ? (
+                  <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 text-[11px] font-semibold text-slate-600 border-b border-slate-200">
+                          <th className="px-4 py-2.5 w-28">Fecha</th>
+                          <th className="px-4 py-2.5 w-48">Trabajador</th>
+                          <th className="px-4 py-2.5">Tarea / Trabajo Realizado</th>
+                          <th className="px-4 py-2.5 w-24 text-right">Horas</th>
+                          <th className="px-4 py-2.5 w-28 text-right">Coste (20€/h)</th>
+                          <th className="px-4 py-2.5 w-16 text-right">Acción</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {horasObraList.map(h => (
+                          <tr key={h.id} className="border-b border-slate-100 text-xs hover:bg-slate-50/50">
+                            <td className="px-4 py-3 font-mono text-slate-500">
+                              {new Date(h.fecha).toLocaleDateString('es-ES')}
+                            </td>
+                            <td className="px-4 py-3 font-semibold text-slate-800">
+                              {h.trabajador}
+                            </td>
+                            <td className="px-4 py-3 text-slate-600 leading-normal">
+                              {h.tarea}
+                            </td>
+                            <td className="px-4 py-3 text-right font-mono font-bold text-slate-800">
+                              {h.horas} h
+                            </td>
+                            <td className="px-4 py-3 text-right font-mono font-bold text-emerald-600">
+                              {(h.horas * 20).toLocaleString('es-ES')} €
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteHoraClick(h.id)}
+                                className="h-7 w-7 text-slate-400 hover:text-red-600 rounded-md hover:bg-red-50 cursor-pointer"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-xs text-slate-400 italic border border-dashed border-slate-200 bg-slate-50/40 rounded-xl">
+                    No se han registrado partes de horas para esta obra. Utiliza el formulario superior para añadir el primero.
                   </div>
                 )}
               </div>

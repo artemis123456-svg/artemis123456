@@ -13,10 +13,11 @@ function prodFromRow(row: any): Producto {
     precioCompra: Number(row.precio_compra),
     precioVenta: Number(row.precio_venta),
     unidad: row.unidad,
-    stock: Number(row.stock),
-    stockMinimo: Number(row.stock_minimo),
+    stock: row.stock !== null && row.stock !== undefined ? Number(row.stock) : undefined,
+    stockMinimo: row.stock_minimo !== null && row.stock_minimo !== undefined ? Number(row.stock_minimo) : undefined,
     activo: !!row.activo,
-    imagenUrl: row.imagen_url || ''
+    imagenUrl: row.imagen_url || '',
+    restos: row.restos || ''
   };
 }
 
@@ -35,6 +36,7 @@ function prodToRow(prod: Partial<Producto>): any {
   if (prod.stockMinimo !== undefined) row.stock_minimo = prod.stockMinimo;
   if (prod.activo !== undefined) row.activo = prod.activo;
   if (prod.imagenUrl !== undefined) row.imagen_url = prod.imagenUrl;
+  if (prod.restos !== undefined) row.restos = prod.restos;
   return row;
 }
 
@@ -111,13 +113,13 @@ export function useProductos() {
     fetchAllData();
   }, [fetchAllData]);
 
-  // Generar código automático PRD-XXXXXX
+  // Generar código automático PRD-XXXXXX (deprecated but kept for compatibility if needed)
   const generateNextCodigo = (): string => {
     if (productos.length === 0) return 'PRD-000001';
 
     const codigos = productos
       .map(p => {
-        const match = p.codigo.match(/PRD-(\d+)/);
+        const match = p.codigo?.match(/PRD-(\d+)/);
         return match ? parseInt(match[1], 10) : 0;
       })
       .filter(num => !isNaN(num));
@@ -127,14 +129,12 @@ export function useProductos() {
     return `PRD-${String(nextNum).padStart(6, '0')}`;
   };
 
-  const addProducto = async (prodData: Omit<Producto, 'id' | 'codigo'>) => {
+  const addProducto = async (prodData: Omit<Producto, 'id'>) => {
     try {
       const newId = `prd_${Date.now()}`;
-      const nextCode = generateNextCodigo();
       const newProd: Producto = {
         ...prodData,
-        id: newId,
-        codigo: nextCode
+        id: newId
       };
 
       // 1. Insert product

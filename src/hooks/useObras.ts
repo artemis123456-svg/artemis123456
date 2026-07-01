@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Obra } from '../types/obra';
+import { Obra, HoraObra } from '../types/obra';
 import { supabase } from '../lib/supabaseClient';
 
 function fromRow(row: any): Obra {
@@ -162,6 +162,73 @@ export function useObras() {
     }
   };
 
+  // Fetch horas for a specific obraId
+  const fetchHorasObra = useCallback(async (obraId: string): Promise<HoraObra[]> => {
+    try {
+      const { data, error: err } = await supabase
+        .from('horas_obra')
+        .select('*')
+        .eq('obra_id', obraId)
+        .order('fecha', { ascending: false });
+      if (err) throw err;
+      return (data || []).map(row => ({
+        id: row.id,
+        obraId: row.obra_id,
+        fecha: row.fecha,
+        trabajador: row.trabajador,
+        horas: Number(row.horas),
+        tarea: row.tarea
+      }));
+    } catch (err: any) {
+      console.error('Error fetching horas_obra:', err);
+      setError(err.message || 'Error al cargar las horas de la obra');
+      throw err;
+    }
+  }, []);
+
+  // Add a new log for horas_obra
+  const addHoraObra = useCallback(async (horaData: Omit<HoraObra, 'id'>): Promise<HoraObra> => {
+    try {
+      const newId = `ho_${Date.now()}`;
+      const row = {
+        id: newId,
+        obra_id: horaData.obraId,
+        fecha: horaData.fecha,
+        trabajador: horaData.trabajador,
+        horas: Number(horaData.horas),
+        tarea: horaData.tarea
+      };
+      const { error: err } = await supabase
+        .from('horas_obra')
+        .insert([row]);
+      if (err) throw err;
+
+      return {
+        id: newId,
+        ...horaData
+      };
+    } catch (err: any) {
+      console.error('Error adding horas_obra:', err);
+      setError(err.message || 'Error al guardar el registro de horas');
+      throw err;
+    }
+  }, []);
+
+  // Delete a log from horas_obra
+  const deleteHoraObra = useCallback(async (id: string): Promise<void> => {
+    try {
+      const { error: err } = await supabase
+        .from('horas_obra')
+        .delete()
+        .eq('id', id);
+      if (err) throw err;
+    } catch (err: any) {
+      console.error('Error deleting horas_obra:', err);
+      setError(err.message || 'Error al eliminar el registro de horas');
+      throw err;
+    }
+  }, []);
+
   return {
     obras,
     loading,
@@ -170,6 +237,9 @@ export function useObras() {
     updateObra,
     updateObraStatus,
     deleteObra,
-    generateObraCode
+    generateObraCode,
+    fetchHorasObra,
+    addHoraObra,
+    deleteHoraObra
   };
 }

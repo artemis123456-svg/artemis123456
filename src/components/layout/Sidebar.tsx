@@ -50,25 +50,24 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         {/* Brand Header */}
         <div className="flex h-16 items-center justify-between px-5 border-b border-white/10">
           <div className="flex items-center gap-3 overflow-hidden">
+            {/* Elegant vertical color bars as material swatches (firma visual) */}
+            <div className="flex gap-1 h-7 shrink-0 pr-1.5">
+              <div className="w-1 h-full bg-[#F5B301] rounded-xs" title="Muestra Madera"></div>
+              <div className="w-1 h-full bg-[#E84A8A] rounded-xs" title="Muestra Textil"></div>
+              <div className="w-1 h-full bg-[#3B82C4] rounded-xs" title="Muestra Vidrio"></div>
+              <div className="w-1 h-full bg-[#2FA69A] rounded-xs" title="Muestra Metal"></div>
+              <div className="w-1 h-full bg-[#8B4A9C] rounded-xs" title="Muestra Piedra"></div>
+            </div>
             <div className="flex flex-col shrink-0">
-              <span className="font-sans font-black tracking-[0.2em] text-white text-xl leading-none">
+              <span className="font-sans font-black tracking-[0.2em] text-white text-lg leading-none">
                 VERINI
               </span>
-              <div className="flex gap-0.5 mt-1.5 h-1">
-                <div className="w-1.5 h-1 bg-[#F5B301] rounded-full"></div>
-                <div className="w-1.5 h-1 bg-[#E84A8A] rounded-full"></div>
-                <div className="w-1.5 h-1 bg-[#3B82C4] rounded-full"></div>
-                <div className="w-1.5 h-1 bg-[#2FA69A] rounded-full"></div>
-                <div className="w-1.5 h-1 bg-[#8B4A9C] rounded-full"></div>
-              </div>
-            </div>
-            {isOpen && (
-              <div className="flex flex-col ml-1">
-                <span className="text-[9px] font-semibold text-verini-grey uppercase tracking-widest leading-none">
+              {isOpen && (
+                <span className="text-[8px] font-bold text-verini-grey uppercase tracking-widest leading-none mt-1">
                   ESPAI CREATIU
                 </span>
-              </div>
-            )}
+              )}
+            </div>
           </div>
           {/* Collapse Toggle for Desktop */}
           <Button

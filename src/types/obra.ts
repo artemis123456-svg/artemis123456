@@ -13,3 +13,13 @@ export interface Obra {
   estado: 'Presupuesto' | 'Aceptada' | 'En obra' | 'Entregada';  // fase del kanban
   importe: number;
 }
+
+export interface HoraObra {
+  id: string;
+  obraId: string;
+  fecha: string;
+  trabajador: string;
+  horas: number;
+  tarea: string;
+}
+

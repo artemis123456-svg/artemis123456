@@ -42,8 +42,8 @@ export default function Productos() {
   const stats = useMemo(() => {
     const total = productos.length;
     
-    // Low stock warning count
-    const alerts = productos.filter(p => p.stock <= p.stockMinimo).length;
+    // Products with registered restos count
+    const restosCount = productos.filter(p => p.restos && p.restos.trim().length > 0).length;
     
     // Unique categories count
     const categories = new Set(productos.map(p => p.categoria).filter(Boolean));
@@ -57,7 +57,7 @@ export default function Productos() {
 
     return {
       total,
-      alerts,
+      restosCount,
       uniqueCatsCount,
       avgMarginPct
     };
@@ -151,20 +151,20 @@ export default function Productos() {
             </CardContent>
           </Card>
 
-          {/* Under minimum stock alert */}
-          <Card className={`border shadow-xs rounded-xl bg-white ${stats.alerts > 0 ? 'border-amber-200 ring-2 ring-amber-500/5' : 'border-slate-200/80'}`}>
+          {/* Material Sobrante / Restos card */}
+          <Card className={`border shadow-xs rounded-xl bg-white ${stats.restosCount > 0 ? 'border-emerald-200 ring-2 ring-emerald-500/5' : 'border-slate-200/80'}`}>
             <CardContent className="p-4 flex items-center gap-4">
               <div className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 border
-                ${stats.alerts > 0 
-                  ? 'bg-amber-50 border-amber-100 text-amber-600 animate-pulse' 
+                ${stats.restosCount > 0 
+                  ? 'bg-emerald-50 border-emerald-100 text-emerald-600' 
                   : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
-                <AlertTriangle className="h-5.5 w-5.5" />
+                <AlertTriangle className="h-5.5 w-5.5 text-emerald-600" />
               </div>
               <div className="min-w-0 flex-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Alerta de Stock</span>
-                <p className={`text-lg font-extrabold leading-none mt-1 font-mono ${stats.alerts > 0 ? 'text-amber-700' : 'text-slate-900'}`}>{stats.alerts}</p>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Material Sobrante</span>
+                <p className={`text-lg font-extrabold leading-none mt-1 font-mono ${stats.restosCount > 0 ? 'text-emerald-700' : 'text-slate-900'}`}>{stats.restosCount}</p>
                 <p className="text-[10px] text-slate-400 mt-1 truncate">
-                  {stats.alerts > 0 ? 'Artículos bajo mínimo' : 'Inventario de seguridad OK'}
+                  {stats.restosCount > 0 ? 'Artículos con restos/sobrantes' : 'Sin restos anotados'}
                 </p>
               </div>
             </CardContent>

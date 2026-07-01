@@ -174,15 +174,29 @@ export default function FacturaDetail({
             <div>
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="h-7 w-7 rounded-lg bg-verini-black flex items-center justify-center text-white font-extrabold text-sm tracking-tighter">V</span>
-                <span className="font-extrabold text-xl text-slate-900 tracking-tight">VERINI</span>
+                <span className="font-extrabold text-xl text-slate-900 tracking-tight">Verini Espai Creatiu</span>
               </div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Reformas e Interiorismo</p>
-              <p className="text-xs text-slate-500 mt-2">
-                Verini Design S.L.<br />
-                NIF: B-98765432<br />
-                Paseo de la Alameda 8<br />
-                46010 Valencia, España
-              </p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Reformas, Diseño e Interiorismo</p>
+              
+              {/* Bloque de datos fiscales del EMISOR (con advertencias muy evidentes de COMPLETAR) */}
+              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs max-w-md space-y-1">
+                <p className="font-extrabold text-amber-800 flex items-center gap-1 text-[11px] uppercase tracking-wider">
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 animate-pulse" />
+                  DATOS FISCALES DEL EMISOR
+                </p>
+                <div className="text-slate-700 space-y-1 pl-5">
+                  <p className="font-bold text-slate-900">Verini Espai Creatiu</p>
+                  <p className="text-amber-800 font-medium bg-amber-100/50 px-1.5 py-0.5 rounded border border-amber-200/40 inline-block">
+                    [⚠️ COMPLETAR: Nombre fiscal de Fran]
+                  </p>
+                  <p className="text-amber-800 font-medium bg-amber-100/50 px-1.5 py-0.5 rounded border border-amber-200/40 block w-fit">
+                    [⚠️ COMPLETAR: NIF]
+                  </p>
+                  <p className="text-amber-800 font-medium bg-amber-100/50 px-1.5 py-0.5 rounded border border-amber-200/40 block w-fit">
+                    [⚠️ COMPLETAR: Dirección fiscal]
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="text-left md:text-right space-y-2">

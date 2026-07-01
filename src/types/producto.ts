@@ -8,10 +8,11 @@ export interface Producto {
   precioCompra: number;      // precio al que Verini lo compra
   precioVenta: number;       // precio de venta al cliente (PVP)
   unidad: 'ud' | 'm2' | 'ml' | 'caja';  // unidad de medida
-  stock: number;
-  stockMinimo: number;
+  stock?: number;
+  stockMinimo?: number;
   activo: boolean;
   imagenUrl: string;         // URL de imagen (mock, puede ser un placeholder)
+  restos: string;            // libre de restos/sobrantes
 }
 
 export interface TarifaProducto {

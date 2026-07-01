@@ -270,19 +270,13 @@ export default function ProductoDetail({
 
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Stock en Tienda</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Restos / Sobrantes</span>
             <Layers className="h-4 w-4 text-slate-400" />
           </div>
-          <div className="flex items-baseline gap-2 mt-2">
-            <p className={`text-xl font-bold font-mono ${producto.stock <= producto.stockMinimo ? 'text-amber-600' : 'text-slate-900'}`}>
-              {producto.stock} {producto.unidad}
-            </p>
-          </div>
-          <p className="text-[10px] text-slate-400 font-medium mt-0.5">
-            {producto.stock <= producto.stockMinimo 
-              ? `¡Por debajo de seguridad! (Mín. ${producto.stockMinimo})` 
-              : `Stock óptimo (Seguridad: ${producto.stockMinimo})`}
+          <p className="mt-2 text-xs font-semibold text-slate-800 leading-tight line-clamp-2">
+            {producto.restos || 'Sin restos registrados'}
           </p>
+          <p className="text-[10px] text-slate-400 font-medium mt-1">Material sobrante de obra</p>
         </div>
       </div>
 
@@ -366,18 +360,14 @@ export default function ProductoDetail({
                 <div className="space-y-4">
                   <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
                     <Layers className="h-3.5 w-3.5 text-gray-700" />
-                    Gestión de Inventario
+                    Detalles de Material y Restos
                   </h4>
                   <ul className="space-y-3 text-xs">
-                    <li className="flex justify-between items-center py-0.5">
-                      <span className="font-semibold text-slate-400">Stock Actual en Tienda:</span>
-                      <span className={`font-mono font-bold ${producto.stock <= producto.stockMinimo ? 'text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded font-bold' : 'text-slate-800'}`}>
-                        {producto.stock} {producto.unidad}
+                    <li className="flex justify-between items-start py-0.5">
+                      <span className="font-semibold text-slate-400 shrink-0">Restos / Sobrantes:</span>
+                      <span className="font-semibold text-slate-800 text-right max-w-[200px] break-words">
+                        {producto.restos || 'No hay anotaciones'}
                       </span>
-                    </li>
-                    <li className="flex justify-between items-center py-0.5">
-                      <span className="font-semibold text-slate-400">Mínimo de Alerta:</span>
-                      <span className="font-mono font-bold text-slate-800">{producto.stockMinimo} {producto.unidad}</span>
                     </li>
                     <li className="flex justify-between items-center py-0.5">
                       <span className="font-semibold text-slate-400">Proveedor Suministrador:</span>

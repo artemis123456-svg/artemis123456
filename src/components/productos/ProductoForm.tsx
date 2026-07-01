@@ -28,6 +28,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
   const { proveedores } = useProveedores();
 
   // State variables for product fields
+  const [codigo, setCodigo] = useState('');
   const [nombre, setNombre] = useState('');
   const [categoria, setCategoria] = useState('');
   const [descripcion, setDescripcion] = useState('');
@@ -35,10 +36,9 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
   const [precioCompra, setPrecioCompra] = useState('');
   const [precioVenta, setPrecioVenta] = useState('');
   const [unidad, setUnidad] = useState<Producto['unidad']>('ud');
-  const [stock, setStock] = useState('');
-  const [stockMinimo, setStockMinimo] = useState('');
   const [activo, setActivo] = useState(true);
   const [imagenUrl, setImagenUrl] = useState('');
+  const [restos, setRestos] = useState('');
 
   // Suggested categories for auto-complete datalist
   const suggestedCategories = [
@@ -65,6 +65,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
   // Load product details if we are in Edit Mode
   useEffect(() => {
     if (productoToEdit) {
+      setCodigo(productoToEdit.codigo || '');
       setNombre(productoToEdit.nombre || '');
       setCategoria(productoToEdit.categoria || '');
       setDescripcion(productoToEdit.descripcion || '');
@@ -72,12 +73,12 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
       setPrecioCompra(String(productoToEdit.precioCompra ?? ''));
       setPrecioVenta(String(productoToEdit.precioVenta ?? ''));
       setUnidad(productoToEdit.unidad || 'ud');
-      setStock(String(productoToEdit.stock ?? ''));
-      setStockMinimo(String(productoToEdit.stockMinimo ?? ''));
       setActivo(productoToEdit.activo !== undefined ? productoToEdit.activo : true);
       setImagenUrl(productoToEdit.imagenUrl || '');
+      setRestos(productoToEdit.restos || '');
     } else {
       // Clear form for New Product Mode
+      setCodigo('');
       setNombre('');
       setCategoria('Azulejos');
       setDescripcion('');
@@ -85,10 +86,9 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
       setPrecioCompra('');
       setPrecioVenta('');
       setUnidad('ud');
-      setStock('0');
-      setStockMinimo('5');
       setActivo(true);
       setImagenUrl('');
+      setRestos('');
     }
   }, [productoToEdit, proveedores]);
 
@@ -96,6 +96,10 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!codigo.trim()) {
+      alert('El Código / Referencia es obligatorio.');
+      return;
+    }
     if (!nombre.trim()) {
       alert('El Nombre del Producto es obligatorio.');
       return;
@@ -119,6 +123,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
     }
 
     const prodData = {
+      codigo: codigo.trim(),
       nombre: nombre.trim(),
       categoria: categoria.trim(),
       descripcion: descripcion.trim(),
@@ -126,10 +131,9 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
       precioCompra: compPrice,
       precioVenta: ventPrice,
       unidad,
-      stock: Number(stock) || 0,
-      stockMinimo: Number(stockMinimo) || 0,
       activo,
-      imagenUrl: imagenUrl.trim() || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=600&q=80'
+      imagenUrl: imagenUrl.trim() || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=600&q=80',
+      restos: restos.trim()
     };
 
     onSave(prodData);
@@ -178,6 +182,19 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
                     value={nombre}
                     onChange={(e) => setNombre(e.target.value)}
                     className="text-xs h-9.5 bg-slate-50/20 font-medium text-slate-900"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+                    Código / Referencia <span className="text-red-500">*</span>
+                  </label>
+                  <Input
+                    required
+                    placeholder="ej. MAMP-01, AZU-15"
+                    value={codigo}
+                    onChange={(e) => setCodigo(e.target.value)}
+                    className="text-xs h-9.5 bg-slate-50/20 font-bold text-slate-900 font-mono"
                   />
                 </div>
 
@@ -303,35 +320,24 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
               </div>
             </div>
 
-            {/* Sección 3: Control de Stock */}
+            {/* Sección 3: Restos y Sobrantes */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
                 <Boxes className="h-4 w-4 text-gray-700" />
-                Control de Stock e Inventario
+                Restos / Sobrantes
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Stock Actual</label>
-                  <Input
-                    type="number"
-                    placeholder="0"
-                    value={stock}
-                    onChange={(e) => setStock(e.target.value)}
-                    className="text-xs h-9.5 bg-slate-50/20 font-mono"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Stock de Seguridad Mínimo</label>
-                  <Input
-                    type="number"
-                    placeholder="5"
-                    value={stockMinimo}
-                    onChange={(e) => setStockMinimo(e.target.value)}
-                    className="text-xs h-9.5 bg-slate-50/20 font-mono"
-                  />
-                </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+                  Anotación de restos o sobrantes (no obligatorio)
+                </label>
+                <Input
+                  type="text"
+                  placeholder="ej. Media caja de parquet roble, 3 listones sobrantes..."
+                  value={restos}
+                  onChange={(e) => setRestos(e.target.value)}
+                  className="text-xs h-9.5 bg-slate-50/20 text-slate-900"
+                />
               </div>
             </div>
 
