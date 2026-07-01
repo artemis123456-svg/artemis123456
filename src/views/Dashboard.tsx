@@ -64,32 +64,35 @@ export default function Dashboard() {
   };
 
   const allEvents = useMemo(() => {
-    return [...eventos, ...getEventosAutomaticos()];
+    try {
+      const auto = getEventosAutomaticos ? getEventosAutomaticos() : [];
+      return [...(eventos || []), ...(auto || [])];
+    } catch { return eventos || []; }
   }, [eventos, getEventosAutomaticos]);
 
   const eventsTodayCount = useMemo(() => {
-    return allEvents.filter(e => isToday(e.fechaInicio)).length;
+    return (allEvents || []).filter(e => isToday(e.fechaInicio)).length;
   }, [allEvents]);
 
   // Counts for cards
   const activeClientsCount = useMemo(() => {
-    return clients.filter(c => c.estado === 'Activo').length;
+    return (clients || []).filter(c => c.estado === 'Activo').length;
   }, [clients]);
 
   const activeObrasCount = useMemo(() => {
-    return obras.filter(o => o.estado === 'En obra').length;
+    return (obras || []).filter(o => o.estado === 'En obra').length;
   }, [obras]);
 
   const pendingBudgetsCount = useMemo(() => {
-    return obras.filter(o => o.estado === 'Presupuesto').length;
+    return (obras || []).filter(o => o.estado === 'Presupuesto').length;
   }, [obras]);
 
   const unpaidInvoicesCount = useMemo(() => {
-    return facturas.filter(f => f.estado !== 'Cobrada').length;
+    return (facturas || []).filter(f => f.estado !== 'Cobrada').length;
   }, [facturas]);
 
   const borradorFacturasCount = useMemo(() => {
-    return facturas.filter(f => f.estado === 'Borrador').length;
+    return (facturas || []).filter(f => f.estado === 'Borrador').length;
   }, [facturas]);
 
   // Billing calculation for current month (excluding Borrador)
@@ -164,7 +167,7 @@ export default function Dashboard() {
       const targetYear = d.getFullYear();
       const targetMonth = d.getMonth();
 
-      const monthFacturas = facturas.filter(f => {
+      const monthFacturas = (facturas || []).filter(f => {
         if (f.estado === 'Borrador') return false;
         const fDate = new Date(f.fechaEmision);
         return !isNaN(fDate.getTime()) &&
