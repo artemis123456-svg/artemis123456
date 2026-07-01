@@ -13,7 +13,8 @@ import {
   TrendingUp,
   Truck,
   Package,
-  FileText
+  FileText,
+  ReceiptText
 } from 'lucide-react';
 import { Button } from '@/src/components/ui/button';
 
@@ -29,6 +30,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     { name: 'Proveedores', path: '/proveedores', icon: Truck },
     { name: 'Productos', path: '/productos', icon: Package },
     { name: 'Facturas', path: '/facturas', icon: FileText },
+    { name: 'Facturas Proveedor', path: '/facturas-proveedor', icon: ReceiptText },
   ];
 
   return (

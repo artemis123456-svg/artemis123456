@@ -20,8 +20,13 @@ import {
   Upload,
   StickyNote,
   CheckCircle2,
-  Edit2
+  Edit2,
+  Package,
+  ReceiptText,
+  AlertCircle
 } from 'lucide-react';
+import { useProveedores } from '../../hooks/useProveedores';
+import { useFacturasProveedor } from '../../hooks/useFacturasProveedor';
 
 interface ObraDetailProps {
   obra: Obra;
@@ -35,7 +40,7 @@ interface ObraDetailProps {
   deleteHoraObra: (id: string) => Promise<void>;
 }
 
-type TabType = 'generales' | 'presupuestos' | 'facturas' | 'documentos' | 'notas' | 'horas';
+type TabType = 'generales' | 'presupuestos' | 'facturas' | 'documentos' | 'notas' | 'horas' | 'materiales';
 
 interface MockDocument {
   id: string;
@@ -64,6 +69,11 @@ export default function ObraDetail({
   deleteHoraObra
 }: ObraDetailProps) {
   const [activeTab, setActiveTab] = useState<TabType>('generales');
+
+  const { proveedores } = useProveedores();
+  const { getMaterialLinesByObraId } = useFacturasProveedor();
+  const [materialLines, setMaterialLines] = useState<any[]>([]);
+  const [materialLinesLoading, setMaterialLinesLoading] = useState(false);
 
   // Local state for interactive note and document additions within this session
   const [localNotes, setLocalNotes] = useState<MockNote[]>([
@@ -129,6 +139,24 @@ export default function ObraDetail({
       loadHoras();
     }
   }, [activeTab, loadHoras]);
+
+  const loadMaterialLines = React.useCallback(async () => {
+    try {
+      setMaterialLinesLoading(true);
+      const data = await getMaterialLinesByObraId(obra.id);
+      setMaterialLines(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setMaterialLinesLoading(false);
+    }
+  }, [obra.id, getMaterialLinesByObraId]);
+
+  React.useEffect(() => {
+    if (activeTab === 'materiales') {
+      loadMaterialLines();
+    }
+  }, [activeTab, loadMaterialLines]);
 
   const handleAddHoraSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -420,6 +448,7 @@ export default function ObraDetail({
               { id: 'presupuestos', label: `Presupuestos (${mockPresupuestos.length})`, icon: DollarSign },
               { id: 'facturas', label: `Facturas (${mockFacturas.length})`, icon: FileText },
               { id: 'horas', label: `Control de Horas (${horasObraList.length})`, icon: Clock },
+              { id: 'materiales', label: `Gastos de Materiales (${materialLines.length})`, icon: Package },
               { id: 'documentos', label: `Documentación (${localDocs.length})`, icon: Upload },
               { id: 'notas', label: `Notas de Bitácora (${localNotes.length})`, icon: StickyNote }
             ] as const
@@ -903,6 +932,78 @@ export default function ObraDetail({
                 ) : (
                   <div className="text-center py-8 text-xs text-slate-400 italic border border-dashed border-slate-200 bg-slate-50/40 rounded-xl">
                     No se han registrado partes de horas para esta obra. Utiliza el formulario superior para añadir el primero.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB: GASTOS DE MATERIALES */}
+          {activeTab === 'materiales' && (
+            <div className="space-y-6">
+              {/* Header metadata and overall summary */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-50 border border-slate-150 p-5 rounded-2xl">
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">Imputación de Materiales de Proveedores</h4>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Gastos reales extraídos de facturas de proveedores vinculadas a esta obra.</p>
+                </div>
+                <div className="text-left sm:text-right shrink-0">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Total Acumulado Materiales</span>
+                  <span className="text-xl font-mono font-black text-slate-900">
+                    {materialLines.reduce((sum, l) => sum + (l.cantidad * l.precioUnitario), 0).toLocaleString('es-ES', { minimumFractionDigits: 2 })} €
+                  </span>
+                </div>
+              </div>
+
+              {/* Materials Log List */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Conceptos de Compra Imputados</h4>
+                
+                {materialLinesLoading ? (
+                  <div className="text-center py-8 text-xs text-slate-400 animate-pulse">
+                    Cargando materiales imputados...
+                  </div>
+                ) : materialLines.length > 0 ? (
+                  <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-200">
+                          <th className="px-4 py-3">Concepto / Descripción</th>
+                          <th className="px-4 py-3 w-32 text-right">Cantidad</th>
+                          <th className="px-4 py-3 w-32 text-right">Precio Unitario</th>
+                          <th className="px-4 py-3 w-32 text-right">Importe Total</th>
+                          <th className="px-4 py-3 w-36">Factura Origen</th>
+                          <th className="px-4 py-3 w-48">Proveedor</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {materialLines.map((line, idx) => {
+                          const subtotal = line.cantidad * line.precioUnitario;
+                          const provName = proveedores.find(p => p.id === line.proveedorId)?.nombre || '—';
+                          return (
+                            <tr key={line.id || idx} className="border-b border-slate-100 text-xs hover:bg-slate-50/50">
+                              <td className="px-4 py-3.5 font-semibold text-slate-800">
+                                {line.concepto}
+                                {line.tipo === 'producto' && (
+                                  <span className="ml-2 inline-flex items-center rounded bg-slate-100 px-1.5 py-0.2 text-[8px] font-medium text-slate-600 uppercase">Ficha</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3.5 text-right font-mono text-slate-600">{line.cantidad}</td>
+                              <td className="px-4 py-3.5 text-right font-mono text-slate-600">{line.precioUnitario.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</td>
+                              <td className="px-4 py-3.5 text-right font-mono font-bold text-slate-900">{subtotal.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</td>
+                              <td className="px-4 py-3.5 font-mono text-slate-500 font-bold">{line.facturaNumero}</td>
+                              <td className="px-4 py-3.5 text-slate-700 font-semibold truncate max-w-[180px]" title={provName}>{provName}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-10 text-xs text-slate-400 italic border border-dashed border-slate-200 bg-slate-50/40 rounded-xl space-y-2">
+                    <AlertCircle className="h-6 w-6 text-slate-300 mx-auto" />
+                    <p>No hay gastos de materiales imputados a esta obra actualmente.</p>
+                    <p className="text-[10px] text-slate-400 font-normal">Crea una Factura de Proveedor y vincula sus líneas a este proyecto para verlas aquí.</p>
                   </div>
                 )}
               </div>

@@ -1,0 +1,540 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { FacturaProveedor, LineaFacturaProveedor } from '../../types/facturaProveedor';
+import { Proveedor } from '../../types/proveedor';
+import { Obra } from '../../types/obra';
+import { Producto } from '../../types/producto';
+import { calculateFacturaProveedorTotals } from '../../hooks/useFacturasProveedor';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { 
+  Plus, 
+  Trash2, 
+  Save, 
+  X, 
+  Calendar, 
+  Briefcase, 
+  Layers, 
+  FileText,
+  Percent,
+  Search,
+  ShoppingCart
+} from 'lucide-react';
+
+interface FacturaProveedorFormProps {
+  factura?: FacturaProveedor; // If provided, we are editing
+  proveedores: Proveedor[];
+  obras: Obra[];
+  productos: Producto[];
+  onSave: (facturaData: Omit<FacturaProveedor, 'id'>) => Promise<void>;
+  onCancel: () => void;
+}
+
+export default function FacturaProveedorForm({
+  factura,
+  proveedores,
+  obras,
+  productos,
+  onSave,
+  onCancel
+}: FacturaProveedorFormProps) {
+  const isEdit = !!factura;
+
+  // Header state
+  const [numero, setNumero] = useState('');
+  const [proveedorId, setProveedorId] = useState('');
+  const [fechaEmision, setFechaEmision] = useState('');
+  const [fechaVencimiento, setFechaVencimiento] = useState('');
+  const [estado, setEstado] = useState<'Pendiente' | 'Pagada' | 'Vencida'>('Pendiente');
+  const [retencionIrpf, setRetencionIrpf] = useState<number>(0);
+  const [observaciones, setObservaciones] = useState('');
+
+  // Lines state
+  const [lineas, setLineas] = useState<LineaFacturaProveedor[]>([]);
+
+  // Initialize form with existing data if editing, or default values if creating
+  useEffect(() => {
+    if (isEdit && factura) {
+      setNumero(factura.numero);
+      setProveedorId(factura.proveedorId);
+      setFechaEmision(factura.fechaEmision);
+      setFechaVencimiento(factura.fechaVencimiento);
+      setEstado(factura.estado);
+      setRetencionIrpf(factura.retencionIrpf || 0);
+      setObservaciones(factura.observaciones || '');
+      setLineas(factura.lineas.map(l => ({ ...l })));
+    } else {
+      const today = new Date().toISOString().split('T')[0];
+      const nextMonth = new Date();
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      const vencimiento = nextMonth.toISOString().split('T')[0];
+
+      setNumero('');
+      setProveedorId(proveedores[0]?.id || '');
+      setFechaEmision(today);
+      setFechaVencimiento(vencimiento);
+      setEstado('Pendiente');
+      setRetencionIrpf(0);
+      setObservaciones('');
+      
+      // Start with 1 empty libre line
+      setLineas([
+        {
+          id: `temp_${Date.now()}_0`,
+          facturaProveedorId: '',
+          tipo: 'libre',
+          productoId: null,
+          concepto: '',
+          cantidad: 1,
+          precioUnitario: 0,
+          ivaPorcentaje: 21,
+          obraId: null,
+          orden: 0
+        }
+      ]);
+    }
+  }, [factura, isEdit, proveedores]);
+
+  // Handle adding a new empty line
+  const handleAddLine = () => {
+    const newLine: LineaFacturaProveedor = {
+      id: `temp_${Date.now()}_${lineas.length}`,
+      facturaProveedorId: '',
+      tipo: 'libre',
+      productoId: null,
+      concepto: '',
+      cantidad: 1,
+      precioUnitario: 0,
+      ivaPorcentaje: 21,
+      obraId: null,
+      orden: lineas.length
+    };
+    setLineas([...lineas, newLine]);
+  };
+
+  // Handle removing a line
+  const handleRemoveLine = (index: number) => {
+    if (lineas.length === 1) {
+      alert('La factura debe tener al menos una línea de material.');
+      return;
+    }
+    const updated = lineas.filter((_, idx) => idx !== index);
+    // Re-index order
+    const reindexed = updated.map((l, idx) => ({ ...l, orden: idx }));
+    setLineas(reindexed);
+  };
+
+  // Handle line property updates
+  const handleLineChange = (index: number, field: keyof LineaFacturaProveedor, value: any) => {
+    const updated = [...lineas];
+    const targetLine = { ...updated[index] };
+
+    if (field === 'tipo') {
+      targetLine.tipo = value;
+      if (value === 'producto') {
+        // Default to first product in the catalog
+        const defaultProd = productos[0];
+        if (defaultProd) {
+          targetLine.productoId = defaultProd.id;
+          targetLine.concepto = defaultProd.nombre;
+          targetLine.precioUnitario = defaultProd.precioCompra || 0;
+        }
+      } else {
+        targetLine.productoId = null;
+        targetLine.concepto = '';
+        targetLine.precioUnitario = 0;
+      }
+    } else if (field === 'productoId') {
+      targetLine.productoId = value;
+      const prod = productos.find(p => p.id === value);
+      if (prod) {
+        targetLine.concepto = prod.nombre;
+        targetLine.precioUnitario = prod.precioCompra || 0;
+      }
+    } else {
+      (targetLine as any)[field] = value;
+    }
+
+    updated[index] = targetLine;
+    setLineas(updated);
+  };
+
+  // Calculate live totals
+  const liveTotals = useMemo(() => {
+    return calculateFacturaProveedorTotals(lineas, retencionIrpf);
+  }, [lineas, retencionIrpf]);
+
+  // Form submit handler
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!numero.trim()) {
+      alert('Por favor introduzca el número de la factura.');
+      return;
+    }
+    if (!proveedorId) {
+      alert('Por favor seleccione un proveedor.');
+      return;
+    }
+
+    // Validate lines
+    for (let i = 0; i < lineas.length; i++) {
+      const l = lineas[i];
+      if (!l.concepto.trim()) {
+        alert(`La línea #${i + 1} debe tener una descripción/concepto.`);
+        return;
+      }
+      if (l.cantidad <= 0) {
+        alert(`La cantidad en la línea #${i + 1} debe ser mayor que cero.`);
+        return;
+      }
+    }
+
+    const payload: Omit<FacturaProveedor, 'id'> = {
+      numero: numero.trim(),
+      proveedorId,
+      fechaEmision,
+      fechaVencimiento,
+      estado,
+      retencionIrpf: Number(retencionIrpf) || 0,
+      observaciones: observaciones.trim(),
+      lineas: lineas.map((l, index) => ({
+        ...l,
+        orden: index
+      }))
+    };
+
+    try {
+      await onSave(payload);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Header Form Title */}
+      <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div>
+          <h2 className="text-base font-extrabold text-slate-950 uppercase tracking-wide">
+            {isEdit ? `Editar Factura de Proveedor: ${factura?.numero}` : 'Nueva Factura de Proveedor'}
+          </h2>
+          <p className="text-[11px] text-slate-400 mt-0.5">
+            Introduce los datos de cabecera y añade las líneas de material imputadas a las obras correspondientes.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onCancel}
+          className="h-8 w-8 text-slate-400 hover:text-slate-700 cursor-pointer p-0"
+        >
+          <X className="h-5 w-5" />
+        </Button>
+      </div>
+
+      {/* Grid: Cabecera */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white p-5 border border-slate-150 rounded-2xl shadow-sm">
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Número de Factura <span className="text-red-500">*</span></label>
+          <Input
+            required
+            placeholder="ej. EXP-2026/89B"
+            value={numero}
+            onChange={e => setNumero(e.target.value)}
+            className="text-xs h-9 font-semibold text-slate-800 border-slate-200 focus-visible:ring-verini-black"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Proveedor <span className="text-red-500">*</span></label>
+          <select
+            required
+            value={proveedorId}
+            onChange={e => setProveedorId(e.target.value)}
+            className="w-full h-9 bg-white border border-slate-200 rounded-lg px-3 text-xs focus:outline-none focus:ring-1 focus:ring-verini-black font-semibold text-slate-800"
+          >
+            <option value="" disabled>Seleccione proveedor...</option>
+            {proveedores.map(p => (
+              <option key={p.id} value={p.id}>{p.nombre}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Fecha Emisión <span className="text-red-500">*</span></label>
+          <Input
+            required
+            type="date"
+            value={fechaEmision}
+            onChange={e => setFechaEmision(e.target.value)}
+            className="text-xs h-9 border-slate-200 focus-visible:ring-verini-black font-medium"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Fecha Vencimiento <span className="text-red-500">*</span></label>
+          <Input
+            required
+            type="date"
+            value={fechaVencimiento}
+            onChange={e => setFechaVencimiento(e.target.value)}
+            className="text-xs h-9 border-slate-200 focus-visible:ring-verini-black font-medium"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Estado de la Factura</label>
+          <select
+            value={estado}
+            onChange={e => setEstado(e.target.value as any)}
+            className="w-full h-9 bg-white border border-slate-200 rounded-lg px-3 text-xs focus:outline-none focus:ring-1 focus:ring-verini-black font-semibold"
+          >
+            <option value="Pendiente">Pendiente</option>
+            <option value="Pagada">Pagada</option>
+            <option value="Vencida">Vencida</option>
+          </select>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Retención IRPF (%)</label>
+          <div className="relative">
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              placeholder="0"
+              value={retencionIrpf === 0 ? '' : retencionIrpf}
+              onChange={e => setRetencionIrpf(Math.max(0, Number(e.target.value) || 0))}
+              className="text-xs h-9 border-slate-200 focus-visible:ring-verini-black pr-8 font-semibold text-slate-800"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-semibold pointer-events-none">%</span>
+          </div>
+        </div>
+
+        <div className="space-y-1 md:col-span-2">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Observaciones generales</label>
+          <Input
+            placeholder="Comentarios o notas internas sobre la factura de compra..."
+            value={observaciones}
+            onChange={e => setObservaciones(e.target.value)}
+            className="text-xs h-9 border-slate-200 focus-visible:ring-verini-black"
+          />
+        </div>
+      </div>
+
+      {/* Editor Dinámico de Líneas */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-400">Conceptos e Imputaciones a Obras</h3>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleAddLine}
+            className="text-xs h-8 px-3 gap-1.5 border-dashed border-slate-300 text-slate-600 hover:text-slate-900 hover:border-slate-400 rounded-lg cursor-pointer font-bold"
+          >
+            <Plus className="h-4 w-4" />
+            Añadir Línea
+          </Button>
+        </div>
+
+        {/* Lines layout */}
+        <div className="space-y-4">
+          {lineas.map((linea, index) => {
+            const subtotal = linea.cantidad * linea.precioUnitario;
+            return (
+              <div 
+                key={linea.id || index} 
+                className="grid grid-cols-1 md:grid-cols-12 gap-3 bg-slate-50/50 p-4 border border-slate-200/60 rounded-2xl relative"
+              >
+                {/* Header/Counter of line */}
+                <div className="absolute -top-2.5 -left-2.5 h-6 w-6 rounded-full bg-slate-200 flex items-center justify-center font-bold text-[10px] text-slate-600 border border-white">
+                  {index + 1}
+                </div>
+
+                {/* Tipo de línea */}
+                <div className="md:col-span-2 space-y-1">
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Tipo</label>
+                  <select
+                    value={linea.tipo}
+                    onChange={e => handleLineChange(index, 'tipo', e.target.value)}
+                    className="w-full h-9 bg-white border border-slate-200 rounded-lg px-2 text-xs focus:outline-none focus:ring-1 focus:ring-verini-black font-semibold"
+                  >
+                    <option value="libre">Entrada Libre</option>
+                    <option value="producto">Catálogo</option>
+                  </select>
+                </div>
+
+                {/* Selector de Producto o Input de Concepto */}
+                <div className="md:col-span-3 space-y-1">
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                    {linea.tipo === 'producto' ? 'Seleccionar Material' : 'Concepto / Descripción'}
+                  </label>
+                  {linea.tipo === 'producto' ? (
+                    <select
+                      value={linea.productoId || ''}
+                      onChange={e => handleLineChange(index, 'productoId', e.target.value)}
+                      className="w-full h-9 bg-white border border-slate-200 rounded-lg px-2 text-xs focus:outline-none focus:ring-1 focus:ring-verini-black font-semibold text-slate-800"
+                    >
+                      <option value="" disabled>Seleccione material...</option>
+                      {productos.map(p => (
+                        <option key={p.id} value={p.id}>{p.nombre} ({p.precioCompra} €)</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <Input
+                      required
+                      placeholder="ej. Saco de cemento cola gris C2"
+                      value={linea.concepto}
+                      onChange={e => handleLineChange(index, 'concepto', e.target.value)}
+                      className="text-xs h-9 bg-white border-slate-200 focus-visible:ring-verini-black"
+                    />
+                  )}
+                </div>
+
+                {/* Imputación de Obra (Opcional) */}
+                <div className="md:col-span-3 space-y-1">
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                    <Briefcase className="h-3 w-3 text-slate-400" />
+                    Imputar a Obra
+                  </label>
+                  <select
+                    value={linea.obraId || ''}
+                    onChange={e => handleLineChange(index, 'obraId', e.target.value ? e.target.value : null)}
+                    className="w-full h-9 bg-white border border-slate-200 rounded-lg px-2 text-xs focus:outline-none focus:ring-1 focus:ring-verini-black font-semibold text-slate-800"
+                  >
+                    <option value="">No imputar a obra</option>
+                    {obras.map(o => (
+                      <option key={o.id} value={o.id}>{o.titulo}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Cantidad */}
+                <div className="md:col-span-1.5 space-y-1">
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Cant.</label>
+                  <Input
+                    required
+                    type="number"
+                    min="0.01"
+                    step="any"
+                    placeholder="1"
+                    value={linea.cantidad === 0 ? '' : linea.cantidad}
+                    onChange={e => handleLineChange(index, 'cantidad', Math.max(0, Number(e.target.value) || 0))}
+                    className="text-xs h-9 bg-white text-center font-mono font-bold border-slate-200 focus-visible:ring-verini-black"
+                  />
+                </div>
+
+                {/* Precio Unitario */}
+                <div className="md:col-span-1.5 space-y-1">
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">P. Unitario</label>
+                  <div className="relative">
+                    <Input
+                      required
+                      type="number"
+                      min="0"
+                      step="any"
+                      placeholder="0.00"
+                      value={linea.precioUnitario === 0 ? '' : linea.precioUnitario}
+                      onChange={e => handleLineChange(index, 'precioUnitario', Math.max(0, Number(e.target.value) || 0))}
+                      className="text-xs h-9 bg-white pr-4 font-mono font-bold border-slate-200 focus-visible:ring-verini-black"
+                    />
+                    <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold">€</span>
+                  </div>
+                </div>
+
+                {/* IVA Porcentaje */}
+                <div className="md:col-span-1 space-y-1">
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">IVA</label>
+                  <select
+                    value={linea.ivaPorcentaje}
+                    onChange={e => handleLineChange(index, 'ivaPorcentaje', Number(e.target.value))}
+                    className="w-full h-9 bg-white border border-slate-200 rounded-lg px-1.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-verini-black font-mono font-semibold"
+                  >
+                    <option value="21">21%</option>
+                    <option value="10">10%</option>
+                    <option value="0">0%</option>
+                  </select>
+                </div>
+
+                {/* Subtotal & Delete Action */}
+                <div className="md:col-span-1 flex items-end justify-between md:justify-center gap-2 pt-2 md:pt-0">
+                  <div className="text-right md:hidden">
+                    <span className="text-[9px] text-slate-400 block font-bold uppercase">Subtotal</span>
+                    <span className="text-xs font-mono font-bold text-slate-800">{subtotal.toLocaleString('es-ES')} €</span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemoveLine(index)}
+                    className="h-9 w-9 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 cursor-pointer shrink-0"
+                    title="Eliminar línea"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Grid: Footers & Totals */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+        <div className="p-4 bg-slate-50 border border-slate-200/60 rounded-2xl flex items-start gap-3">
+          <Layers className="h-5 w-5 text-slate-400 shrink-0 mt-0.5" />
+          <div className="text-xs text-slate-500 leading-normal space-y-1">
+            <span className="font-bold text-slate-700 block uppercase tracking-wide text-[10px]">Asignación a Proyectos</span>
+            <p>
+              Recuerda vincular cada concepto al proyecto correspondiente seleccionando su obra en el desplegable. Esto cargará el coste directamente a la ficha analítica de la obra para cuadrar los gastos de materiales en tiempo real.
+            </p>
+          </div>
+        </div>
+
+        {/* Real-time calculated totals sheet */}
+        <div className="bg-slate-50/50 border border-slate-150 rounded-2xl p-5 space-y-3">
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-slate-500 font-medium">Base Imponible</span>
+            <span className="font-mono text-slate-800 font-bold">{liveTotals.baseImponible.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
+          </div>
+
+          <div className="flex justify-between items-center text-xs border-t border-slate-200/50 pt-2">
+            <span className="text-slate-500 font-medium">Impuestos (IVA)</span>
+            <span className="font-mono text-slate-800 font-bold">{liveTotals.totalIva.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
+          </div>
+
+          {retencionIrpf > 0 && (
+            <div className="flex justify-between items-center text-xs text-red-600">
+              <span className="font-medium">Retención IRPF (-{retencionIrpf}%)</span>
+              <span className="font-mono font-bold">-{liveTotals.importeRetencion.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
+            </div>
+          )}
+
+          <div className="flex justify-between items-center text-sm font-black border-t border-slate-200 pt-3">
+            <span className="text-slate-900 uppercase tracking-wide">TOTAL ESTIMADO</span>
+            <span className="font-mono text-base text-slate-950 font-black">{liveTotals.total.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Save & Cancel Bar */}
+      <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          className="text-xs h-10 border-slate-200 text-slate-600 px-4 rounded-lg cursor-pointer hover:bg-slate-50"
+        >
+          Cancelar
+        </Button>
+        <Button
+          type="submit"
+          className="bg-verini-black hover:bg-black/95 text-white text-xs h-10 px-5 gap-2 rounded-lg font-bold cursor-pointer"
+        >
+          <Save className="h-4.5 w-4.5" />
+          {isEdit ? 'Guardar Cambios' : 'Registrar Factura'}
+        </Button>
+      </div>
+    </form>
+  );
+}
