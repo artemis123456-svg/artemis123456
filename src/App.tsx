@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './components/layout/Layout';
+import Dashboard from './views/Dashboard';
 import Clients from './views/Clients';
 import Obras from './views/Obras';
 import Proveedores from './views/Proveedores';
@@ -36,7 +37,8 @@ function AppContent() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Layout />}>
-          <Route index element={<Clients />} />
+          <Route index element={<Dashboard />} />
+          <Route path="clientes" element={<Clients />} />
           <Route path="obras" element={<Obras />} />
           <Route path="proveedores" element={<Proveedores />} />
           <Route path="productos" element={<Productos />} />

@@ -27,7 +27,8 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const menuItems = [
-    { name: 'Clientes', path: '/', icon: Users },
+    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+    { name: 'Clientes', path: '/clientes', icon: Users },
     { name: 'Obras', path: '/obras', icon: Building2 },
     { name: 'Proveedores', path: '/proveedores', icon: Truck },
     { name: 'Productos', path: '/productos', icon: Package },
