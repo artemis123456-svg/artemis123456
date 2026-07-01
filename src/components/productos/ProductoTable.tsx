@@ -41,7 +41,7 @@ interface ProductoTableProps {
   onNewProducto: () => void;
 }
 
-type SortField = 'codigo' | 'nombre' | 'categoria' | 'precioVenta' | 'stock' | 'activo';
+type SortField = 'codigo' | 'nombre' | 'categoria' | 'precioVenta' | 'activo';
 type SortOrder = 'asc' | 'desc';
 
 export default function ProductoTable({
@@ -178,30 +178,6 @@ export default function ProductoTable({
         </span>
       );
     }
-  };
-
-  // Stock Badge with warning
-  const renderStockBadge = (prod: Producto) => {
-    const isUnderMinimum = prod.stock <= prod.stockMinimo;
-    if (isUnderMinimum) {
-      return (
-        <div className="space-y-1">
-          <span className="inline-flex items-center gap-1.5 rounded bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700 ring-1 ring-inset ring-amber-600/20">
-            <AlertTriangle className="h-3.5 w-3.5 text-amber-600 animate-pulse" />
-            {prod.stock} {prod.unidad}
-          </span>
-          <p className="text-[9px] text-amber-500 font-bold">¡Bajo mínimo! ({prod.stockMinimo})</p>
-        </div>
-      );
-    }
-    return (
-      <div>
-        <span className="inline-flex items-center gap-1.5 rounded bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700">
-          {prod.stock} {prod.unidad}
-        </span>
-        <p className="text-[9px] text-slate-400 mt-0.5">Mín: {prod.stockMinimo}</p>
-      </div>
-    );
   };
 
   // Sort Icon Renderer

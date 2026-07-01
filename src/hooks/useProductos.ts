@@ -13,8 +13,6 @@ function prodFromRow(row: any): Producto {
     precioCompra: Number(row.precio_compra),
     precioVenta: Number(row.precio_venta),
     unidad: row.unidad,
-    stock: row.stock !== null && row.stock !== undefined ? Number(row.stock) : undefined,
-    stockMinimo: row.stock_minimo !== null && row.stock_minimo !== undefined ? Number(row.stock_minimo) : undefined,
     activo: !!row.activo,
     imagenUrl: row.imagen_url || '',
     restos: row.restos || ''
@@ -32,8 +30,6 @@ function prodToRow(prod: Partial<Producto>): any {
   if (prod.precioCompra !== undefined) row.precio_compra = prod.precioCompra;
   if (prod.precioVenta !== undefined) row.precio_venta = prod.precioVenta;
   if (prod.unidad !== undefined) row.unidad = prod.unidad;
-  if (prod.stock !== undefined) row.stock = prod.stock;
-  if (prod.stockMinimo !== undefined) row.stock_minimo = prod.stockMinimo;
   if (prod.activo !== undefined) row.activo = prod.activo;
   if (prod.imagenUrl !== undefined) row.imagen_url = prod.imagenUrl;
   if (prod.restos !== undefined) row.restos = prod.restos;
