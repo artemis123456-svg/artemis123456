@@ -179,11 +179,6 @@ export default function Topbar({ onMenuToggle }: TopbarProps) {
               <p className="text-[11px] font-medium text-slate-400 truncate">{user?.email || 'email@ejemplo.com'}</p>
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer gap-2 py-2">
-              <Sliders className="h-4 w-4 text-slate-400" />
-              <span>Mi Perfil</span>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
             <DropdownMenuItem 
               onClick={() => signOut()}
               className="cursor-pointer gap-2 py-2 text-rose-600 focus:text-rose-600 focus:bg-rose-50"
