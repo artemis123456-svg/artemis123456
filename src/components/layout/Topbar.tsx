@@ -23,6 +23,7 @@ import {
 } from '@/src/components/ui/dropdown-menu';
 import { Input } from '@/src/components/ui/input';
 import { useAuth } from '../../context/AuthContext';
+import { useEventos } from '../../hooks/useEventos';
 
 interface TopbarProps {
   onMenuToggle: () => void;
@@ -31,6 +32,9 @@ interface TopbarProps {
 export default function Topbar({ onMenuToggle }: TopbarProps) {
   const [currentTime, setCurrentTime] = useState<string>('');
   const { user, signOut } = useAuth();
+  const { getEventosProximos } = useEventos();
+  
+  const proximos = getEventosProximos(7); // today + next 7 days
   
   useEffect(() => {
     // Standard system time presentation for 2026-06-30
@@ -80,28 +84,72 @@ export default function Topbar({ onMenuToggle }: TopbarProps) {
             render={
               <Button variant="ghost" size="icon" className="relative h-9 w-9 text-slate-500 hover:text-slate-900 hover:bg-slate-50 rounded-lg">
                 <Bell className="h-5 w-5" />
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-verini-yellow ring-2 ring-white"></span>
+                {proximos.length > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-verini-black ring-2 ring-white text-[8px] font-black text-white">
+                    {proximos.length}
+                  </span>
+                )}
               </Button>
             }
           />
           <DropdownMenuContent align="end" className="w-80 p-0 overflow-hidden">
             <div className="border-b border-slate-100 bg-slate-50 px-4 py-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-800">Notificaciones</span>
-                <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-700">Nueva</span>
+                <span className="text-xs font-black text-slate-800 uppercase tracking-wider">Próximos Eventos</span>
+                {proximos.length > 0 && (
+                  <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                    {proximos.length} activos
+                  </span>
+                )}
               </div>
             </div>
-            <div className="divide-y divide-slate-50 max-h-64 overflow-y-auto">
-              <div className="flex gap-3 p-4 hover:bg-slate-50/50 transition-colors">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-700">
-                  <CheckCircle className="h-4 w-4" />
+            <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto">
+              {proximos.length > 0 ? (
+                proximos.map(ev => {
+                  const evDate = new Date(ev.fechaInicio);
+                  const isToday = evDate.getFullYear() === new Date().getFullYear() &&
+                                  evDate.getMonth() === new Date().getMonth() &&
+                                  evDate.getDate() === new Date().getDate();
+
+                  return (
+                    <div 
+                      key={ev.id} 
+                      className={`flex gap-3 p-3.5 hover:bg-slate-50/50 transition-colors ${
+                        isToday ? 'bg-amber-50/30 border-l-4 border-amber-400' : ''
+                      }`}
+                    >
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1.5">
+                          <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${
+                            ev.tipo === 'Visita' ? 'bg-blue-50 text-blue-700' :
+                            ev.tipo === 'Reunión' ? 'bg-purple-50 text-purple-700' :
+                            ev.tipo === 'Llamada' ? 'bg-teal-50 text-teal-700' :
+                            ev.tipo === 'Inicio obra' ? 'bg-amber-50 text-amber-700' :
+                            'bg-slate-50 text-slate-600'
+                          }`}>
+                            {ev.tipo}
+                          </span>
+                          <span className="text-[9px] font-mono text-slate-400 font-bold">
+                            {evDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                          </span>
+                        </div>
+                        <span className={`text-xs font-bold text-slate-800 mt-1.5 truncate ${ev.completado ? 'line-through opacity-50' : ''}`}>
+                          {ev.titulo}
+                        </span>
+                        {isToday && (
+                          <span className="text-[9px] font-black text-amber-700 uppercase mt-0.5 flex items-center gap-0.5">
+                            ★ ¡Hoy!
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="p-6 text-center text-xs text-slate-400 italic">
+                  No hay eventos próximos en tu agenda.
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-semibold text-slate-800">Verini CRM Activo 🚀</span>
-                  <span className="text-[11px] text-slate-500 mt-0.5">Módulo Clientes listo para producción.</span>
-                  <span className="text-[9px] text-slate-400 mt-1">Hace unos instantes</span>
-                </div>
-              </div>
+              )}
             </div>
           </DropdownMenuContent>
         </DropdownMenu>

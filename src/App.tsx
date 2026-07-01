@@ -10,6 +10,7 @@ import Facturas from './views/Facturas';
 import FacturasProveedor from './views/FacturasProveedor';
 import Impuestos from './views/Impuestos';
 import Configuracion from './views/Configuracion';
+import Agenda from './views/Agenda';
 import Login from './views/Login';
 import { Loader2 } from 'lucide-react';
 
@@ -43,6 +44,7 @@ function AppContent() {
           <Route path="facturas-proveedor" element={<FacturasProveedor />} />
           <Route path="impuestos" element={<Impuestos />} />
           <Route path="configuracion" element={<Configuracion />} />
+          <Route path="agenda" element={<Agenda />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
