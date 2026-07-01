@@ -194,7 +194,7 @@ export default function ClientTable({
       WhatsApp: 'bg-green-50 text-green-700 ring-green-600/10',
       Telefono: 'bg-cyan-50 text-cyan-700 ring-cyan-600/10',
       Instagram: 'bg-pink-50 text-pink-700 ring-pink-600/10',
-      Referido: 'bg-indigo-50 text-indigo-700 ring-indigo-600/10',
+      Referido: 'bg-gray-100 text-gray-800 ring-gray-900/10',
       Otro: 'bg-slate-50 text-slate-700 ring-slate-600/10',
     };
 
@@ -222,8 +222,8 @@ export default function ClientTable({
   const renderSortIcon = (field: SortField) => {
     if (sortField !== field) return <ArrowUpDown className="ml-1 h-3.5 w-3.5 text-slate-400" />;
     return sortOrder === 'asc' 
-      ? <ChevronUp className="ml-1 h-4 w-4 text-indigo-600 font-bold" />
-      : <ChevronDown className="ml-1 h-4 w-4 text-indigo-600 font-bold" />;
+      ? <ChevronUp className="ml-1 h-4 w-4 text-gray-900 font-bold" />
+      : <ChevronDown className="ml-1 h-4 w-4 text-gray-900 font-bold" />;
   };
 
   return (
@@ -237,7 +237,7 @@ export default function ClientTable({
             placeholder="Buscar por código, nombre, empresa, email, ciudad..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 text-xs h-9 bg-slate-50/50 border-slate-200 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all rounded-lg"
+            className="pl-9 text-xs h-9 bg-slate-50/50 border-slate-200 focus:bg-white focus:ring-2 focus:ring-gray-700/20 focus:border-gray-700 transition-all rounded-lg"
           />
           {searchQuery && (
             <button 
@@ -255,19 +255,19 @@ export default function ClientTable({
             variant="outline"
             size="sm"
             onClick={() => setShowFilters(!showFilters)}
-            className={`h-9 text-xs font-medium border-slate-200 rounded-lg transition-colors gap-1.5 ${showFilters ? 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 hover:text-indigo-800' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`h-9 text-xs font-medium border-slate-200 rounded-lg transition-colors gap-1.5 ${showFilters ? 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100 hover:text-gray-900' : 'text-slate-600 hover:bg-slate-50'}`}
           >
             <SlidersHorizontal className="h-3.5 w-3.5" />
             Filtros
             {(statusFilter !== 'all' || cityFilter !== 'all') && (
-              <span className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse ml-0.5" />
+              <span className="h-2 w-2 rounded-full bg-gray-900 animate-pulse ml-0.5" />
             )}
           </Button>
 
           {/* New Client Button */}
           <Button
             onClick={onNewClient}
-            className="h-9 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm shadow-indigo-600/10 transition-all gap-1.5 px-3.5"
+            className="h-9 bg-gray-900 hover:bg-gray-800 text-white text-xs font-semibold rounded-lg shadow-sm shadow-gray-900/10 transition-all gap-1.5 px-3.5"
           >
             <Plus className="h-4 w-4" />
             Nuevo Cliente
@@ -283,7 +283,7 @@ export default function ClientTable({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+              className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700/20"
             >
               <option value="all">Todos los estados</option>
               <option value="Activo">Activos</option>
@@ -297,7 +297,7 @@ export default function ClientTable({
             <select
               value={cityFilter}
               onChange={(e) => setCityFilter(e.target.value)}
-              className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+              className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700/20"
             >
               <option value="all">Todas las ciudades</option>
               {uniqueCities.map(city => (
@@ -315,7 +315,7 @@ export default function ClientTable({
                 setCityFilter('all');
               }}
               disabled={statusFilter === 'all' && cityFilter === 'all'}
-              className="text-xs text-indigo-600 hover:text-indigo-800 font-medium h-9 hover:bg-indigo-50 disabled:opacity-50"
+              className="text-xs text-gray-900 hover:text-gray-900 font-medium h-9 hover:bg-gray-100 disabled:opacity-50"
             >
               Limpiar filtros
             </Button>
@@ -406,7 +406,7 @@ export default function ClientTable({
                     className="group border-b border-slate-100/70 hover:bg-slate-50/50 cursor-pointer transition-colors duration-150"
                   >
                     {/* Código */}
-                    <TableCell className="px-4 py-3 font-mono text-xs font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                    <TableCell className="px-4 py-3 font-mono text-xs font-semibold text-slate-900 group-hover:text-gray-900 transition-colors">
                       {client.codigo}
                     </TableCell>
 
@@ -457,7 +457,7 @@ export default function ClientTable({
 
                     {/* Número de obras */}
                     <TableCell className="px-4 py-3 text-xs text-center font-semibold">
-                      <span className={`inline-flex items-center justify-center h-5 px-2 rounded-full font-mono ${client.obrasCount > 0 ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-100 text-slate-400'}`}>
+                      <span className={`inline-flex items-center justify-center h-5 px-2 rounded-full font-mono ${client.obrasCount > 0 ? 'bg-gray-100 text-gray-800' : 'bg-slate-100 text-slate-400'}`}>
                         {client.obrasCount}
                       </span>
                     </TableCell>
@@ -475,7 +475,7 @@ export default function ClientTable({
                           size="icon-xs"
                           onClick={() => onSelectClient(client)}
                           title="Ver ficha"
-                          className="h-7 w-7 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md"
+                          className="h-7 w-7 text-slate-400 hover:text-gray-900 hover:bg-gray-100 rounded-md"
                         >
                           <Eye className="h-3.5 w-3.5" />
                         </Button>
@@ -519,7 +519,7 @@ export default function ClientTable({
             </p>
             <Button
               onClick={onNewClient}
-              className="mt-4 h-8 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm gap-1.5 px-3"
+              className="mt-4 h-8 bg-gray-900 hover:bg-gray-800 text-white text-xs font-semibold rounded-lg shadow-sm gap-1.5 px-3"
             >
               <Plus className="h-3.5 w-3.5" />
               Añadir Cliente
@@ -559,7 +559,7 @@ export default function ClientTable({
                       variant={currentPage === page ? 'default' : 'outline'}
                       size="xs"
                       onClick={() => setCurrentPage(page)}
-                      className={`h-8 w-8 text-xs font-medium rounded-lg ${currentPage === page ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'}`}
+                      className={`h-8 w-8 text-xs font-medium rounded-lg ${currentPage === page ? 'bg-gray-900 text-white hover:bg-gray-800' : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'}`}
                     >
                       {page}
                     </Button>

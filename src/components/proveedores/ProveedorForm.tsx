@@ -132,9 +132,9 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
           <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4 px-6">
             <CardTitle className="text-base font-bold text-slate-950 flex items-center gap-2">
               {tipo === 'Materiales' ? (
-                <Truck className="h-5 w-5 text-indigo-600" />
+                <Truck className="h-5 w-5 text-gray-900" />
               ) : (
-                <Briefcase className="h-5 w-5 text-indigo-600" />
+                <Briefcase className="h-5 w-5 text-gray-900" />
               )}
               {proveedorToEdit ? `Editar Proveedor: ${proveedorToEdit.codigo}` : 'Registrar Nuevo Proveedor'}
             </CardTitle>
@@ -144,7 +144,7 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
             {/* Sección 1: Datos Identificativos */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                <User className="h-4 w-4 text-indigo-500" />
+                <User className="h-4 w-4 text-gray-700" />
                 Identificación y Categoría
               </h3>
 
@@ -179,7 +179,7 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
                   <select
                     value={tipo}
                     onChange={(e) => handleTipoChange(e.target.value as any)}
-                    className="w-full text-xs h-9.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                    className="w-full text-xs h-9.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700/20"
                   >
                     <option value="Materiales">Materiales (Suministros)</option>
                     <option value="Subcontrata">Subcontrata (Gremio / Instalador)</option>
@@ -219,7 +219,7 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
                   <select
                     value={activo ? 'true' : 'false'}
                     onChange={(e) => setActivo(e.target.value === 'true')}
-                    className="w-full text-xs h-9.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                    className="w-full text-xs h-9.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700/20"
                   >
                     <option value="true">Activo</option>
                     <option value="false">Inactivo</option>
@@ -231,7 +231,7 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
             {/* Sección 2: Datos de Contacto */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                <Phone className="h-4 w-4 text-indigo-500" />
+                <Phone className="h-4 w-4 text-gray-700" />
                 Información de Contacto
               </h3>
 
@@ -272,7 +272,7 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
             {/* Sección 3: Datos de Dirección */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                <MapPin className="h-4 w-4 text-indigo-500" />
+                <MapPin className="h-4 w-4 text-gray-700" />
                 Dirección / Ubicación
               </h3>
 
@@ -322,7 +322,7 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
             {/* Sección 4: Datos de Facturación y Pago */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                <Landmark className="h-4 w-4 text-indigo-500" />
+                <Landmark className="h-4 w-4 text-gray-700" />
                 Datos de Pago y Facturación
               </h3>
 
@@ -342,7 +342,7 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
             {/* Sección 5: Observaciones */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                <FileText className="h-4 w-4 text-indigo-500" />
+                <FileText className="h-4 w-4 text-gray-700" />
                 Observaciones y Notas Internas
               </h3>
 
@@ -352,7 +352,7 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
                   placeholder="Detalles sobre acuerdos, condiciones comerciales, tarifas de entrega, plazos habituales..."
                   value={observaciones}
                   onChange={(e) => setObservaciones(e.target.value)}
-                  className="w-full text-xs rounded-xl border border-slate-200 bg-slate-50/10 p-3 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                  className="w-full text-xs rounded-xl border border-slate-200 bg-slate-50/10 p-3 text-slate-700 outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700/20"
                 />
               </div>
             </div>
@@ -370,7 +370,7 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
             </Button>
             <Button
               type="submit"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs h-9.5 px-4 gap-1.5 rounded-lg shadow-xs"
+              className="bg-gray-900 hover:bg-gray-800 text-white font-semibold text-xs h-9.5 px-4 gap-1.5 rounded-lg shadow-xs"
             >
               <Save className="h-4 w-4" />
               {proveedorToEdit ? 'Guardar Cambios' : 'Registrar Proveedor'}

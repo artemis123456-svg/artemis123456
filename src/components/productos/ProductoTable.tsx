@@ -208,8 +208,8 @@ export default function ProductoTable({
   const renderSortIcon = (field: SortField) => {
     if (sortField !== field) return <ArrowUpDown className="ml-1 h-3.5 w-3.5 text-slate-400 inline-block" />;
     return sortOrder === 'asc' 
-      ? <ChevronUp className="ml-1 h-4 w-4 text-indigo-600 font-bold inline-block" />
-      : <ChevronDown className="ml-1 h-4 w-4 text-indigo-600 font-bold inline-block" />;
+      ? <ChevronUp className="ml-1 h-4 w-4 text-gray-900 font-bold inline-block" />
+      : <ChevronDown className="ml-1 h-4 w-4 text-gray-900 font-bold inline-block" />;
   };
 
   return (
@@ -223,7 +223,7 @@ export default function ProductoTable({
             placeholder="Buscar por nombre, categoría o código..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 text-xs h-9 bg-slate-50/50 border-slate-200 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all rounded-lg"
+            className="pl-9 text-xs h-9 bg-slate-50/50 border-slate-200 focus:bg-white focus:ring-2 focus:ring-gray-700/20 focus:border-gray-700 transition-all rounded-lg"
           />
           {searchQuery && (
             <button 
@@ -241,19 +241,19 @@ export default function ProductoTable({
             variant="outline"
             size="sm"
             onClick={() => setShowFilters(!showFilters)}
-            className={`h-9 text-xs font-medium border-slate-200 rounded-lg transition-colors gap-1.5 ${showFilters ? 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 hover:text-indigo-800' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`h-9 text-xs font-medium border-slate-200 rounded-lg transition-colors gap-1.5 ${showFilters ? 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100 hover:text-gray-900' : 'text-slate-600 hover:bg-slate-50'}`}
           >
             <SlidersHorizontal className="h-3.5 w-3.5" />
             Filtros
             {(categoriaFilter !== 'all' || proveedorFilter !== 'all' || statusFilter !== 'all') && (
-              <span className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse ml-0.5" />
+              <span className="h-2 w-2 rounded-full bg-gray-900 animate-pulse ml-0.5" />
             )}
           </Button>
 
           {/* New Product Button */}
           <Button
             onClick={onNewProducto}
-            className="h-9 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm shadow-indigo-600/10 transition-all gap-1.5 px-3.5"
+            className="h-9 bg-gray-900 hover:bg-gray-800 text-white text-xs font-semibold rounded-lg shadow-sm shadow-gray-900/10 transition-all gap-1.5 px-3.5"
           >
             <Plus className="h-4 w-4" />
             Nuevo Producto
@@ -269,7 +269,7 @@ export default function ProductoTable({
             <select
               value={categoriaFilter}
               onChange={(e) => setCategoriaFilter(e.target.value)}
-              className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+              className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700/20"
             >
               <option value="all">Todas las categorías</option>
               {uniqueCategories.map(cat => (
@@ -283,7 +283,7 @@ export default function ProductoTable({
             <select
               value={proveedorFilter}
               onChange={(e) => setProveedorFilter(e.target.value)}
-              className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+              className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700/20"
             >
               <option value="all">Todos los proveedores</option>
               {proveedores.map(p => (
@@ -297,7 +297,7 @@ export default function ProductoTable({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+              className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700/20"
             >
               <option value="all">Todos los estados</option>
               <option value="activo">Activo</option>
@@ -384,8 +384,8 @@ export default function ProductoTable({
                         </div>
                       </TableCell>
                       <TableCell className="py-3 px-4">
-                        <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50/70 px-2 py-0.5 text-[10px] font-bold text-indigo-700 ring-1 ring-inset ring-indigo-600/10">
-                          <Tag className="h-3 w-3 text-indigo-400" />
+                        <span className="inline-flex items-center gap-1 rounded-md bg-gray-100/70 px-2 py-0.5 text-[10px] font-bold text-gray-800 ring-1 ring-inset ring-gray-900/10">
+                          <Tag className="h-3 w-3 text-gray-500" />
                           {prod.categoria}
                         </span>
                       </TableCell>
@@ -412,7 +412,7 @@ export default function ProductoTable({
                             size="icon"
                             onClick={() => onSelectProducto(prod)}
                             title="Ficha Producto"
-                            className="h-8 w-8 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-slate-100"
+                            className="h-8 w-8 text-slate-400 hover:text-gray-900 rounded-lg hover:bg-slate-100"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -421,7 +421,7 @@ export default function ProductoTable({
                             size="icon"
                             onClick={() => onEditProducto(prod)}
                             title="Editar"
-                            className="h-8 w-8 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-slate-100"
+                            className="h-8 w-8 text-slate-400 hover:text-gray-900 rounded-lg hover:bg-slate-100"
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
@@ -511,7 +511,7 @@ export default function ProductoTable({
                     key={page}
                     onClick={() => setCurrentPage(page)}
                     variant={currentPage === page ? 'default' : 'outline'}
-                    className={`h-8 w-8 p-0 text-xs ${currentPage === page ? 'bg-indigo-600 text-white' : 'border-slate-200 text-slate-600'}`}
+                    className={`h-8 w-8 p-0 text-xs ${currentPage === page ? 'bg-gray-900 text-white' : 'border-slate-200 text-slate-600'}`}
                   >
                     {page}
                   </Button>

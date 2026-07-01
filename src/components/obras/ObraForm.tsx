@@ -231,7 +231,7 @@ export default function ObraForm({ obraToEdit, clients, onSave, onCancel }: Obra
           {/* Section 2: Planificación de Fechas */}
           <div className="space-y-4 pt-4 border-t border-slate-100">
             <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-              <Calendar className="h-4 w-4 text-indigo-500" />
+              <Calendar className="h-4 w-4 text-gray-700" />
               Planificación e Hitos de Fechas
             </h3>
 

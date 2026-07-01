@@ -199,8 +199,8 @@ export default function ProveedorDetail({
       );
     } else {
       return (
-        <span className="inline-flex items-center gap-1 rounded bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-800 ring-1 ring-inset ring-indigo-600/20">
-          <Briefcase className="h-3.5 w-3.5 text-indigo-600" />
+        <span className="inline-flex items-center gap-1 rounded bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-900 ring-1 ring-inset ring-gray-900/20">
+          <Briefcase className="h-3.5 w-3.5 text-gray-900" />
           Subcontrata
         </span>
       );
@@ -347,10 +347,10 @@ export default function ProveedorDetail({
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-5 py-3.5 text-xs font-semibold border-b-2 whitespace-nowrap transition-all outline-none
                   ${isActive 
-                    ? 'border-indigo-600 text-indigo-700 bg-white font-bold' 
+                    ? 'border-gray-900 text-gray-800 bg-white font-bold' 
                     : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50/40'}`}
               >
-                <Icon className={`h-4 w-4 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`} />
+                <Icon className={`h-4 w-4 ${isActive ? 'text-gray-900' : 'text-slate-400'}`} />
                 {tab.label}
               </button>
             );
@@ -367,7 +367,7 @@ export default function ProveedorDetail({
                 {/* Contact Data */}
                 <div className="space-y-4">
                   <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                    <Phone className="h-3.5 w-3.5 text-indigo-500" />
+                    <Phone className="h-3.5 w-3.5 text-gray-700" />
                     Contacto de Empresa
                   </h4>
                   <ul className="space-y-3 text-xs">
@@ -377,7 +377,7 @@ export default function ProveedorDetail({
                     </li>
                     <li className="flex justify-between items-center py-0.5">
                       <span className="font-semibold text-slate-400">Categoría / Especialidad:</span>
-                      <span className="font-bold text-indigo-600 bg-indigo-50/70 px-2 py-0.5 rounded border border-indigo-100/50">{proveedor.categoria}</span>
+                      <span className="font-bold text-gray-900 bg-gray-100/70 px-2 py-0.5 rounded border border-gray-100/50">{proveedor.categoria}</span>
                     </li>
                     <li className="flex justify-between items-center py-0.5">
                       <span className="font-semibold text-slate-400">Teléfono Fijo:</span>
@@ -389,7 +389,7 @@ export default function ProveedorDetail({
                     </li>
                     <li className="flex justify-between items-center py-0.5">
                       <span className="font-semibold text-slate-400">Correo Electrónico:</span>
-                      <span className="font-mono text-slate-800 text-indigo-600 hover:underline">{proveedor.email || '-'}</span>
+                      <span className="font-mono text-slate-800 text-gray-900 hover:underline">{proveedor.email || '-'}</span>
                     </li>
                     <li className="flex justify-between items-center py-0.5">
                       <span className="font-semibold text-slate-400">NIF / CIF:</span>
@@ -401,7 +401,7 @@ export default function ProveedorDetail({
                 {/* Location and bank */}
                 <div className="space-y-4">
                   <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                    <MapPin className="h-3.5 w-3.5 text-indigo-500" />
+                    <MapPin className="h-3.5 w-3.5 text-gray-700" />
                     Ubicación y Facturación
                   </h4>
                   <ul className="space-y-3 text-xs">
@@ -457,7 +457,7 @@ export default function ProveedorDetail({
                 
                 <Button
                   onClick={() => setIsPurchaseFormOpen(!isPurchaseFormOpen)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-8 px-3 gap-1 rounded-lg"
+                  className="bg-gray-900 hover:bg-gray-800 text-white text-xs h-8 px-3 gap-1 rounded-lg"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Registrar Pedido
@@ -506,7 +506,7 @@ export default function ProveedorDetail({
                       <select
                         value={purchaseStatus}
                         onChange={e => setPurchaseStatus(e.target.value as any)}
-                        className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-indigo-500"
+                        className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-gray-700"
                       >
                         <option value="Pendiente">Pendiente (No Recibido / No Pagado)</option>
                         <option value="Recibido">Recibido (Servido, Sin Pagar)</option>
@@ -526,7 +526,7 @@ export default function ProveedorDetail({
                     </Button>
                     <Button
                       type="submit"
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-8 px-4 rounded-lg"
+                      className="bg-gray-900 hover:bg-gray-800 text-white text-xs h-8 px-4 rounded-lg"
                     >
                       Guardar Pedido
                     </Button>
@@ -618,10 +618,10 @@ export default function ProveedorDetail({
                 onDrop={handleDrop}
                 className={`flex flex-col items-center justify-center py-8 px-4 text-center rounded-xl border-2 border-dashed transition-all duration-150 cursor-pointer
                   ${isDragging
-                    ? 'border-indigo-600 bg-indigo-50/50'
+                    ? 'border-gray-900 bg-gray-100/50'
                     : 'border-slate-250 bg-slate-50 hover:bg-slate-100/50'}`}
               >
-                <Upload className={`h-8 w-8 mb-2 ${isDragging ? 'text-indigo-600 animate-bounce' : 'text-slate-400'}`} />
+                <Upload className={`h-8 w-8 mb-2 ${isDragging ? 'text-gray-900 animate-bounce' : 'text-slate-400'}`} />
                 <p className="text-xs font-bold text-slate-700">Arrastra tarifas, catálogos o pólizas de seguro aquí</p>
                 <p className="text-[10px] text-slate-400 mt-1">O escribe el nombre del archivo abajo para añadirlo manualmente</p>
               </div>
@@ -634,7 +634,7 @@ export default function ProveedorDetail({
                   onChange={e => setNewDocName(e.target.value)}
                   className="text-xs h-9 bg-white"
                 />
-                <Button type="submit" className="bg-indigo-600 text-white text-xs h-9 px-4 gap-1 rounded-lg">
+                <Button type="submit" className="bg-gray-900 text-white text-xs h-9 px-4 gap-1 rounded-lg">
                   <Plus className="h-4 w-4" />
                   Añadir
                 </Button>
@@ -646,7 +646,7 @@ export default function ProveedorDetail({
                   providerDocs.map(doc => (
                     <div key={doc.id} className="flex items-center justify-between p-3 bg-white text-xs hover:bg-slate-50">
                       <div className="flex items-center gap-2.5">
-                        <div className="p-2 rounded bg-indigo-50 text-indigo-700 font-bold font-mono text-[10px] select-none">
+                        <div className="p-2 rounded bg-gray-100 text-gray-800 font-bold font-mono text-[10px] select-none">
                           {doc.tipo}
                         </div>
                         <div>
@@ -686,10 +686,10 @@ export default function ProveedorDetail({
                   placeholder="Añade un comentario sobre incidencias de entrega, notas de negociación de tarifas..."
                   value={newNote}
                   onChange={e => setNewNote(e.target.value)}
-                  className="w-full text-xs rounded-xl border border-slate-200 bg-white p-3 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                  className="w-full text-xs rounded-xl border border-slate-200 bg-white p-3 text-slate-700 outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700/20"
                 />
                 <div className="flex justify-end">
-                  <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-9 px-4 gap-1 rounded-lg">
+                  <Button type="submit" className="bg-gray-900 hover:bg-gray-800 text-white text-xs h-9 px-4 gap-1 rounded-lg">
                     <CheckCircle2 className="h-4 w-4" />
                     Guardar Nota
                   </Button>

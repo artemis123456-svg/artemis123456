@@ -154,7 +154,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
         <Card className="border border-slate-200 shadow-sm rounded-xl overflow-hidden bg-white">
           <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4 px-6">
             <CardTitle className="text-base font-bold text-slate-950 flex items-center gap-2">
-              <Package className="h-5 w-5 text-indigo-600" />
+              <Package className="h-5 w-5 text-gray-900" />
               {productoToEdit ? `Modificar Producto: ${productoToEdit.codigo}` : 'Agregar Producto al Catálogo'}
             </CardTitle>
           </CardHeader>
@@ -163,7 +163,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
             {/* Sección 1: Datos Identificativos */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                <Tag className="h-4 w-4 text-indigo-500" />
+                <Tag className="h-4 w-4 text-gray-700" />
                 Definición y Categoría
               </h3>
 
@@ -208,7 +208,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
                     required
                     value={proveedorId}
                     onChange={(e) => setProveedorId(e.target.value)}
-                    className="w-full text-xs h-9.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 font-medium outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                    className="w-full text-xs h-9.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 font-medium outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700/20"
                   >
                     <option value="" disabled>Seleccione un proveedor...</option>
                     {proveedores.map((p) => (
@@ -229,7 +229,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
                   <select
                     value={unidad}
                     onChange={(e) => setUnidad(e.target.value as any)}
-                    className="w-full text-xs h-9.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-indigo-500"
+                    className="w-full text-xs h-9.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-gray-700"
                   >
                     <option value="ud">Unidad (ud)</option>
                     <option value="m2">Metro Cuadrado (m²)</option>
@@ -243,7 +243,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
                   <select
                     value={activo ? 'true' : 'false'}
                     onChange={(e) => setActivo(e.target.value === 'true')}
-                    className="w-full text-xs h-9.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-indigo-500"
+                    className="w-full text-xs h-9.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-gray-700"
                   >
                     <option value="true">Activo / Visible</option>
                     <option value="false">Inactivo / Oculto</option>
@@ -255,7 +255,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
             {/* Sección 2: Precios e Impuestos */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                <DollarSign className="h-4 w-4 text-indigo-500" />
+                <DollarSign className="h-4 w-4 text-gray-700" />
                 Precios y Rendimiento Económico
               </h3>
 
@@ -280,7 +280,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
                     placeholder="0.00"
                     value={precioVenta}
                     onChange={(e) => setPrecioVenta(e.target.value)}
-                    className="text-xs h-9.5 bg-slate-50/20 font-mono font-bold text-indigo-700"
+                    className="text-xs h-9.5 bg-slate-50/20 font-mono font-bold text-gray-800"
                   />
                 </div>
 
@@ -306,7 +306,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
             {/* Sección 3: Control de Stock */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                <Boxes className="h-4 w-4 text-indigo-500" />
+                <Boxes className="h-4 w-4 text-gray-700" />
                 Control de Stock e Inventario
               </h3>
 
@@ -338,7 +338,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
             {/* Sección 4: Imagen e Ilustraciones */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                <ImageIcon className="h-4 w-4 text-indigo-500" />
+                <ImageIcon className="h-4 w-4 text-gray-700" />
                 Multimedia e Imagen del Catálogo
               </h3>
 
@@ -363,7 +363,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
                         type="button"
                         onClick={() => setImagenUrl(preset.url)}
                         className={`text-[10px] font-semibold border px-2.5 py-1.5 rounded-lg transition-colors bg-white hover:bg-slate-50 flex items-center gap-1.5
-                          ${imagenUrl === preset.url ? 'border-indigo-600 text-indigo-600 font-bold bg-indigo-50/50' : 'border-slate-200 text-slate-600'}`}
+                          ${imagenUrl === preset.url ? 'border-gray-900 text-gray-900 font-bold bg-gray-100/50' : 'border-slate-200 text-slate-600'}`}
                       >
                         <span className="h-2 w-2 rounded-full bg-slate-400" style={{ backgroundImage: `url(${preset.url})`, backgroundSize: 'cover' }} />
                         {preset.name}
@@ -402,7 +402,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
             {/* Sección 5: Ficha Técnica */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                <FileText className="h-4 w-4 text-indigo-500" />
+                <FileText className="h-4 w-4 text-gray-700" />
                 Descripción Técnica e Información Adicional
               </h3>
 
@@ -412,7 +412,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
                   placeholder="Detalla dimensiones, grosores, acabados, tolerancias de montaje, normativas de homologación o cualquier dato de utilidad para los jefes de obra."
                   value={descripcion}
                   onChange={(e) => setDescripcion(e.target.value)}
-                  className="w-full text-xs rounded-xl border border-slate-200 bg-slate-50/10 p-3 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                  className="w-full text-xs rounded-xl border border-slate-200 bg-slate-50/10 p-3 text-slate-700 outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700/20"
                 />
               </div>
             </div>
@@ -430,7 +430,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
             </Button>
             <Button
               type="submit"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs h-9.5 px-4 gap-1.5 rounded-lg shadow-xs"
+              className="bg-gray-900 hover:bg-gray-800 text-white font-semibold text-xs h-9.5 px-4 gap-1.5 rounded-lg shadow-xs"
             >
               <Save className="h-4 w-4" />
               {productoToEdit ? 'Guardar Cambios' : 'Dar de Alta Producto'}

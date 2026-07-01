@@ -123,7 +123,7 @@ export default function ClientForm({ clientToEdit, onSave, onCancel }: ClientFor
         <Card className="border border-slate-150 shadow-sm bg-white rounded-xl overflow-hidden">
           <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4 px-6">
             <CardTitle className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-              <User className="h-4.5 w-4.5 text-indigo-600" />
+              <User className="h-4.5 w-4.5 text-gray-900" />
               {clientToEdit 
                 ? `Editar Ficha de Cliente - ${clientToEdit.codigo}` 
                 : 'Formulario de Alta - Nuevo Cliente'}
@@ -133,7 +133,7 @@ export default function ClientForm({ clientToEdit, onSave, onCancel }: ClientFor
           <CardContent className="p-6 space-y-6">
             {/* Section 1: Identificación */}
             <div className="space-y-4">
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 border-b border-slate-100 pb-1 flex items-center gap-1.5">
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-gray-900 border-b border-slate-100 pb-1 flex items-center gap-1.5">
                 <User className="h-3.5 w-3.5" />
                 Datos de Identificación
               </h3>
@@ -172,7 +172,7 @@ export default function ClientForm({ clientToEdit, onSave, onCancel }: ClientFor
                   <select
                     value={estado}
                     onChange={(e) => setEstado(e.target.value as any)}
-                    className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                    className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-slate-700 outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700/20"
                   >
                     <option value="Activo">Activo</option>
                     <option value="Potencial">Potencial</option>
@@ -218,7 +218,7 @@ export default function ClientForm({ clientToEdit, onSave, onCancel }: ClientFor
                   <select
                     value={fuenteLead}
                     onChange={(e) => setFuenteLead(e.target.value as any)}
-                    className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-slate-700 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                    className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-slate-700 outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700/20"
                   >
                     <option value="Showroom">Showroom</option>
                     <option value="Web">Web</option>
@@ -245,14 +245,14 @@ export default function ClientForm({ clientToEdit, onSave, onCancel }: ClientFor
                           setFechaConsentimiento(null);
                         }
                       }}
-                      className="h-4 w-4 rounded border-slate-350 text-indigo-600 focus:ring-indigo-500"
+                      className="h-4 w-4 rounded border-slate-350 text-gray-900 focus:ring-gray-700"
                     />
                     <label htmlFor="consentimientoRGPD" className="text-xs font-semibold text-slate-700 cursor-pointer select-none">
                       El cliente acepta recibir comunicaciones comerciales (RGPD)
                     </label>
                   </div>
                   {consentimientoRGPD && (
-                    <span className="text-[10px] text-indigo-600 font-medium pl-6">
+                    <span className="text-[10px] text-gray-900 font-medium pl-6">
                       Aceptado el: {fechaConsentimiento ? new Date(fechaConsentimiento).toLocaleDateString('es-ES') : new Date().toLocaleDateString('es-ES')}
                     </span>
                   )}
@@ -262,7 +262,7 @@ export default function ClientForm({ clientToEdit, onSave, onCancel }: ClientFor
 
             {/* Section 2: Contacto */}
             <div className="space-y-4">
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 border-b border-slate-100 pb-1 flex items-center gap-1.5">
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-gray-900 border-b border-slate-100 pb-1 flex items-center gap-1.5">
                 <Phone className="h-3.5 w-3.5" />
                 Información de Contacto
               </h3>
@@ -312,7 +312,7 @@ export default function ClientForm({ clientToEdit, onSave, onCancel }: ClientFor
 
             {/* Section 3: Dirección y Datos Financieros */}
             <div className="space-y-4">
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 border-b border-slate-100 pb-1 flex items-center gap-1.5">
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-gray-900 border-b border-slate-100 pb-1 flex items-center gap-1.5">
                 <MapPin className="h-3.5 w-3.5" />
                 Ubicación y Facturación
               </h3>
@@ -380,7 +380,7 @@ export default function ClientForm({ clientToEdit, onSave, onCancel }: ClientFor
 
             {/* Section 4: Observaciones */}
             <div className="space-y-4">
-              <h3 className="text-[11px] font-bold uppercase tracking-wider text-indigo-600 border-b border-slate-100 pb-1 flex items-center gap-1.5">
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-gray-900 border-b border-slate-100 pb-1 flex items-center gap-1.5">
                 <FileText className="h-3.5 w-3.5" />
                 Observaciones Adicionales
               </h3>
@@ -392,7 +392,7 @@ export default function ClientForm({ clientToEdit, onSave, onCancel }: ClientFor
                   value={observaciones}
                   onChange={(e) => setObservaciones(e.target.value)}
                   rows={4}
-                  className="w-full text-xs rounded-lg border border-slate-200 bg-white p-2.5 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                  className="w-full text-xs rounded-lg border border-slate-200 bg-white p-2.5 outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700/20"
                 />
               </div>
             </div>
@@ -412,7 +412,7 @@ export default function ClientForm({ clientToEdit, onSave, onCancel }: ClientFor
 
           <Button
             type="submit"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm shadow-indigo-600/10 h-9 px-4 gap-1.5 transition-all"
+            className="bg-gray-900 hover:bg-gray-800 text-white text-xs font-semibold rounded-lg shadow-sm shadow-gray-900/10 h-9 px-4 gap-1.5 transition-all"
           >
             <Save className="h-4 w-4" />
             Guardar Ficha

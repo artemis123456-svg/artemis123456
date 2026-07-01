@@ -318,7 +318,7 @@ export default function ClientDetail({
       {/* CRM Client Header Card */}
       <div className="bg-white rounded-xl border border-slate-150 p-6 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div className="flex items-start gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-700 border border-indigo-100 font-bold text-lg shadow-sm">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gray-100 text-gray-800 border border-gray-100 font-bold text-lg shadow-sm">
             {client.nombre.charAt(0)}{client.apellidos.charAt(0)}
           </div>
           <div className="space-y-1">
@@ -345,7 +345,7 @@ export default function ClientDetail({
           <Button
             size="sm"
             onClick={() => setIsObraModalOpen(true)}
-            className="h-8.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg gap-1.5 px-3"
+            className="h-8.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-semibold rounded-lg gap-1.5 px-3"
           >
             <Plus className="h-3.5 w-3.5" />
             Crear Obra
@@ -425,10 +425,10 @@ export default function ClientDetail({
                 onClick={() => setActiveTab(tab.id as TabType)}
                 className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold border-b-2 transition-all shrink-0 select-none whitespace-nowrap
                   ${isActive 
-                    ? 'border-indigo-600 text-indigo-700 font-bold' 
+                    ? 'border-gray-900 text-gray-800 font-bold' 
                     : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'}`}
               >
-                <Icon className={`h-4 w-4 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`} />
+                <Icon className={`h-4 w-4 ${isActive ? 'text-gray-900' : 'text-slate-400'}`} />
                 {tab.label}
               </button>
             );
@@ -472,7 +472,7 @@ export default function ClientDetail({
                     </li>
                     <li className="flex items-center gap-3">
                       <span className="font-semibold text-slate-400 w-24">Email:</span>
-                      <span className="text-indigo-600 hover:underline font-sans font-medium">
+                      <span className="text-gray-900 hover:underline font-sans font-medium">
                         {client.email ? <a href={`mailto:${client.email}`}>{client.email}</a> : '-'}
                       </span>
                     </li>
@@ -524,7 +524,7 @@ export default function ClientDetail({
                 {/* Fuente de Captación */}
                 <div className="space-y-3">
                   <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 border-b border-slate-100 pb-1">
-                    <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
+                    <Sparkles className="h-3.5 w-3.5 text-gray-700" />
                     Origen y Captación
                   </h4>
                   <ul className="space-y-3 text-xs">
@@ -538,7 +538,7 @@ export default function ClientDetail({
                 {/* Consentimiento RGPD */}
                 <div className="space-y-3">
                   <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 border-b border-slate-100 pb-1">
-                    <FileText className="h-3.5 w-3.5 text-indigo-500" />
+                    <FileText className="h-3.5 w-3.5 text-gray-700" />
                     Consentimiento RGPD
                   </h4>
                   <ul className="space-y-3 text-xs">
@@ -581,7 +581,7 @@ export default function ClientDetail({
                 <Button 
                   size="sm" 
                   onClick={() => setIsObraModalOpen(true)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-8 gap-1 rounded-lg"
+                  className="bg-gray-900 hover:bg-gray-800 text-white text-xs h-8 gap-1 rounded-lg"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Añadir Obra
@@ -598,7 +598,7 @@ export default function ClientDetail({
                           <h4 className="text-xs font-bold text-slate-950 leading-snug">{obra.titulo}</h4>
                         </div>
                         <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold leading-none
-                          ${obra.estado === 'En obra' ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/10' :
+                          ${obra.estado === 'En obra' ? 'bg-gray-100 text-gray-800 ring-1 ring-gray-900/10' :
                             obra.estado === 'Aceptada' ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/10' :
                             obra.estado === 'Entregada' ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/10' :
                             'bg-slate-100 text-slate-600 ring-1 ring-slate-600/10'}`}
@@ -633,7 +633,7 @@ export default function ClientDetail({
                               className={`px-1.5 py-0.5 rounded text-[9px] font-semibold transition-colors
                                 ${obra.estado === st 
                                   ? 'bg-slate-200 text-slate-700 font-bold' 
-                                  : 'text-indigo-600 hover:bg-indigo-50'}`}
+                                  : 'text-gray-900 hover:bg-gray-100'}`}
                             >
                               {st}
                             </button>
@@ -651,7 +651,7 @@ export default function ClientDetail({
                   <Button 
                     size="xs" 
                     onClick={() => setIsObraModalOpen(true)}
-                    className="bg-indigo-600 text-white text-[11px] h-7"
+                    className="bg-gray-900 text-white text-[11px] h-7"
                   >
                     Añadir Primera Obra
                   </Button>
@@ -668,7 +668,7 @@ export default function ClientDetail({
                 <Button 
                   size="sm" 
                   onClick={() => setIsPresupuestoModalOpen(true)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-8 gap-1 rounded-lg"
+                  className="bg-gray-900 hover:bg-gray-800 text-white text-xs h-8 gap-1 rounded-lg"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Añadir Presupuesto
@@ -699,7 +699,7 @@ export default function ClientDetail({
                             <TableCell className="px-4 py-3 text-slate-500">
                               {linkedObra ? (
                                 <span className="inline-flex items-center gap-1 font-medium text-slate-700">
-                                  <Building2 className="h-3 w-3 text-indigo-500" />
+                                  <Building2 className="h-3 w-3 text-gray-700" />
                                   {linkedObra.titulo}
                                 </span>
                               ) : 'General / Sin obra'}
@@ -709,7 +709,7 @@ export default function ClientDetail({
                             <TableCell className="px-4 py-3">
                               <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold leading-none
                                 ${pres.estado === 'Aceptado' ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/10' :
-                                  pres.estado === 'Enviado' ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/10' :
+                                  pres.estado === 'Enviado' ? 'bg-gray-100 text-gray-800 ring-1 ring-gray-900/10' :
                                   pres.estado === 'Rechazado' ? 'bg-red-50 text-red-700 ring-1 ring-red-600/10' :
                                   'bg-slate-100 text-slate-600 ring-1 ring-slate-600/10'}`}
                               >
@@ -727,7 +727,7 @@ export default function ClientDetail({
                                       className={`px-1 py-0.5 rounded text-[9px] font-semibold transition-colors
                                         ${pres.estado === st 
                                           ? 'bg-slate-200 text-slate-700 font-bold' 
-                                          : 'text-indigo-600 hover:bg-indigo-50'}`}
+                                          : 'text-gray-900 hover:bg-gray-100'}`}
                                     >
                                       {st}
                                     </button>
@@ -749,7 +749,7 @@ export default function ClientDetail({
                   <Button 
                     size="xs" 
                     onClick={() => setIsPresupuestoModalOpen(true)}
-                    className="bg-indigo-600 text-white text-[11px] h-7"
+                    className="bg-gray-900 text-white text-[11px] h-7"
                   >
                     Crear Presupuesto
                   </Button>
@@ -813,7 +813,7 @@ export default function ClientDetail({
                                     className={`px-1.5 py-0.5 rounded text-[9px] font-semibold transition-colors
                                       ${fac.estado === st 
                                         ? 'bg-slate-200 text-slate-700 font-bold' 
-                                        : 'text-indigo-600 hover:bg-indigo-50'}`}
+                                        : 'text-gray-900 hover:bg-gray-100'}`}
                                   >
                                     {st === 'Cobrada' ? 'Marcar Cobrada' : st}
                                   </button>
@@ -844,7 +844,7 @@ export default function ClientDetail({
                 <Button 
                   size="sm" 
                   onClick={() => setIsDocModalOpen(true)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-8 gap-1 rounded-lg"
+                  className="bg-gray-900 hover:bg-gray-800 text-white text-xs h-8 gap-1 rounded-lg"
                 >
                   <Upload className="h-3.5 w-3.5" />
                   Subir Documento
@@ -857,10 +857,10 @@ export default function ClientDetail({
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
                 className={`border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer flex flex-col items-center justify-center space-y-2
-                  ${isDragging ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 hover:bg-slate-50/50'}`}
+                  ${isDragging ? 'border-gray-700 bg-gray-100/50' : 'border-slate-200 hover:bg-slate-50/50'}`}
                 onClick={() => setIsDocModalOpen(true)}
               >
-                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-full">
+                <div className="p-2 bg-gray-100 text-gray-900 rounded-full">
                   <Upload className="h-5 w-5" />
                 </div>
                 <p className="text-xs font-semibold text-slate-700">Arrastra archivos aquí o haz clic para examinar</p>
@@ -879,7 +879,7 @@ export default function ClientDetail({
                           <div className={`p-2 shrink-0 rounded-lg text-xs font-bold font-mono
                             ${isPDF ? 'bg-red-50 text-red-600 border border-red-100' :
                               isZIP ? 'bg-amber-50 text-amber-600 border border-amber-100' :
-                              'bg-indigo-50 text-indigo-600 border border-indigo-100'}`}
+                              'bg-gray-100 text-gray-900 border border-gray-100'}`}
                           >
                             {doc.tipo}
                           </div>
@@ -894,7 +894,7 @@ export default function ClientDetail({
                           size="icon-xs"
                           onClick={() => window.open('https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=800')}
                           title="Descargar"
-                          className="h-8 w-8 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 shrink-0"
+                          className="h-8 w-8 text-slate-400 hover:text-gray-900 hover:bg-gray-100 shrink-0"
                         >
                           <ExternalLink className="h-3.5 w-3.5" />
                         </Button>
@@ -922,13 +922,13 @@ export default function ClientDetail({
                   value={newNoteContent}
                   onChange={(e) => setNewNoteContent(e.target.value)}
                   rows={3}
-                  className="w-full text-xs rounded-lg border border-slate-200 bg-white p-2.5 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                  className="w-full text-xs rounded-lg border border-slate-200 bg-white p-2.5 outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700/20"
                 />
                 <div className="flex justify-end">
                   <Button
                     type="submit"
                     disabled={!newNoteContent.trim()}
-                    className="h-8 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm gap-1.5 px-3 transition-all"
+                    className="h-8 bg-gray-900 hover:bg-gray-800 text-white text-xs font-semibold rounded-lg shadow-sm gap-1.5 px-3 transition-all"
                   >
                     <MessageSquare className="h-3.5 w-3.5" />
                     Publicar Nota
@@ -943,7 +943,7 @@ export default function ClientDetail({
                     <div key={nota.id} className="bg-slate-50/50 border border-slate-150 rounded-xl p-4 space-y-2 relative">
                       <div className="flex items-center justify-between text-[11px] text-slate-400">
                         <span className="font-semibold text-slate-700 flex items-center gap-1">
-                          <User className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                          <User className="h-3.5 w-3.5 text-gray-700 shrink-0" />
                           {nota.autor}
                         </span>
                         <span className="flex items-center gap-1 font-mono">
@@ -973,7 +973,7 @@ export default function ClientDetail({
                   {clientHistorial.map((entry) => (
                     <div key={entry.id} className="relative group">
                       {/* Timeline dot */}
-                      <span className="absolute -left-[21px] top-1 h-3 w-3 rounded-full bg-indigo-500 ring-4 ring-white border border-indigo-600 transition-colors duration-150 group-hover:bg-indigo-600" />
+                      <span className="absolute -left-[21px] top-1 h-3 w-3 rounded-full bg-gray-700 ring-4 ring-white border border-gray-900 transition-colors duration-150 group-hover:bg-gray-900" />
                       
                       <div className="space-y-1">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-slate-400 gap-1">
@@ -1042,7 +1042,7 @@ export default function ClientDetail({
                 <select 
                   value={obraTipoReforma} 
                   onChange={e => setObraTipoReforma(e.target.value as any)}
-                  className="col-span-3 text-xs rounded-lg border border-slate-200 bg-white p-2.5 outline-none focus:border-indigo-500"
+                  className="col-span-3 text-xs rounded-lg border border-slate-200 bg-white p-2.5 outline-none focus:border-gray-700"
                 >
                   <option value="Cocina">Cocina</option>
                   <option value="Baño">Baño</option>
@@ -1067,7 +1067,7 @@ export default function ClientDetail({
                 <select 
                   value={obraEstado} 
                   onChange={e => setObraEstado(e.target.value as any)}
-                  className="col-span-3 text-xs rounded-lg border border-slate-200 bg-white p-2.5 outline-none focus:border-indigo-500"
+                  className="col-span-3 text-xs rounded-lg border border-slate-200 bg-white p-2.5 outline-none focus:border-gray-700"
                 >
                   <option value="Presupuesto">Presupuesto</option>
                   <option value="Aceptada">Aceptada</option>
@@ -1091,7 +1091,7 @@ export default function ClientDetail({
               <Button type="button" variant="ghost" onClick={() => setIsObraModalOpen(false)} className="text-xs h-8">
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-8 px-4">
+              <Button type="submit" className="bg-gray-900 hover:bg-gray-800 text-white text-xs h-8 px-4">
                 Crear Obra
               </Button>
             </DialogFooter>
@@ -1139,7 +1139,7 @@ export default function ClientDetail({
                 <select 
                   value={presObraId} 
                   onChange={e => setPresObraId(e.target.value)}
-                  className="col-span-3 text-xs rounded-lg border border-slate-200 bg-white p-2.5 outline-none focus:border-indigo-500"
+                  className="col-span-3 text-xs rounded-lg border border-slate-200 bg-white p-2.5 outline-none focus:border-gray-700"
                 >
                   <option value="">General / Sin obra asignada</option>
                   {clientObras.map(o => (
@@ -1153,7 +1153,7 @@ export default function ClientDetail({
                 <select 
                   value={presEstado} 
                   onChange={e => setPresEstado(e.target.value as any)}
-                  className="col-span-3 text-xs rounded-lg border border-slate-200 bg-white p-2.5 outline-none focus:border-indigo-500"
+                  className="col-span-3 text-xs rounded-lg border border-slate-200 bg-white p-2.5 outline-none focus:border-gray-700"
                 >
                   <option value="Borrador">Borrador</option>
                   <option value="Enviado">Enviado</option>
@@ -1167,7 +1167,7 @@ export default function ClientDetail({
               <Button type="button" variant="ghost" onClick={() => setIsPresupuestoModalOpen(false)} className="text-xs h-8">
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-8 px-4">
+              <Button type="submit" className="bg-gray-900 hover:bg-gray-800 text-white text-xs h-8 px-4">
                 Generar Presupuesto
               </Button>
             </DialogFooter>
@@ -1211,7 +1211,7 @@ export default function ClientDetail({
               <Button type="button" variant="ghost" onClick={() => setIsDocModalOpen(false)} className="text-xs h-8">
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-8 px-4">
+              <Button type="submit" className="bg-gray-900 hover:bg-gray-800 text-white text-xs h-8 px-4">
                 Adjuntar Archivo
               </Button>
             </DialogFooter>

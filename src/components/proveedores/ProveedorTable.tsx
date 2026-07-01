@@ -378,7 +378,7 @@ export default function ProveedorTable({
                           size="icon"
                           onClick={() => onSelectProveedor(prov)}
                           title="Ficha Proveedor"
-                          className="h-8 w-8 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-slate-100"
+                          className="h-8 w-8 text-slate-400 hover:text-gray-900 rounded-lg hover:bg-slate-100"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -387,7 +387,7 @@ export default function ProveedorTable({
                           size="icon"
                           onClick={() => onEditProveedor(prov)}
                           title="Editar"
-                          className="h-8 w-8 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-slate-100"
+                          className="h-8 w-8 text-slate-400 hover:text-gray-900 rounded-lg hover:bg-slate-100"
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>

@@ -192,8 +192,8 @@ export default function ProductoDetail({
               <span className="font-mono text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 uppercase tracking-wide">
                 {producto.codigo}
               </span>
-              <span className="inline-flex items-center gap-1 rounded bg-indigo-50 px-2.5 py-0.5 text-[11px] font-bold text-indigo-800 ring-1 ring-indigo-600/10">
-                <Tag className="h-3 w-3 text-indigo-400" />
+              <span className="inline-flex items-center gap-1 rounded bg-gray-100 px-2.5 py-0.5 text-[11px] font-bold text-gray-900 ring-1 ring-gray-900/10">
+                <Tag className="h-3 w-3 text-gray-500" />
                 {producto.categoria}
               </span>
               {renderStatusBadge(producto.activo)}
@@ -236,9 +236,9 @@ export default function ProductoDetail({
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Precio Venta PVP</span>
-            <DollarSign className="h-4 w-4 text-indigo-500" />
+            <DollarSign className="h-4 w-4 text-gray-700" />
           </div>
-          <p className="mt-2 text-xl font-bold text-indigo-650 font-mono">
+          <p className="mt-2 text-xl font-bold text-gray-800 font-mono">
             {producto.precioVenta.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €
           </p>
           <p className="text-[10px] text-slate-400 font-medium mt-0.5">Por {producto.unidad}</p>
@@ -305,10 +305,10 @@ export default function ProductoDetail({
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-5 py-3.5 text-xs font-semibold border-b-2 whitespace-nowrap transition-all outline-none
                   ${isActive 
-                    ? 'border-indigo-600 text-indigo-700 bg-white font-bold' 
+                    ? 'border-gray-900 text-gray-800 bg-white font-bold' 
                     : 'border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50/40'}`}
               >
-                <Icon className={`h-4 w-4 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`} />
+                <Icon className={`h-4 w-4 ${isActive ? 'text-gray-900' : 'text-slate-400'}`} />
                 {tab.label}
               </button>
             );
@@ -324,7 +324,7 @@ export default function ProductoDetail({
                 {/* Technical data and margins */}
                 <div className="space-y-4">
                   <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                    <Wrench className="h-3.5 w-3.5 text-indigo-500" />
+                    <Wrench className="h-3.5 w-3.5 text-gray-700" />
                     Propiedades Técnicas y Tarifación
                   </h4>
                   <ul className="space-y-3 text-xs">
@@ -347,7 +347,7 @@ export default function ProductoDetail({
                     </li>
                     <li className="flex justify-between items-center py-0.5">
                       <span className="font-semibold text-slate-400">Precio Venta Recomendado (PVP):</span>
-                      <span className="font-mono font-bold text-indigo-700 bg-indigo-50/50 px-2 py-0.5 rounded border border-indigo-150">{producto.precioVenta.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
+                      <span className="font-mono font-bold text-gray-800 bg-gray-100/50 px-2 py-0.5 rounded border border-gray-200">{producto.precioVenta.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
                     </li>
                     <li className="flex justify-between items-center py-0.5 border-t border-dashed border-slate-100 mt-2 pt-2">
                       <span className="font-bold text-slate-500">Rendimiento Comercial Bruto:</span>
@@ -365,7 +365,7 @@ export default function ProductoDetail({
                 {/* Stock details */}
                 <div className="space-y-4">
                   <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                    <Layers className="h-3.5 w-3.5 text-indigo-500" />
+                    <Layers className="h-3.5 w-3.5 text-gray-700" />
                     Gestión de Inventario
                   </h4>
                   <ul className="space-y-3 text-xs">
@@ -381,7 +381,7 @@ export default function ProductoDetail({
                     </li>
                     <li className="flex justify-between items-center py-0.5">
                       <span className="font-semibold text-slate-400">Proveedor Suministrador:</span>
-                      <span className="font-bold text-indigo-600 hover:underline cursor-pointer flex items-center gap-1" onClick={() => setActiveTab('proveedor')}>
+                      <span className="font-bold text-gray-900 hover:underline cursor-pointer flex items-center gap-1" onClick={() => setActiveTab('proveedor')}>
                         {associatedProvider ? associatedProvider.nombre : 'Sin proveedor asignado'}
                         <ExternalLink className="h-3 w-3 inline-block" />
                       </span>
@@ -413,7 +413,7 @@ export default function ProductoDetail({
                 
                 <Button
                   onClick={() => setIsTarifaFormOpen(!isTarifaFormOpen)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-8 px-3 gap-1 rounded-lg"
+                  className="bg-gray-900 hover:bg-gray-800 text-white text-xs h-8 px-3 gap-1 rounded-lg"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Agregar Tarifa Especial
@@ -470,7 +470,7 @@ export default function ProductoDetail({
                     </Button>
                     <Button
                       type="submit"
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-8 px-4 rounded-lg"
+                      className="bg-gray-900 hover:bg-gray-800 text-white text-xs h-8 px-4 rounded-lg"
                     >
                       Añadir Escala
                     </Button>
@@ -498,7 +498,7 @@ export default function ProductoDetail({
                       return (
                         <tr key={t.id} className="border-b border-slate-100 text-xs hover:bg-slate-50/50">
                           <td className="px-4 py-3.5 font-bold text-slate-800">{t.nombre}</td>
-                          <td className="px-4 py-3.5 font-mono font-bold text-indigo-700">{t.precio.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</td>
+                          <td className="px-4 py-3.5 font-mono font-bold text-gray-800">{t.precio.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</td>
                           <td className="px-4 py-3.5">
                             {discountPct > 0 ? (
                               <span className="inline-flex items-center rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/15">
@@ -542,7 +542,7 @@ export default function ProductoDetail({
                 <div className="bg-slate-50/70 p-5 rounded-xl border border-slate-200/80 space-y-4 animate-in fade-in">
                   <div className="flex justify-between items-start flex-wrap gap-2">
                     <div>
-                      <p className="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded inline-block">
+                      <p className="text-[10px] font-mono font-bold text-gray-800 bg-gray-100 border border-gray-100 px-2 py-0.5 rounded inline-block">
                         {associatedProvider.codigo}
                       </p>
                       <h4 className="text-sm font-bold text-slate-900 mt-1">{associatedProvider.nombre}</h4>
@@ -572,7 +572,7 @@ export default function ProductoDetail({
                       <p className="flex items-center gap-2 text-slate-600">
                         <Mail className="h-4 w-4 text-slate-400 shrink-0" />
                         <span className="font-semibold text-slate-500">Email:</span>
-                        <span className="font-mono text-slate-800 text-indigo-600 hover:underline">{associatedProvider.email || '-'}</span>
+                        <span className="font-mono text-slate-800 text-gray-900 hover:underline">{associatedProvider.email || '-'}</span>
                       </p>
                     </div>
 
@@ -621,7 +621,7 @@ export default function ProductoDetail({
                   onChange={e => setNewImgUrl(e.target.value)}
                   className="text-xs h-9 bg-white font-mono"
                 />
-                <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-9 px-4 gap-1 rounded-lg shrink-0">
+                <Button type="submit" className="bg-gray-900 hover:bg-gray-800 text-white text-xs h-9 px-4 gap-1 rounded-lg shrink-0">
                   <Upload className="h-4 w-4" />
                   Agregar Enlace Imagen
                 </Button>
@@ -643,7 +643,7 @@ export default function ProductoDetail({
 
                     {/* Principal marker overlay */}
                     {img.esPrincipal && (
-                      <span className="absolute top-2 left-2 bg-indigo-600 text-white font-bold text-[9px] uppercase px-2 py-0.5 rounded shadow-sm select-none">
+                      <span className="absolute top-2 left-2 bg-gray-900 text-white font-bold text-[9px] uppercase px-2 py-0.5 rounded shadow-sm select-none">
                         Principal
                       </span>
                     )}
