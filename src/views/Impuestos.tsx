@@ -22,7 +22,8 @@ import {
   X,
   FileText,
   HelpCircle,
-  Eye
+  Eye,
+  Printer
 } from 'lucide-react';
 
 type PeriodType = 'T1' | 'T2' | 'T3' | 'T4' | 'ALL' | string;
@@ -407,6 +408,18 @@ export default function Impuestos() {
               </select>
             </>
           )}
+
+          <div className="h-4 w-px bg-slate-200 print:hidden"></div>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.print()}
+            className="h-7 px-2.5 text-[11px] font-bold bg-white text-slate-700 hover:text-slate-900 border-slate-200 cursor-pointer flex items-center gap-1.5 print:hidden"
+          >
+            <Printer className="h-3.5 w-3.5" />
+            Imprimir Informe
+          </Button>
 
         </div>
       </div>

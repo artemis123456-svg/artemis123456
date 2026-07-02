@@ -137,3 +137,55 @@
     @apply font-sans;
     }
 }
+
+@media print {
+  aside,
+  header,
+  nav,
+  button,
+  select,
+  .no-print,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  body, html, main, #root, .main-content, div[class*="h-screen"], div[class*="w-screen"], div[class*="overflow-hidden"] {
+    background: white !important;
+    color: black !important;
+    height: auto !important;
+    overflow: visible !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: static !important;
+    display: block !important;
+  }
+
+  /* Make tables and containers print fully without scrollbars */
+  .overflow-x-auto, .overflow-y-auto, [class*="overflow-y-auto"], [class*="overflow-x-auto"] {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  /* Clean up cards and boxes for printing */
+  .bg-white, .bg-slate-50, .bg-slate-100 {
+    background: transparent !important;
+  }
+  
+  .border, .border-slate-150, .border-slate-200 {
+    border-color: #e2e8f0 !important;
+  }
+
+  table {
+    page-break-inside: auto;
+  }
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+  thead {
+    display: table-header-group;
+  }
+}
