@@ -18,4 +18,5 @@ export interface Factura {
   lineas: LineaFactura[];
   estado: 'Borrador' | 'Emitida' | 'Cobrada' | 'Vencida';
   observaciones: string;
+  entregadoGestoria?: boolean;
 }

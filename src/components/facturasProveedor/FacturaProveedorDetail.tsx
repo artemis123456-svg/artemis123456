@@ -23,6 +23,7 @@ interface FacturaProveedorDetailProps {
   obras: Obra[];
   onBack: () => void;
   onUpdateStatus: (id: string, status: FacturaProveedor['estado']) => void;
+  onToggleGestoria?: (id: string) => void;
 }
 
 export default function FacturaProveedorDetail({
@@ -30,7 +31,8 @@ export default function FacturaProveedorDetail({
   proveedores,
   obras,
   onBack,
-  onUpdateStatus
+  onUpdateStatus,
+  onToggleGestoria
 }: FacturaProveedorDetailProps) {
   const proveedor = proveedores.find(p => p.id === factura.proveedorId);
   const totals = calculateFacturaProveedorTotals(factura.lineas, factura.retencionIrpf);
@@ -81,6 +83,17 @@ export default function FacturaProveedorDetail({
         </Button>
 
         <div className="flex items-center gap-2">
+          {/* Gestoría toggle */}
+          <div className="flex items-center gap-1.5 border border-slate-200 rounded-lg p-1 bg-slate-50 mr-2 text-xs h-9">
+            <span className="px-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Gestoría:</span>
+            <button
+              onClick={() => onToggleGestoria?.(factura.id)}
+              className={`h-7 px-2.5 text-[11px] font-semibold rounded-md transition-all cursor-pointer flex items-center gap-1 ${factura.entregadoGestoria ? 'bg-emerald-600 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'}`}
+            >
+              {factura.entregadoGestoria ? 'Entregado' : 'Pendiente'}
+            </button>
+          </div>
+
           {factura.estado !== 'Pagada' && (
             <Button
               onClick={() => onUpdateStatus(factura.id, 'Pagada')}
@@ -147,6 +160,12 @@ export default function FacturaProveedorDetail({
             </div>
 
             <div className="flex md:justify-end gap-6 pt-4 text-xs text-slate-500">
+              <div className="space-y-0.5">
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Gestoría</span>
+                <span className={`inline-flex items-center rounded px-1.5 py-0.2 text-[10px] font-bold ${factura.entregadoGestoria ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/10' : 'bg-slate-100 text-slate-600'}`}>
+                  {factura.entregadoGestoria ? 'Sí, Entregado' : 'No, Pendiente'}
+                </span>
+              </div>
               <div className="space-y-0.5">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Fecha Emisión</span>
                 <span className="font-mono text-slate-800 font-bold">{new Date(factura.fechaEmision).toLocaleDateString('es-ES')}</span>

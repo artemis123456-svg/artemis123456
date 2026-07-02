@@ -61,6 +61,7 @@ function facturaProveedorFromRow(row: any, lineas: LineaFacturaProveedor[]): Fac
     estado: row.estado,
     retencionIrpf: Number(row.retencion_irpf || 0),
     observaciones: row.observaciones || '',
+    entregadoGestoria: !!row.entregado_gestoria,
     lineas: lineas
   };
 }
@@ -75,6 +76,7 @@ function facturaProveedorToRow(fac: Partial<FacturaProveedor>): any {
   if (fac.estado !== undefined) row.estado = fac.estado;
   if (fac.retencionIrpf !== undefined) row.retencion_irpf = Number(fac.retencionIrpf);
   if (fac.observaciones !== undefined) row.observaciones = fac.observaciones;
+  if (fac.entregadoGestoria !== undefined) row.entregado_gestoria = fac.entregadoGestoria;
   return row;
 }
 
@@ -309,6 +311,25 @@ export function useFacturasProveedor() {
     }
   }, []);
 
+  const toggleEntregadoGestoria = async (id: string) => {
+    try {
+      const current = facturasProveedor.find(f => f.id === id);
+      if (!current) return;
+      const newValue = !current.entregadoGestoria;
+      const { error: err } = await supabase
+        .from('facturas_proveedor')
+        .update({ entregado_gestoria: newValue })
+        .eq('id', id);
+      if (err) throw err;
+
+      await fetchFacturasProveedor();
+    } catch (err: any) {
+      console.error('Error toggling entregado_gestoria (proveedor):', err);
+      setError(err.message || 'Error al cambiar el estado de gestoría');
+      throw err;
+    }
+  };
+
   return {
     facturasProveedor,
     loading,
@@ -317,6 +338,7 @@ export function useFacturasProveedor() {
     updateFacturaProveedor,
     deleteFacturaProveedor,
     changeFacturaProveedorEstado,
+    toggleEntregadoGestoria,
     getMaterialLinesByObraId,
     calculateTotals: calculateFacturaProveedorTotals
   };

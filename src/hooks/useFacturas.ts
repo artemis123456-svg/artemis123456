@@ -58,6 +58,7 @@ function facturaFromRow(row: any, lineas: LineaFactura[]): Factura {
     fechaVencimiento: row.fecha_vencimiento,
     estado: row.estado,
     observaciones: row.observaciones || '',
+    entregadoGestoria: !!row.entregado_gestoria,
     lineas: lineas
   };
 }
@@ -72,6 +73,7 @@ function facturaToRow(fac: Partial<Factura>): any {
   if (fac.fechaVencimiento !== undefined) row.fecha_vencimiento = fac.fechaVencimiento;
   if (fac.estado !== undefined) row.estado = fac.estado;
   if (fac.observaciones !== undefined) row.observaciones = fac.observaciones;
+  if (fac.entregadoGestoria !== undefined) row.entregado_gestoria = fac.entregadoGestoria;
   return row;
 }
 
@@ -274,6 +276,25 @@ export function useFacturas() {
     }
   };
 
+  const toggleEntregadoGestoria = async (id: string) => {
+    try {
+      const current = facturas.find(f => f.id === id);
+      if (!current) return;
+      const newValue = !current.entregadoGestoria;
+      const { error: err } = await supabase
+        .from('facturas')
+        .update({ entregado_gestoria: newValue })
+        .eq('id', id);
+      if (err) throw err;
+
+      await fetchFacturas();
+    } catch (err: any) {
+      console.error('Error toggling entregado_gestoria:', err);
+      setError(err.message || 'Error al cambiar el estado de gestoría');
+      throw err;
+    }
+  };
+
   return {
     facturas,
     loading,
@@ -282,6 +303,7 @@ export function useFacturas() {
     updateFactura,
     deleteFactura,
     changeFacturaEstado,
+    toggleEntregadoGestoria,
     generateNextNumero,
     calculateTotals: calculateFacturaTotals
   };

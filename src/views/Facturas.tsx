@@ -30,6 +30,7 @@ export default function Facturas() {
     updateFactura,
     deleteFactura,
     changeFacturaEstado,
+    toggleEntregadoGestoria,
     generateNextNumero
   } = useFacturas();
 
@@ -94,6 +95,13 @@ export default function Facturas() {
     // Sync active detailed view if open
     if (selectedFactura && selectedFactura.id === id) {
       setSelectedFactura(prev => prev ? { ...prev, estado: nuevoEstado } : null);
+    }
+  };
+
+  const handleToggleGestoria = async (id: string) => {
+    await toggleEntregadoGestoria(id);
+    if (selectedFactura && selectedFactura.id === id) {
+      setSelectedFactura(prev => prev ? { ...prev, entregadoGestoria: !prev.entregadoGestoria } : null);
     }
   };
 
@@ -220,6 +228,7 @@ export default function Facturas() {
               setSelectedFactura(null);
               setViewState('create');
             }}
+            onToggleGestoria={handleToggleGestoria}
           />
         )}
 
@@ -237,6 +246,7 @@ export default function Facturas() {
               setViewState('edit');
             }}
             onChangeEstado={handleChangeEstado}
+            onToggleGestoria={handleToggleGestoria}
           />
         )}
 

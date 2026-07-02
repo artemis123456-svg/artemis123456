@@ -36,6 +36,7 @@ interface FacturaProveedorTableProps {
   onEditFactura: (factura: FacturaProveedor) => void;
   onDeleteFactura: (id: string) => void;
   onNewFactura: () => void;
+  onToggleGestoria?: (id: string) => void;
 }
 
 type SortField = 'numero' | 'proveedorName' | 'fechaEmision' | 'total' | 'estado';
@@ -47,7 +48,8 @@ export default function FacturaProveedorTable({
   onSelectFactura,
   onEditFactura,
   onDeleteFactura,
-  onNewFactura
+  onNewFactura,
+  onToggleGestoria
 }: FacturaProveedorTableProps) {
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -284,6 +286,9 @@ export default function FacturaProveedorTable({
               <TableHead onClick={() => handleSort('estado')} className="cursor-pointer select-none hover:bg-slate-100/50 w-32 font-bold text-slate-700">
                 Estado {renderSortIcon('estado')}
               </TableHead>
+              <TableHead className="py-3 px-4 font-bold text-slate-700 select-none text-center">
+                Gestoría
+              </TableHead>
               <TableHead className="w-28 text-right font-bold text-slate-700">
                 Acciones
               </TableHead>
@@ -323,6 +328,25 @@ export default function FacturaProveedorTable({
                   </TableCell>
                   <TableCell className="text-xs">
                     {renderStatusBadge(f.estado)}
+                  </TableCell>
+                  <TableCell className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={f.entregadoGestoria || false}
+                        onChange={() => onToggleGestoria?.(f.id)}
+                        className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                      />
+                      {f.entregadoGestoria ? (
+                        <span className="inline-flex items-center rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-600/20">
+                          Entregado
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-md bg-slate-50 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 ring-1 ring-slate-200">
+                          Pendiente
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-1">

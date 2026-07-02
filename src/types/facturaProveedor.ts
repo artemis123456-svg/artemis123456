@@ -20,5 +20,6 @@ export interface FacturaProveedor {
   estado: 'Pendiente' | 'Pagada' | 'Vencida';
   retencionIrpf: number;      // % IRPF (ej. 15)
   observaciones: string;
+  entregadoGestoria?: boolean;
   lineas: LineaFacturaProveedor[];
 }

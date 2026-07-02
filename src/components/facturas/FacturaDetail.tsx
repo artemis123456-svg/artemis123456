@@ -31,6 +31,7 @@ interface FacturaDetailProps {
   onBack: () => void;
   onEdit: (factura: Factura) => void;
   onChangeEstado: (id: string, estado: Factura['estado']) => void;
+  onToggleGestoria?: (id: string) => void;
 }
 
 export default function FacturaDetail({
@@ -39,7 +40,8 @@ export default function FacturaDetail({
   obras,
   onBack,
   onEdit,
-  onChangeEstado
+  onChangeEstado,
+  onToggleGestoria
 }: FacturaDetailProps) {
   const { datos: datosEmpresa } = useDatosEmpresa();
 
@@ -108,41 +110,52 @@ export default function FacturaDetail({
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Quick status actions */}
-          <div className="flex items-center gap-1 border border-slate-200 rounded-lg p-1 bg-slate-50 mr-2 text-xs">
-            <span className="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cambiar estado:</span>
-            <Button
-              variant={factura.estado === 'Borrador' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => onChangeEstado(factura.id, 'Borrador')}
-              className={`h-7 px-2 text-[11px] font-semibold rounded-md ${factura.estado === 'Borrador' ? 'bg-white text-slate-800 shadow-xs hover:bg-white' : 'text-slate-500 hover:text-slate-800'}`}
-            >
-              Borrador
-            </Button>
-            <Button
-              variant={factura.estado === 'Emitida' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => onChangeEstado(factura.id, 'Emitida')}
-              className={`h-7 px-2 text-[11px] font-semibold rounded-md cursor-pointer ${factura.estado === 'Emitida' ? 'bg-verini-blue text-white shadow-xs hover:bg-verini-blue/90' : 'text-slate-500 hover:text-slate-800'}`}
-            >
-              Emitir
-            </Button>
-            <Button
-              variant={factura.estado === 'Cobrada' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => onChangeEstado(factura.id, 'Cobrada')}
-              className={`h-7 px-2 text-[11px] font-semibold rounded-md cursor-pointer ${factura.estado === 'Cobrada' ? 'bg-verini-teal text-white shadow-xs hover:bg-verini-teal/90' : 'text-slate-500 hover:text-slate-800'}`}
-            >
-              Cobrada
-            </Button>
-            <Button
-              variant={factura.estado === 'Vencida' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => onChangeEstado(factura.id, 'Vencida')}
-              className={`h-7 px-2 text-[11px] font-semibold rounded-md cursor-pointer ${factura.estado === 'Vencida' ? 'bg-verini-pink text-white shadow-xs hover:bg-verini-pink/90 animate-pulse' : 'text-slate-500 hover:text-slate-800'}`}
-            >
-              Vencida
-            </Button>
-          </div>
+            <div className="flex items-center gap-1 border border-slate-200 rounded-lg p-1 bg-slate-50 mr-2 text-xs">
+              <span className="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cambiar estado:</span>
+              <Button
+                variant={factura.estado === 'Borrador' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => onChangeEstado(factura.id, 'Borrador')}
+                className={`h-7 px-2 text-[11px] font-semibold rounded-md ${factura.estado === 'Borrador' ? 'bg-white text-slate-800 shadow-xs hover:bg-white' : 'text-slate-500 hover:text-slate-800'}`}
+              >
+                Borrador
+              </Button>
+              <Button
+                variant={factura.estado === 'Emitida' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => onChangeEstado(factura.id, 'Emitida')}
+                className={`h-7 px-2 text-[11px] font-semibold rounded-md cursor-pointer ${factura.estado === 'Emitida' ? 'bg-verini-blue text-white shadow-xs hover:bg-verini-blue/90' : 'text-slate-500 hover:text-slate-800'}`}
+              >
+                Emitir
+              </Button>
+              <Button
+                variant={factura.estado === 'Cobrada' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => onChangeEstado(factura.id, 'Cobrada')}
+                className={`h-7 px-2 text-[11px] font-semibold rounded-md cursor-pointer ${factura.estado === 'Cobrada' ? 'bg-verini-teal text-white shadow-xs hover:bg-verini-teal/90' : 'text-slate-500 hover:text-slate-800'}`}
+              >
+                Cobrada
+              </Button>
+              <Button
+                variant={factura.estado === 'Vencida' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => onChangeEstado(factura.id, 'Vencida')}
+                className={`h-7 px-2 text-[11px] font-semibold rounded-md cursor-pointer ${factura.estado === 'Vencida' ? 'bg-verini-pink text-white shadow-xs hover:bg-verini-pink/90 animate-pulse' : 'text-slate-500 hover:text-slate-800'}`}
+              >
+                Vencida
+              </Button>
+            </div>
+
+            {/* Gestoría toggle */}
+            <div className="flex items-center gap-1.5 border border-slate-200 rounded-lg p-1 bg-slate-50 mr-2 text-xs">
+              <span className="px-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Gestoría:</span>
+              <button
+                onClick={() => onToggleGestoria?.(factura.id)}
+                className={`h-7 px-2.5 text-[11px] font-semibold rounded-md transition-all cursor-pointer flex items-center gap-1 ${factura.entregadoGestoria ? 'bg-emerald-600 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'}`}
+              >
+                {factura.entregadoGestoria ? 'Entregado' : 'Pendiente'}
+              </button>
+            </div>
 
           {/* Edit Invoice Button */}
           <Button
@@ -223,6 +236,7 @@ export default function FacturaDetail({
               <div className="space-y-1 text-slate-600">
                 <p><span className="font-semibold text-slate-800">Fecha Emisión:</span> {factura.fechaEmision}</p>
                 <p><span className="font-semibold text-slate-800">Fecha Vencimiento:</span> {factura.fechaVencimiento}</p>
+                <p><span className="font-semibold text-slate-800">Entregado a gestoría:</span> {factura.entregadoGestoria ? 'Sí' : 'No'}</p>
                 <p><span className="font-semibold text-slate-800">Método de Pago:</span> Transferencia Bancaria</p>
                 <p><span className="font-semibold text-slate-800">IBAN:</span> ES21 0049 1500 0512 3456 7890</p>
               </div>

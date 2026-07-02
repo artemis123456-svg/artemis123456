@@ -38,6 +38,7 @@ interface FacturaTableProps {
   onEditFactura: (factura: Factura) => void;
   onDeleteFactura: (id: string) => void;
   onNewFactura: () => void;
+  onToggleGestoria?: (id: string) => void;
 }
 
 type SortField = 'numero' | 'clientName' | 'obraTitle' | 'fechaEmision' | 'total' | 'estado';
@@ -50,7 +51,8 @@ export default function FacturaTable({
   onSelectFactura,
   onEditFactura,
   onDeleteFactura,
-  onNewFactura
+  onNewFactura,
+  onToggleGestoria
 }: FacturaTableProps) {
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -315,6 +317,9 @@ export default function FacturaTable({
                 <TableHead onClick={() => handleSort('estado')} className="cursor-pointer hover:bg-slate-100 transition-colors py-3 px-4 font-semibold text-xs text-slate-500 select-none">
                   Estado {renderSortIcon('estado')}
                 </TableHead>
+                <TableHead className="py-3 px-4 font-semibold text-xs text-slate-500 select-none text-center">
+                  Gestoría
+                </TableHead>
                 <TableHead className="py-3 px-4 text-right font-semibold text-xs text-slate-500 select-none w-28">
                   Acciones
                 </TableHead>
@@ -360,6 +365,25 @@ export default function FacturaTable({
                     </TableCell>
                     <TableCell className="py-3 px-4">
                       {renderStatusBadge(fac.estado)}
+                    </TableCell>
+                    <TableCell className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={fac.entregadoGestoria || false}
+                          onChange={() => onToggleGestoria?.(fac.id)}
+                          className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                        />
+                        {fac.entregadoGestoria ? (
+                          <span className="inline-flex items-center rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-600/20">
+                            Entregado
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-md bg-slate-50 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 ring-1 ring-slate-200">
+                            Pendiente
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="py-3 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1.5">

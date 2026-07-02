@@ -33,7 +33,8 @@ export default function FacturasProveedor() {
     addFacturaProveedor,
     updateFacturaProveedor,
     deleteFacturaProveedor,
-    changeFacturaProveedorEstado
+    changeFacturaProveedorEstado,
+    toggleEntregadoGestoria
   } = useFacturasProveedor();
 
   // Navigation workflow state: 'list' | 'detail' | 'create' | 'edit'
@@ -94,6 +95,17 @@ export default function FacturasProveedor() {
       }
     } catch (err) {
       alert('Error al actualizar el estado de la factura.');
+    }
+  };
+
+  const handleToggleGestoria = async (id: string) => {
+    try {
+      await toggleEntregadoGestoria(id);
+      if (selectedFactura && selectedFactura.id === id) {
+        setSelectedFactura(prev => prev ? { ...prev, entregadoGestoria: !prev.entregadoGestoria } : null);
+      }
+    } catch (err) {
+      alert('Error al cambiar el estado de gestoría.');
     }
   };
 
@@ -242,6 +254,7 @@ export default function FacturasProveedor() {
               setSelectedFactura(null);
               setViewState('create');
             }}
+            onToggleGestoria={handleToggleGestoria}
           />
         )}
 
@@ -255,6 +268,7 @@ export default function FacturasProveedor() {
               setViewState('list');
             }}
             onUpdateStatus={handleChangeEstado}
+            onToggleGestoria={handleToggleGestoria}
           />
         )}
 
