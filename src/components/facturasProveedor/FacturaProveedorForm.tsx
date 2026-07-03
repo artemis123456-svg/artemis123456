@@ -91,12 +91,12 @@ export default function FacturaProveedorForm({
       setPlazosDias(0);
       setReferenciaBancaria('');
       
-      // Start with 1 empty libre line
+      // Start with 1 empty product line
       setLineas([
         {
           id: `temp_${Date.now()}_0`,
           facturaProveedorId: '',
-          tipo: 'libre',
+          tipo: 'producto',
           productoId: null,
           concepto: '',
           cantidad: 1,
@@ -135,7 +135,7 @@ export default function FacturaProveedorForm({
     const newLine: LineaFacturaProveedor = {
       id: `temp_${Date.now()}_${lineas.length}`,
       facturaProveedorId: '',
-      tipo: 'libre',
+      tipo: 'producto',
       productoId: null,
       concepto: '',
       cantidad: 1,
@@ -164,22 +164,7 @@ export default function FacturaProveedorForm({
     const updated = [...lineas];
     const targetLine = { ...updated[index] };
 
-    if (field === 'tipo') {
-      targetLine.tipo = value;
-      if (value === 'producto') {
-        // Default to first product in the catalog
-        const defaultProd = productos[0];
-        if (defaultProd) {
-          targetLine.productoId = defaultProd.id;
-          targetLine.concepto = defaultProd.nombre;
-          targetLine.precioUnitario = defaultProd.precioCompra || 0;
-        }
-      } else {
-        targetLine.productoId = null;
-        targetLine.concepto = '';
-        targetLine.precioUnitario = 0;
-      }
-    } else if (field === 'productoId') {
+    if (field === 'productoId') {
       targetLine.productoId = value;
       const prod = productos.find(p => p.id === value);
       if (prod) {
@@ -441,29 +426,8 @@ export default function FacturaProveedorForm({
                   {index + 1}
                 </div>
 
-                {/* Tipo de línea (Visual Selector) */}
-                <div className="md:col-span-2 space-y-1">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Procedencia</label>
-                  <div className="flex rounded-lg h-9 p-0.5 bg-slate-100 border border-slate-200/60">
-                    <button
-                      type="button"
-                      onClick={() => handleLineChange(index, 'tipo', 'libre')}
-                      className={`flex-1 text-[10px] font-bold rounded px-2 transition-all cursor-pointer ${linea.tipo === 'libre' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-400 hover:text-slate-600'}`}
-                    >
-                      Libre
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleLineChange(index, 'tipo', 'producto')}
-                      className={`flex-1 text-[10px] font-bold rounded px-2 transition-all cursor-pointer ${linea.tipo === 'producto' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-400 hover:text-slate-600'}`}
-                    >
-                      Catálogo
-                    </button>
-                  </div>
-                </div>
-
                 {/* Buscar producto por código */}
-                <div className="md:col-span-2 space-y-1">
+                <div className="md:col-span-3 space-y-1">
                   <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
                     <Search className="h-3 w-3 text-slate-450" />
                     Buscar por Código
@@ -479,7 +443,7 @@ export default function FacturaProveedorForm({
                       }}
                       className="text-xs h-9 bg-white border-slate-200 focus-visible:ring-verini-black pr-7 font-mono"
                     />
-                    {linea.tipo === 'producto' && linea.productoId && (
+                    {linea.productoId && (
                       <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-emerald-600 font-bold" title="Producto Encontrado">
                         ✓
                       </span>
@@ -487,31 +451,22 @@ export default function FacturaProveedorForm({
                   </div>
                 </div>
 
-                {/* Selector de Producto o Input de Concepto */}
-                <div className="md:col-span-2 space-y-1">
+                {/* Selector de Producto */}
+                <div className="md:col-span-3 space-y-1">
                   <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
-                    {linea.tipo === 'producto' ? 'Seleccionar Material' : 'Concepto / Descripción'}
+                    Seleccionar Material
                   </label>
-                  {linea.tipo === 'producto' ? (
-                    <select
-                      value={linea.productoId || ''}
-                      onChange={e => handleLineChange(index, 'productoId', e.target.value)}
-                      className="w-full h-9 bg-white border border-slate-200 rounded-lg px-2 text-xs focus:outline-none focus:ring-1 focus:ring-verini-black font-semibold text-slate-800"
-                    >
-                      <option value="" disabled>Seleccione material...</option>
-                      {productos.map(p => (
-                        <option key={p.id} value={p.id}>{p.nombre} ({p.precioCompra} €)</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <Input
-                      required
-                      placeholder="ej. Saco de cemento cola gris C2"
-                      value={linea.concepto}
-                      onChange={e => handleLineChange(index, 'concepto', e.target.value)}
-                      className="text-xs h-9 bg-white border-slate-200 focus-visible:ring-verini-black"
-                    />
-                  )}
+                  <select
+                    required
+                    value={linea.productoId || ''}
+                    onChange={e => handleLineChange(index, 'productoId', e.target.value)}
+                    className="w-full h-9 bg-white border border-slate-200 rounded-lg px-2 text-xs focus:outline-none focus:ring-1 focus:ring-verini-black font-semibold text-slate-800"
+                  >
+                    <option value="" disabled>Seleccione material...</option>
+                    {productos.map(p => (
+                      <option key={p.id} value={p.id}>{p.nombre} ({p.precioCompra} €)</option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Imputación de Obra (Opcional) */}

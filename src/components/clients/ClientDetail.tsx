@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import { useEventos } from '../../hooks/useEventos';
 import { 
   Client, 
   Obra, 
@@ -104,52 +103,6 @@ export default function ClientDetail({
   const [isObraModalOpen, setIsObraModalOpen] = useState(false);
   const [isPresupuestoModalOpen, setIsPresupuestoModalOpen] = useState(false);
   const [isDocModalOpen, setIsDocModalOpen] = useState(false);
-  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
-
-  // New Event Fields
-  const { eventos: todosEventos, addEvento, refetch: refetchEventos } = useEventos();
-  const [eventTitulo, setEventTitulo] = useState('');
-  const [eventTipo, setEventTipo] = useState<'Visita' | 'Reunión' | 'Llamada' | 'Inicio obra' | 'Otro'>('Reunión');
-  const [eventFecha, setEventFecha] = useState('');
-  const [eventHora, setEventHora] = useState('10:00');
-  const [eventNotas, setEventNotas] = useState('');
-  const [eventObraId, setEventObraId] = useState('');
-
-  const clientEventos = useMemo(() => {
-    return todosEventos.filter(ev => ev.clienteId === client.id);
-  }, [todosEventos, client.id]);
-
-  const handleCreateEventSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!eventTitulo.trim() || !eventFecha) return;
-
-    const fechaInicio = `${eventFecha}T${eventHora || '00:00'}`;
-    const endHour = eventHora ? String(parseInt(eventHora.split(':')[0], 10) + 1).padStart(2, '0') : '11';
-    const endMinutes = eventHora ? eventHora.split(':')[1] : '00';
-    const fechaFin = `${eventFecha}T${endHour}:${endMinutes}`;
-
-    await addEvento({
-      titulo: eventTitulo.trim(),
-      tipo: eventTipo,
-      fechaInicio,
-      fechaFin,
-      todoElDia: false,
-      clienteId: client.id,
-      obraId: eventObraId || null,
-      notas: eventNotas.trim(),
-      completado: false
-    });
-
-    setEventTitulo('');
-    setEventTipo('Reunión');
-    setEventFecha('');
-    setEventHora('10:00');
-    setEventNotas('');
-    setEventObraId('');
-    setIsEventModalOpen(false);
-    
-    if (refetchEventos) refetchEventos();
-  };
 
   // New Obra Fields
   const [obraTitulo, setObraTitulo] = useState('');
@@ -618,63 +571,7 @@ export default function ClientDetail({
                 </div>
               </div>
 
-              {/* Próximos Eventos / Citas */}
-              <div className="space-y-3 pt-4 border-t border-slate-100">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                    <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                    Próximos Eventos / Citas
-                  </h4>
-                  <Button 
-                    size="xs"
-                    onClick={() => setIsEventModalOpen(true)}
-                    className="h-7 text-[10px] font-semibold bg-slate-900 text-white rounded-md px-2 cursor-pointer"
-                  >
-                    <Plus className="h-3 w-3" />
-                    Añadir Cita Rápida
-                  </Button>
-                </div>
 
-                {clientEventos.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {clientEventos.map(ev => {
-                      const evDate = new Date(ev.fechaInicio);
-                      const obraAsoc = ev.obraId ? obras.find(o => o.id === ev.obraId) : null;
-                      return (
-                        <div key={ev.id} className="border border-slate-200/80 rounded-xl p-3 bg-slate-50/50 space-y-1 hover:border-slate-300 transition-colors">
-                          <div className="flex items-center justify-between">
-                            <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${
-                              ev.tipo === 'Visita' ? 'bg-blue-50 text-blue-700' :
-                              ev.tipo === 'Reunión' ? 'bg-purple-50 text-purple-700' :
-                              ev.tipo === 'Llamada' ? 'bg-teal-50 text-teal-700' :
-                              ev.tipo === 'Inicio obra' ? 'bg-amber-50 text-amber-700' :
-                              'bg-slate-50 text-slate-600'
-                            }`}>
-                              {ev.tipo}
-                            </span>
-                            <span className="text-[10px] font-mono font-bold text-slate-500">
-                              {evDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
-                              {` a las ${evDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`}
-                            </span>
-                          </div>
-                          <h5 className="text-xs font-bold text-slate-800">{ev.titulo}</h5>
-                          {ev.notas && <p className="text-[11px] text-slate-500">{ev.notas}</p>}
-                          {obraAsoc && (
-                            <p className="text-[10px] text-slate-400 font-medium flex items-center gap-1">
-                              <Building2 className="h-3 w-3" />
-                              Obra: {obraAsoc.titulo}
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-xs text-slate-400 italic bg-slate-50 border border-slate-100 rounded-lg p-3">
-                    Sin eventos programados
-                  </div>
-                )}
-              </div>
             </div>
           )}
 
@@ -1324,101 +1221,6 @@ export default function ClientDetail({
         </DialogContent>
       </Dialog>
 
-      {/* 4. Modal Crear Evento / Cita */}
-      <Dialog open={isEventModalOpen} onOpenChange={setIsEventModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <form onSubmit={handleCreateEventSubmit}>
-            <DialogHeader>
-              <DialogTitle className="text-base font-bold text-slate-900">Añadir Cita o Evento Rápido</DialogTitle>
-              <DialogDescription className="text-xs text-slate-500">
-                Registra un evento o llamada programada para {client.nombre} {client.apellidos}.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="grid gap-4 py-4 text-xs">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label className="text-right font-semibold text-slate-500">Título *</label>
-                <Input 
-                  required
-                  placeholder="ej. Reunión de seguimiento / Firma contrato" 
-                  value={eventTitulo}
-                  onChange={e => setEventTitulo(e.target.value)}
-                  className="col-span-3 text-xs h-9" 
-                />
-              </div>
-
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label className="text-right font-semibold text-slate-500">Tipo *</label>
-                <select 
-                  value={eventTipo} 
-                  onChange={e => setEventTipo(e.target.value as any)}
-                  className="col-span-3 text-xs rounded-lg border border-slate-200 bg-white p-2.5 outline-none focus:border-gray-700 font-sans"
-                >
-                  <option value="Visita">Visita</option>
-                  <option value="Reunión">Reunión</option>
-                  <option value="Llamada">Llamada</option>
-                  <option value="Inicio obra">Inicio obra</option>
-                  <option value="Otro">Otro</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label className="text-right font-semibold text-slate-500">Fecha *</label>
-                <Input 
-                  required
-                  type="date"
-                  value={eventFecha}
-                  onChange={e => setEventFecha(e.target.value)}
-                  className="col-span-3 text-xs h-9" 
-                />
-              </div>
-
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label className="text-right font-semibold text-slate-500">Hora</label>
-                <Input 
-                  type="time"
-                  value={eventHora}
-                  onChange={e => setEventHora(e.target.value)}
-                  className="col-span-3 text-xs h-9" 
-                />
-              </div>
-
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label className="text-right font-semibold text-slate-500">Obra Asociada</label>
-                <select 
-                  value={eventObraId} 
-                  onChange={e => setEventObraId(e.target.value)}
-                  className="col-span-3 text-xs rounded-lg border border-slate-200 bg-white p-2.5 outline-none focus:border-gray-700 font-sans"
-                >
-                  <option value="">General / Ninguna</option>
-                  {clientObras.map(o => (
-                    <option key={o.id} value={o.id}>{o.codigo} - {o.titulo}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-4 items-start gap-4">
-                <label className="text-right font-semibold text-slate-500 pt-1.5">Notas</label>
-                <textarea 
-                  placeholder="Observaciones de la cita o evento..." 
-                  value={eventNotas}
-                  onChange={e => setEventNotas(e.target.value)}
-                  className="col-span-3 text-xs rounded-lg border border-slate-200 bg-white p-2.5 outline-none focus:border-gray-700 h-20" 
-                />
-              </div>
-            </div>
-
-            <DialogFooter className="flex gap-2 justify-end pt-2 border-t border-slate-100">
-              <Button type="button" variant="ghost" onClick={() => setIsEventModalOpen(false)} className="text-xs h-8">
-                Cancelar
-              </Button>
-              <Button type="submit" className="bg-gray-900 hover:bg-gray-800 text-white text-xs h-8 px-4">
-                Añadir Cita
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
