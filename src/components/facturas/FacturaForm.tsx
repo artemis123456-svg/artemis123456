@@ -61,6 +61,11 @@ export default function FacturaForm({
   const [estado, setEstado] = useState<Factura['estado']>(factura?.estado || 'Borrador');
   const [observaciones, setObservaciones] = useState(factura?.observaciones || '');
   
+  // Payment Options
+  const [metodoPago, setMetodoPago] = useState<Factura['metodoPago']>(factura?.metodoPago || 'Transferencia');
+  const [plazosDias, setPlazosDias] = useState<number>(factura?.plazosDias || 0);
+  const [referenciaBancaria, setReferenciaBancaria] = useState(factura?.referenciaBancaria || '');
+  
   // Line items state
   const [lineas, setLineas] = useState<LineaFactura[]>(() => {
     if (factura?.lineas) return factura.lineas;
@@ -225,7 +230,10 @@ export default function FacturaForm({
       fechaVencimiento,
       lineas: cleanLines,
       estado,
-      observaciones: observaciones.trim()
+      observaciones: observaciones.trim(),
+      metodoPago,
+      plazosDias: Number(plazosDias),
+      referenciaBancaria: referenciaBancaria.trim()
     });
   };
 
@@ -357,8 +365,55 @@ export default function FacturaForm({
                     type="date"
                     value={fechaVencimiento}
                     onChange={(e) => setFechaVencimiento(e.target.value)}
-                    className="h-9 text-xs border-slate-200 focus:ring-2 focus:ring-verini-black/20 focus:border-verini-black"
+                    className="h-9 text-xs border-slate-200 focus-ring-2 focus:ring-verini-black/20 focus:border-verini-black"
                   />
+                </div>
+              </div>
+
+              {/* Condiciones de Pago Section */}
+              <div className="border-t border-slate-100 pt-4 mt-2 space-y-3">
+                <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                  CONDICIONES Y MÉTODO DE PAGO
+                </h4>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Método de Pago</label>
+                    <select
+                      value={metodoPago}
+                      onChange={(e) => setMetodoPago(e.target.value as any)}
+                      className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-verini-black focus:ring-1 focus:ring-verini-black/20"
+                    >
+                      <option value="Transferencia">Transferencia</option>
+                      <option value="Tarjeta">Tarjeta</option>
+                      <option value="Efectivo">Efectivo</option>
+                      <option value="Giro Bancario">Giro Bancario</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Plazo de Vencimiento</label>
+                    <select
+                      value={plazosDias}
+                      onChange={(e) => setPlazosDias(Number(e.target.value))}
+                      className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-verini-black focus:ring-1 focus:ring-verini-black/20"
+                    >
+                      <option value="0">Al contado (0 días)</option>
+                      <option value="30">30 días</option>
+                      <option value="60">60 días</option>
+                      <option value="90">90 días</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Referencia Bancaria / Cuenta IBAN</label>
+                    <Input
+                      placeholder="ES00 0000 0000 0000 0000 0000"
+                      value={referenciaBancaria}
+                      onChange={(e) => setReferenciaBancaria(e.target.value)}
+                      className="h-9 text-xs border-slate-200 focus:ring-2 focus:ring-verini-black/20 focus:border-verini-black text-slate-800 font-semibold"
+                    />
+                  </div>
                 </div>
               </div>
             </CardContent>

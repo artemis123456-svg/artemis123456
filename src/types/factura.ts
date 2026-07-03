@@ -19,4 +19,7 @@ export interface Factura {
   estado: 'Borrador' | 'Emitida' | 'Cobrada' | 'Vencida';
   observaciones: string;
   entregadoGestoria?: boolean;
+  metodoPago?: 'Transferencia' | 'Tarjeta' | 'Efectivo' | 'Giro Bancario';
+  plazosDias?: number;
+  referenciaBancaria?: string;
 }

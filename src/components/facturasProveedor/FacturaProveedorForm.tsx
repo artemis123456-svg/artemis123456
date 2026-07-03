@@ -17,7 +17,8 @@ import {
   FileText,
   Percent,
   Search,
-  ShoppingCart
+  ShoppingCart,
+  CreditCard
 } from 'lucide-react';
 
 interface FacturaProveedorFormProps {
@@ -48,6 +49,14 @@ export default function FacturaProveedorForm({
   const [retencionIrpf, setRetencionIrpf] = useState<number>(0);
   const [observaciones, setObservaciones] = useState('');
 
+  // Payment Options state
+  const [metodoPago, setMetodoPago] = useState<'Transferencia' | 'Tarjeta' | 'Efectivo' | 'Giro Bancario'>('Transferencia');
+  const [plazosDias, setPlazosDias] = useState<number>(0);
+  const [referenciaBancaria, setReferenciaBancaria] = useState('');
+
+  // Product search code state per line
+  const [searchCodes, setSearchCodes] = useState<Record<string, string>>({});
+
   // Lines state
   const [lineas, setLineas] = useState<LineaFacturaProveedor[]>([]);
 
@@ -62,6 +71,9 @@ export default function FacturaProveedorForm({
       setRetencionIrpf(factura.retencionIrpf || 0);
       setObservaciones(factura.observaciones || '');
       setLineas(factura.lineas.map(l => ({ ...l })));
+      setMetodoPago(factura.metodoPago || 'Transferencia');
+      setPlazosDias(factura.plazosDias || 0);
+      setReferenciaBancaria(factura.referenciaBancaria || '');
     } else {
       const today = new Date().toISOString().split('T')[0];
       const nextMonth = new Date();
@@ -75,6 +87,9 @@ export default function FacturaProveedorForm({
       setEstado('Pendiente');
       setRetencionIrpf(0);
       setObservaciones('');
+      setMetodoPago('Transferencia');
+      setPlazosDias(0);
+      setReferenciaBancaria('');
       
       // Start with 1 empty libre line
       setLineas([
@@ -93,6 +108,27 @@ export default function FacturaProveedorForm({
       ]);
     }
   }, [factura, isEdit, proveedores]);
+
+  // Search product by code and autofill line
+  const handleCodeSearch = (index: number, code: string) => {
+    if (!code) return;
+    const found = productos.find(p => p.codigo.trim().toLowerCase() === code.trim().toLowerCase());
+    if (found) {
+      const updated = [...lineas];
+      updated[index] = {
+        ...updated[index],
+        tipo: 'producto',
+        productoId: found.id,
+        concepto: found.nombre,
+        precioUnitario: found.precioCompra || 0
+      };
+      setLineas(updated);
+
+      if (found.proveedorId) {
+        setProveedorId(found.proveedorId);
+      }
+    }
+  };
 
   // Handle adding a new empty line
   const handleAddLine = () => {
@@ -197,6 +233,9 @@ export default function FacturaProveedorForm({
       estado,
       retencionIrpf: Number(retencionIrpf) || 0,
       observaciones: observaciones.trim(),
+      metodoPago,
+      plazosDias: Number(plazosDias),
+      referenciaBancaria: referenciaBancaria.trim(),
       lineas: lineas.map((l, index) => ({
         ...l,
         orden: index
@@ -322,6 +361,54 @@ export default function FacturaProveedorForm({
         </div>
       </div>
 
+      {/* Sección Método de Pago */}
+      <div className="bg-slate-50/40 border border-slate-150 p-5 rounded-2xl space-y-4">
+        <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+          <CreditCard className="h-4 w-4 text-slate-500" />
+          Condiciones y Método de Pago
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Método de Pago</label>
+            <select
+              value={metodoPago}
+              onChange={e => setMetodoPago(e.target.value as any)}
+              className="w-full h-9 bg-white border border-slate-200 rounded-lg px-3 text-xs focus:outline-none focus:ring-1 focus:ring-verini-black font-semibold text-slate-800"
+            >
+              <option value="Transferencia">Transferencia</option>
+              <option value="Tarjeta">Tarjeta</option>
+              <option value="Efectivo">Efectivo</option>
+              <option value="Giro Bancario">Giro Bancario</option>
+            </select>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Plazo de Pago (Días)</label>
+            <select
+              value={plazosDias}
+              onChange={e => setPlazosDias(Number(e.target.value))}
+              className="w-full h-9 bg-white border border-slate-200 rounded-lg px-3 text-xs focus:outline-none focus:ring-1 focus:ring-verini-black font-semibold text-slate-800"
+            >
+              <option value="0">Al contado (0 días)</option>
+              <option value="30">30 días</option>
+              <option value="60">60 días</option>
+              <option value="90">90 días</option>
+            </select>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Referencia de Pago / IBAN</label>
+            <Input
+              placeholder="ES00 0000 0000 0000 0000 0000"
+              value={referenciaBancaria}
+              onChange={e => setReferenciaBancaria(e.target.value)}
+              className="text-xs h-9 bg-white border-slate-200 focus-visible:ring-verini-black text-slate-800 font-medium"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Editor Dinámico de Líneas */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -341,6 +428,9 @@ export default function FacturaProveedorForm({
         <div className="space-y-4">
           {lineas.map((linea, index) => {
             const subtotal = linea.cantidad * linea.precioUnitario;
+            const searchCodeVal = searchCodes[linea.id] || '';
+            const matchingProduct = productos.find(p => p.id === linea.productoId);
+            
             return (
               <div 
                 key={linea.id || index} 
@@ -351,22 +441,55 @@ export default function FacturaProveedorForm({
                   {index + 1}
                 </div>
 
-                {/* Tipo de línea */}
-                <div className="md:col-span-1 space-y-1">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Tipo</label>
-                  <select
-                    value={linea.tipo}
-                    onChange={e => handleLineChange(index, 'tipo', e.target.value)}
-                    className="w-full h-9 bg-white border border-slate-200 rounded-lg px-2 text-xs focus:outline-none focus:ring-1 focus:ring-verini-black font-semibold"
-                  >
-                    <option value="libre">Libre</option>
-                    <option value="producto">Catálogo</option>
-                  </select>
+                {/* Tipo de línea (Visual Selector) */}
+                <div className="md:col-span-2 space-y-1">
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Procedencia</label>
+                  <div className="flex rounded-lg h-9 p-0.5 bg-slate-100 border border-slate-200/60">
+                    <button
+                      type="button"
+                      onClick={() => handleLineChange(index, 'tipo', 'libre')}
+                      className={`flex-1 text-[10px] font-bold rounded px-2 transition-all cursor-pointer ${linea.tipo === 'libre' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                      Libre
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleLineChange(index, 'tipo', 'producto')}
+                      className={`flex-1 text-[10px] font-bold rounded px-2 transition-all cursor-pointer ${linea.tipo === 'producto' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                      Catálogo
+                    </button>
+                  </div>
+                </div>
+
+                {/* Buscar producto por código */}
+                <div className="md:col-span-2 space-y-1">
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                    <Search className="h-3 w-3 text-slate-450" />
+                    Buscar por Código
+                  </label>
+                  <div className="relative">
+                    <Input
+                      placeholder="PRD-000001"
+                      value={searchCodeVal}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setSearchCodes(prev => ({ ...prev, [linea.id]: val }));
+                        handleCodeSearch(index, val);
+                      }}
+                      className="text-xs h-9 bg-white border-slate-200 focus-visible:ring-verini-black pr-7 font-mono"
+                    />
+                    {linea.tipo === 'producto' && linea.productoId && (
+                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-emerald-600 font-bold" title="Producto Encontrado">
+                        ✓
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Selector de Producto o Input de Concepto */}
-                <div className="md:col-span-3 space-y-1">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                <div className="md:col-span-2 space-y-1">
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
                     {linea.tipo === 'producto' ? 'Seleccionar Material' : 'Concepto / Descripción'}
                   </label>
                   {linea.tipo === 'producto' ? (
@@ -456,15 +579,7 @@ export default function FacturaProveedorForm({
                   </select>
                 </div>
 
-                {/* Total de Línea (Calculado Automáticamente) */}
-                <div className="md:col-span-2 space-y-1">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Total + IVA</label>
-                  <div className="h-9 flex items-center justify-end px-3 bg-slate-100/50 border border-slate-200/50 rounded-lg text-xs font-mono font-black text-slate-800">
-                    {(subtotal * (1 + (linea.ivaPorcentaje / 100))).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
-                  </div>
-                </div>
-
-                {/* Delete Action */}
+                {/* Eliminar Acción */}
                 <div className="md:col-span-1 flex items-end justify-end pt-2 md:pt-0">
                   <Button
                     type="button"

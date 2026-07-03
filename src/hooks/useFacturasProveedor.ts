@@ -62,7 +62,10 @@ function facturaProveedorFromRow(row: any, lineas: LineaFacturaProveedor[]): Fac
     retencionIrpf: Number(row.retencion_irpf || 0),
     observaciones: row.observaciones || '',
     entregadoGestoria: !!row.entregado_gestoria,
-    lineas: lineas
+    lineas: lineas,
+    metodoPago: row.metodo_pago,
+    plazosDias: Number(row.plazos_dias || 0),
+    referenciaBancaria: row.referencia_bancaria || ''
   };
 }
 
@@ -77,6 +80,9 @@ function facturaProveedorToRow(fac: Partial<FacturaProveedor>): any {
   if (fac.retencionIrpf !== undefined) row.retencion_irpf = Number(fac.retencionIrpf);
   if (fac.observaciones !== undefined) row.observaciones = fac.observaciones;
   if (fac.entregadoGestoria !== undefined) row.entregado_gestoria = fac.entregadoGestoria;
+  if (fac.metodoPago !== undefined) row.metodo_pago = fac.metodoPago;
+  if (fac.plazosDias !== undefined) row.plazos_dias = Number(fac.plazosDias);
+  if (fac.referenciaBancaria !== undefined) row.referencia_bancaria = fac.referenciaBancaria;
   return row;
 }
 

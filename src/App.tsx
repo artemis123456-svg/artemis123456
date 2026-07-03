@@ -9,6 +9,7 @@ import Proveedores from './views/Proveedores';
 import Productos from './views/Productos';
 import Facturas from './views/Facturas';
 import FacturasProveedor from './views/FacturasProveedor';
+import Presupuestos from './views/Presupuestos';
 import Impuestos from './views/Impuestos';
 import Configuracion from './views/Configuracion';
 import Agenda from './views/Agenda';
@@ -44,6 +45,7 @@ function AppContent() {
           <Route path="productos" element={<Productos />} />
           <Route path="facturas" element={<Facturas />} />
           <Route path="facturas-proveedor" element={<FacturasProveedor />} />
+          <Route path="presupuestos" element={<Presupuestos />} />
           <Route path="impuestos" element={<Impuestos />} />
           <Route path="configuracion" element={<Configuracion />} />
           <Route path="agenda" element={<Agenda />} />

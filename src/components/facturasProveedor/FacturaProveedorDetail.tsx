@@ -188,6 +188,24 @@ export default function FacturaProveedorDetail({
           </div>
         </div>
 
+        {/* Condiciones de Pago Banner */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-slate-50/50 border border-slate-150/60 rounded-xl text-xs">
+          <div>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Método de Pago</span>
+            <span className="font-semibold text-slate-800">{factura.metodoPago || 'Transferencia'}</span>
+          </div>
+          <div>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Vencimiento acordado</span>
+            <span className="font-semibold text-slate-800">
+              {factura.plazosDias === 0 || !factura.plazosDias ? 'Al contado' : `${factura.plazosDias} días`}
+            </span>
+          </div>
+          <div>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Cuenta de Pago / Referencia</span>
+            <span className="font-semibold text-slate-800 font-mono">{factura.referenciaBancaria || 'No especificada'}</span>
+          </div>
+        </div>
+
         {/* Lines / Materials Table */}
         <div className="space-y-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Detalle de Materiales e Imputación</h3>

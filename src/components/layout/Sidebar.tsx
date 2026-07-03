@@ -16,7 +16,8 @@ import {
   FileText,
   ReceiptText,
   Landmark,
-  Calendar
+  Calendar,
+  Calculator
 } from 'lucide-react';
 import { Button } from '@/src/components/ui/button';
 
@@ -30,6 +31,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Clientes', path: '/clientes', icon: Users },
     { name: 'Obras', path: '/obras', icon: Building2 },
+    { name: 'Presupuestos', path: '/presupuestos', icon: Calculator },
     { name: 'Proveedores', path: '/proveedores', icon: Truck },
     { name: 'Productos', path: '/productos', icon: Package },
     { name: 'Facturas', path: '/facturas', icon: FileText },
