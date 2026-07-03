@@ -14,7 +14,8 @@ import {
   Receipt,
   User,
   Briefcase,
-  AlertCircle
+  AlertCircle,
+  Printer
 } from 'lucide-react';
 
 interface FacturaProveedorDetailProps {
@@ -121,6 +122,15 @@ export default function FacturaProveedorDetail({
               Marcar como Vencida
             </Button>
           )}
+
+          {/* Print Invoice Button */}
+          <Button
+            onClick={() => window.print()}
+            className="h-9 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold gap-1.5 rounded-lg shadow-sm transition-all px-3.5 print:hidden"
+          >
+            <Printer className="h-4 w-4" />
+            Imprimir Factura
+          </Button>
         </div>
       </div>
 

@@ -8,6 +8,8 @@ import FacturaDetail from '../components/facturas/FacturaDetail';
 import FacturaForm from '../components/facturas/FacturaForm';
 import { Factura } from '../types/factura';
 import { Card, CardContent } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import Papa from 'papaparse';
 import { 
   DollarSign, 
   CheckCircle2, 
@@ -17,7 +19,8 @@ import {
   Sparkles,
   TrendingUp,
   FileSpreadsheet,
-  Layers
+  Layers,
+  Download
 } from 'lucide-react';
 
 export default function Facturas() {
@@ -33,6 +36,37 @@ export default function Facturas() {
     toggleEntregadoGestoria,
     generateNextNumero
   } = useFacturas();
+
+  const handleExportCSV = () => {
+    const exportData = facturas.map(f => {
+      const client = clients.find(c => c.id === f.clientId);
+      const clientName = client ? `${client.nombre} ${client.apellidos}` : 'Cliente Desconocido';
+      const totals = calculateFacturaTotals(f.lineas);
+      return {
+        id: f.id,
+        codigo: f.numero,
+        cliente: clientName,
+        fecha: f.fechaEmision,
+        importe_total: totals.total,
+        estado: f.estado,
+        iva: totals.totalIva,
+        irpf: 0
+      };
+    });
+
+    const csv = Papa.unparse(exportData);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    
+    const today = new Date().toISOString().split('T')[0];
+    link.setAttribute('href', url);
+    link.setAttribute('download', `facturas_${today}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Navigation workflow state: 'list' | 'detail' | 'create' | 'edit'
   const [viewState, setViewState] = useState<'list' | 'detail' | 'create' | 'edit'>('list');
@@ -129,6 +163,20 @@ export default function Facturas() {
             </div>
           </div>
         </div>
+
+        {viewState === 'list' && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCSV}
+              className="h-9 px-3 text-xs font-semibold bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-50 border-slate-200 cursor-pointer flex items-center gap-1.5"
+            >
+              <Download className="h-4 w-4" />
+              Descargar CSV
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* STATS KPIs DASHBOARD GRID (Hidden during print or detail/forms view for visual cleanliness) */}

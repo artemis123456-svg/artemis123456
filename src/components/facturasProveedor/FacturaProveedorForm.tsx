@@ -352,14 +352,14 @@ export default function FacturaProveedorForm({
                 </div>
 
                 {/* Tipo de línea */}
-                <div className="md:col-span-2 space-y-1">
+                <div className="md:col-span-1 space-y-1">
                   <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Tipo</label>
                   <select
                     value={linea.tipo}
                     onChange={e => handleLineChange(index, 'tipo', e.target.value)}
                     className="w-full h-9 bg-white border border-slate-200 rounded-lg px-2 text-xs focus:outline-none focus:ring-1 focus:ring-verini-black font-semibold"
                   >
-                    <option value="libre">Entrada Libre</option>
+                    <option value="libre">Libre</option>
                     <option value="producto">Catálogo</option>
                   </select>
                 </div>
@@ -392,17 +392,17 @@ export default function FacturaProveedorForm({
                 </div>
 
                 {/* Imputación de Obra (Opcional) */}
-                <div className="md:col-span-3 space-y-1">
+                <div className="md:col-span-2 space-y-1">
                   <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
                     <Briefcase className="h-3 w-3 text-slate-400" />
-                    Imputar a Obra
+                    Obra
                   </label>
                   <select
                     value={linea.obraId || ''}
                     onChange={e => handleLineChange(index, 'obraId', e.target.value ? e.target.value : null)}
                     className="w-full h-9 bg-white border border-slate-200 rounded-lg px-2 text-xs focus:outline-none focus:ring-1 focus:ring-verini-black font-semibold text-slate-800"
                   >
-                    <option value="">No imputar a obra</option>
+                    <option value="">No imputar</option>
                     {obras.map(o => (
                       <option key={o.id} value={o.id}>{o.titulo}</option>
                     ))}
@@ -410,7 +410,7 @@ export default function FacturaProveedorForm({
                 </div>
 
                 {/* Cantidad */}
-                <div className="md:col-span-1.5 space-y-1">
+                <div className="md:col-span-1 space-y-1">
                   <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Cant.</label>
                   <Input
                     required
@@ -425,8 +425,8 @@ export default function FacturaProveedorForm({
                 </div>
 
                 {/* Precio Unitario */}
-                <div className="md:col-span-1.5 space-y-1">
-                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">P. Unitario</label>
+                <div className="md:col-span-1 space-y-1">
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Precio</label>
                   <div className="relative">
                     <Input
                       required
@@ -438,7 +438,7 @@ export default function FacturaProveedorForm({
                       onChange={e => handleLineChange(index, 'precioUnitario', Math.max(0, Number(e.target.value) || 0))}
                       className="text-xs h-9 bg-white pr-4 font-mono font-bold border-slate-200 focus-visible:ring-verini-black"
                     />
-                    <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold">€</span>
+                    <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[8px] text-slate-400 font-bold">€</span>
                   </div>
                 </div>
 
@@ -448,7 +448,7 @@ export default function FacturaProveedorForm({
                   <select
                     value={linea.ivaPorcentaje}
                     onChange={e => handleLineChange(index, 'ivaPorcentaje', Number(e.target.value))}
-                    className="w-full h-9 bg-white border border-slate-200 rounded-lg px-1.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-verini-black font-mono font-semibold"
+                    className="w-full h-9 bg-white border border-slate-200 rounded-lg px-1 text-xs text-center focus:outline-none focus:ring-1 focus:ring-verini-black font-mono font-semibold"
                   >
                     <option value="21">21%</option>
                     <option value="10">10%</option>
@@ -456,18 +456,22 @@ export default function FacturaProveedorForm({
                   </select>
                 </div>
 
-                {/* Subtotal & Delete Action */}
-                <div className="md:col-span-1 flex items-end justify-between md:justify-center gap-2 pt-2 md:pt-0">
-                  <div className="text-right md:hidden">
-                    <span className="text-[9px] text-slate-400 block font-bold uppercase">Subtotal</span>
-                    <span className="text-xs font-mono font-bold text-slate-800">{subtotal.toLocaleString('es-ES')} €</span>
+                {/* Total de Línea (Calculado Automáticamente) */}
+                <div className="md:col-span-2 space-y-1">
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Total + IVA</label>
+                  <div className="h-9 flex items-center justify-end px-3 bg-slate-100/50 border border-slate-200/50 rounded-lg text-xs font-mono font-black text-slate-800">
+                    {(subtotal * (1 + (linea.ivaPorcentaje / 100))).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                   </div>
+                </div>
+
+                {/* Delete Action */}
+                <div className="md:col-span-1 flex items-end justify-end pt-2 md:pt-0">
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveLine(index)}
-                    className="h-9 w-9 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 cursor-pointer shrink-0"
+                    className="h-9 w-9 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 cursor-pointer shrink-0 flex items-center justify-center"
                     title="Eliminar línea"
                   >
                     <Trash2 className="h-4 w-4" />

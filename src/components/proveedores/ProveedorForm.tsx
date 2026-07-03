@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Proveedor } from '../../types/proveedor';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -30,8 +30,37 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
   const [activo, setActivo] = useState(true);
 
   // Suggested categories lists depending on type
-  const materialCategories = ['Azulejos y Pavimentos', 'Sanitarios y Grifería', 'Iluminación y Electricidad', 'Carpintería de Madera', 'Pintura y Revestimientos', 'Mármoles y Encimeras', 'Electrodomésticos', 'Climatización y Ventilación', 'Perfilería y Vidrios'];
-  const subcontrataCategories = ['Albañilería', 'Fontanería', 'Electricidad', 'Pintura', 'Carpintería de Aluminio/PVC', 'Carpintería de Madera (Montaje)', 'Pladur y Techos', 'Aire Acondicionado', 'Limpieza de Obra', 'Demoliciones'];
+  const availableCategories = [
+    'Pintura',
+    'Electricidad',
+    'Fontanería',
+    'Albañilería',
+    'Madera',
+    'Herramientas',
+    'Azulejos',
+    'Iluminación',
+    'Sanitarios',
+    'Climatización',
+    'Carpintería',
+    'Demolición',
+    'Limpieza',
+    'Vidrio/Perfilería'
+  ];
+
+  const selectedCategories = useMemo(() => {
+    if (!categoria) return [];
+    return categoria.split(',').map(c => c.trim()).filter(Boolean);
+  }, [categoria]);
+
+  const handleToggleCategory = (cat: string) => {
+    let updated: string[];
+    if (selectedCategories.includes(cat)) {
+      updated = selectedCategories.filter(c => c !== cat);
+    } else {
+      updated = [...selectedCategories, cat];
+    }
+    setCategoria(updated.join(', '));
+  };
 
   // Load provider data if editing
   useEffect(() => {
@@ -74,10 +103,6 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
   // Adjust default category if blank when tipo changes
   const handleTipoChange = (newTipo: 'Materiales' | 'Subcontrata') => {
     setTipo(newTipo);
-    // Suggest a default category if blank
-    if (!categoria) {
-      setCategoria(newTipo === 'Materiales' ? materialCategories[0] : subcontrataCategories[0]);
-    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -186,22 +211,29 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
                   </select>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                    Categoría / Especialidad <span className="text-red-500">*</span>
+                 <div className="space-y-1.5 md:col-span-2 lg:col-span-3">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block">
+                    Categorías / Especialidades <span className="text-red-500">*</span>
                   </label>
-                  <Input
-                    placeholder="ej. Fontanería, Sanitarios, Alisado..."
-                    value={categoria}
-                    onChange={(e) => setCategoria(e.target.value)}
-                    list="suggested-categories"
-                    className="text-xs h-9.5 bg-slate-50/20"
-                  />
-                  <datalist id="suggested-categories">
-                    {(tipo === 'Materiales' ? materialCategories : subcontrataCategories).map((cat) => (
-                      <option key={cat} value={cat} />
-                    ))}
-                  </datalist>
+                  <p className="text-[10px] text-slate-400 mb-1.5">Selecciona una o más especialidades para este proveedor:</p>
+                  <div className="flex flex-wrap gap-1.5 p-3.5 bg-slate-50 border border-slate-200/65 rounded-xl max-h-40 overflow-y-auto">
+                    {availableCategories.map((cat) => {
+                      const isSelected = selectedCategories.includes(cat);
+                      return (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => handleToggleCategory(cat)}
+                          className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer select-none
+                            ${isSelected 
+                              ? 'bg-gray-900 text-white border-gray-900 shadow-xs' 
+                              : 'bg-white text-slate-650 border-slate-200 hover:bg-slate-50 hover:text-slate-900'}`}
+                        >
+                          {cat}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div className="space-y-1">

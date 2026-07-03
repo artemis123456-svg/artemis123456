@@ -375,9 +375,19 @@ export default function ProveedorDetail({
                       <span className="font-semibold text-slate-400">Persona de Contacto:</span>
                       <span className="font-bold text-slate-800">{proveedor.personaContacto || 'No declarada'}</span>
                     </li>
-                    <li className="flex justify-between items-center py-0.5">
-                      <span className="font-semibold text-slate-400">Categoría / Especialidad:</span>
-                      <span className="font-bold text-gray-900 bg-gray-100/70 px-2 py-0.5 rounded border border-gray-100/50">{proveedor.categoria}</span>
+                    <li className="flex justify-between items-start py-0.5">
+                      <span className="font-semibold text-slate-400 mt-0.5">Categorías / Especialidades:</span>
+                      <div className="flex flex-wrap gap-1 justify-end max-w-[65%]">
+                        {proveedor.categoria ? (
+                          proveedor.categoria.split(',').map(c => c.trim()).filter(Boolean).map(cat => (
+                            <span key={cat} className="inline-flex items-center rounded-md bg-gray-100 px-2.5 py-0.5 text-[10px] font-semibold text-gray-700 ring-1 ring-inset ring-gray-600/10">
+                              {cat}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-slate-400 font-medium italic">Sin especificar</span>
+                        )}
+                      </div>
                     </li>
                     <li className="flex justify-between items-center py-0.5">
                       <span className="font-semibold text-slate-400">Teléfono Fijo:</span>
