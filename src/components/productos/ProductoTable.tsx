@@ -41,7 +41,7 @@ interface ProductoTableProps {
   onNewProducto: () => void;
 }
 
-type SortField = 'codigo' | 'nombre' | 'categoria' | 'precioVenta' | 'activo';
+type SortField = 'codigo' | 'nombre' | 'categoria' | 'precioVenta' | 'activo' | 'stock';
 type SortOrder = 'asc' | 'desc';
 
 export default function ProductoTable({
@@ -307,8 +307,8 @@ export default function ProductoTable({
                 <TableHead onClick={() => handleSort('precioVenta')} className="cursor-pointer hover:bg-slate-100 transition-colors py-3 px-4 font-semibold text-xs text-slate-500 select-none w-28 text-right">
                   PVP {renderSortIcon('precioVenta')}
                 </TableHead>
-                <TableHead className="py-3 px-4 font-semibold text-xs text-slate-500 select-none w-36">
-                  Restos / Sobrantes
+                <TableHead onClick={() => handleSort('stock')} className="cursor-pointer hover:bg-slate-100 transition-colors py-3 px-4 font-semibold text-xs text-slate-500 select-none w-28 text-right">
+                  Stock {renderSortIcon('stock')}
                 </TableHead>
                 <TableHead onClick={() => handleSort('activo')} className="cursor-pointer hover:bg-slate-100 transition-colors py-3 px-4 font-semibold text-xs text-slate-500 select-none w-24">
                   Estado {renderSortIcon('activo')}
@@ -375,8 +375,8 @@ export default function ProductoTable({
                         {prod.precioVenta.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €
                         <span className="text-[10px] text-slate-400 font-normal block">P.C: {prod.precioCompra.toLocaleString('es-ES')} €</span>
                       </TableCell>
-                      <TableCell className="py-3 px-4 text-xs font-semibold text-slate-700 max-w-[150px] truncate" title={prod.restos || 'Sin restos'}>
-                        {prod.restos || <span className="text-slate-300 font-normal">-</span>}
+                      <TableCell className="py-3 px-4 text-right font-mono font-bold text-slate-900 text-xs">
+                        {prod.stock !== undefined ? `${prod.stock} ${prod.unidad}` : '0 ud'}
                       </TableCell>
                       <TableCell className="py-3 px-4">
                         {renderStatusBadge(prod.activo)}

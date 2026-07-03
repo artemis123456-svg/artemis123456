@@ -270,13 +270,13 @@ export default function ProductoDetail({
 
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Restos / Sobrantes</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Stock Disponible</span>
             <Layers className="h-4 w-4 text-slate-400" />
           </div>
-          <p className="mt-2 text-xs font-semibold text-slate-800 leading-tight line-clamp-2">
-            {producto.restos || 'Sin restos registrados'}
+          <p className="mt-2 text-xl font-bold text-slate-900 font-mono">
+            {producto.stock !== undefined ? producto.stock : 0} <span className="text-xs text-slate-400 font-normal font-sans">{producto.unidad}</span>
           </p>
-          <p className="text-[10px] text-slate-400 font-medium mt-1">Material sobrante de obra</p>
+          <p className="text-[10px] text-slate-400 font-medium mt-0.5">Control de existencias actuales</p>
         </div>
       </div>
 
@@ -360,13 +360,13 @@ export default function ProductoDetail({
                 <div className="space-y-4">
                   <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
                     <Layers className="h-3.5 w-3.5 text-gray-700" />
-                    Detalles de Material y Restos
+                    Detalles de Existencias y Stock
                   </h4>
                   <ul className="space-y-3 text-xs">
-                    <li className="flex justify-between items-start py-0.5">
-                      <span className="font-semibold text-slate-400 shrink-0">Restos / Sobrantes:</span>
-                      <span className="font-semibold text-slate-800 text-right max-w-[200px] break-words">
-                        {producto.restos || 'No hay anotaciones'}
+                    <li className="flex justify-between items-center py-0.5">
+                      <span className="font-semibold text-slate-400 shrink-0">Stock actual:</span>
+                      <span className="font-mono font-bold text-slate-900">
+                        {producto.stock !== undefined ? `${producto.stock} ${producto.unidad}` : '0 ud'}
                       </span>
                     </li>
                     <li className="flex justify-between items-center py-0.5">

@@ -38,7 +38,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
   const [unidad, setUnidad] = useState<Producto['unidad']>('ud');
   const [activo, setActivo] = useState(true);
   const [imagenUrl, setImagenUrl] = useState('');
-  const [restos, setRestos] = useState('');
+  const [stock, setStock] = useState('0');
 
   // Suggested categories for auto-complete datalist
   const suggestedCategories = [
@@ -75,7 +75,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
       setUnidad(productoToEdit.unidad || 'ud');
       setActivo(productoToEdit.activo !== undefined ? productoToEdit.activo : true);
       setImagenUrl(productoToEdit.imagenUrl || '');
-      setRestos(productoToEdit.restos || '');
+      setStock(String(productoToEdit.stock ?? 0));
     } else {
       // Clear form for New Product Mode
       setCodigo('');
@@ -88,7 +88,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
       setUnidad('ud');
       setActivo(true);
       setImagenUrl('');
-      setRestos('');
+      setStock('0');
     }
   }, [productoToEdit, proveedores]);
 
@@ -133,7 +133,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
       unidad,
       activo,
       imagenUrl: imagenUrl.trim() || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=600&q=80',
-      restos: restos.trim()
+      stock: Number(stock) || 0
     };
 
     onSave(prodData);
@@ -320,23 +320,26 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
               </div>
             </div>
 
-            {/* Sección 3: Restos y Sobrantes */}
+            {/* Sección 3: Control de Stock */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
                 <Boxes className="h-4 w-4 text-gray-700" />
-                Restos / Sobrantes
+                Control de Stock
               </h3>
 
               <div className="space-y-1">
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                  Anotación de restos o sobrantes (no obligatorio)
+                  Cantidad disponible en stock (obligatorio)
                 </label>
                 <Input
-                  type="text"
-                  placeholder="ej. Media caja de parquet roble, 3 listones sobrantes..."
-                  value={restos}
-                  onChange={(e) => setRestos(e.target.value)}
+                  type="number"
+                  min="0"
+                  step="any"
+                  placeholder="ej. 15, 2.5..."
+                  value={stock}
+                  onChange={(e) => setStock(e.target.value)}
                   className="text-xs h-9.5 bg-slate-50/20 text-slate-900"
+                  required
                 />
               </div>
             </div>

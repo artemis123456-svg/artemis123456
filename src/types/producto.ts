@@ -10,7 +10,7 @@ export interface Producto {
   unidad: 'ud' | 'm2' | 'ml' | 'caja';  // unidad de medida
   activo: boolean;
   imagenUrl: string;         // URL de imagen (mock, puede ser un placeholder)
-  restos: string;            // libre de restos/sobrantes
+  stock: number;             // cantidad en stock (numeric)
 }
 
 export interface TarifaProducto {

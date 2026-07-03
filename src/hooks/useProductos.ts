@@ -15,7 +15,7 @@ function prodFromRow(row: any): Producto {
     unidad: row.unidad,
     activo: !!row.activo,
     imagenUrl: row.imagen_url || '',
-    restos: row.restos || ''
+    stock: row.stock !== undefined && row.stock !== null ? Number(row.stock) : 0
   };
 }
 
@@ -32,7 +32,7 @@ function prodToRow(prod: Partial<Producto>): any {
   if (prod.unidad !== undefined) row.unidad = prod.unidad;
   if (prod.activo !== undefined) row.activo = prod.activo;
   if (prod.imagenUrl !== undefined) row.imagen_url = prod.imagenUrl;
-  if (prod.restos !== undefined) row.restos = prod.restos;
+  if (prod.stock !== undefined) row.stock = prod.stock;
   return row;
 }
 
