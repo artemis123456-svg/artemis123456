@@ -27,6 +27,8 @@ import {
 } from 'lucide-react';
 import { useProveedores } from '../../hooks/useProveedores';
 import { useFacturasProveedor } from '../../hooks/useFacturasProveedor';
+import { useFacturas, calculateFacturaTotals } from '../../hooks/useFacturas';
+import { usePresupuestos } from '../../hooks/usePresupuestos';
 
 interface ObraDetailProps {
   obra: Obra;
@@ -52,6 +54,7 @@ interface MockDocument {
 
 interface MockNote {
   id: string;
+  obraId?: string;
   contenido: string;
   fechaCreacion: string;
   autor: string;
@@ -75,16 +78,21 @@ export default function ObraDetail({
   const [materialLines, setMaterialLines] = useState<any[]>([]);
   const [materialLinesLoading, setMaterialLinesLoading] = useState(false);
 
+  const { facturas } = useFacturas();
+  const { presupuestos } = usePresupuestos();
+
   // Local state for interactive note and document additions within this session
-  const [localNotes, setLocalNotes] = useState<MockNote[]>([
+  const [notas, setNotas] = useState<MockNote[]>([
     {
       id: 'n_1',
+      obraId: 'obr_1',
       contenido: 'Reunión con el cliente para validar materiales. Aprueba el microcemento para el suelo y los azulejos de formato grande.',
       fechaCreacion: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
       autor: 'Laura Domenech (Gestora de Proyectos)'
     },
     {
       id: 'n_2',
+      obraId: 'obr_1',
       contenido: 'La carpintería metálica de las ventanas se retrasará 4 días por falta de perfilería del proveedor habitual.',
       fechaCreacion: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
       autor: 'Carlos Ibáñez (Técnico)'
@@ -191,75 +199,51 @@ export default function ObraDetail({
     }
   };
 
-  // Generate mock budget list based on the project cost
-  const mockPresupuestos = useMemo(() => {
-    const importFase1 = Math.round(obra.importe * 0.35);
-    const importFase2 = obra.importe - importFase1;
-    return [
-      {
-        id: `m_pre_1`,
-        codigo: `PRE-2026-${obra.codigo.replace('OBR-', '')}-1`,
-        titulo: 'Fase I: Proyecto Técnico, Licencia y Derribos',
-        importe: importFase1,
-        estado: 'Aceptado' as const,
-        fechaEmision: obra.fechaInicioPrevista || '2026-04-10'
-      },
-      {
-        id: `m_pre_2`,
-        codigo: `PRE-2026-${obra.codigo.replace('OBR-', '')}-2`,
-        titulo: 'Fase II: Albañilería, Instalaciones y Acabados de obra',
-        importe: importFase2,
-        estado: obra.estado === 'Presupuesto' ? ('Enviado' as const) : ('Aceptado' as const),
-        fechaEmision: obra.fechaInicioPrevista || '2026-04-15'
-      }
-    ];
-  }, [obra]);
-
-  // Generate mock invoices based on budgets and current state
-  const mockFacturas = useMemo(() => {
-    const list = [];
-    const importFase1 = Math.round(obra.importe * 0.35);
-    const totalF1 = Math.round(importFase1 * 1.21);
-
-    if (obra.estado !== 'Presupuesto') {
-      list.push({
-        id: 'm_fac_1',
-        codigo: `FAC-2026-${obra.codigo.replace('OBR-', '')}-1`,
-        titulo: 'Certificación Obra Nº 1 - Acopio e Inicio',
-        baseImponible: importFase1,
-        iva: 21,
-        total: totalF1,
-        estado: 'Cobrada' as const,
-        fechaEmision: obra.fechaInicioReal || obra.fechaInicioPrevista || '2026-05-01',
-        fechaVencimiento: '2026-06-01'
+  // Filter and map real invoices to match layout requirements
+  const facturasDeObra = useMemo(() => {
+    return facturas
+      .filter(f => f.obraId === obra.id)
+      .map(f => {
+        const totals = calculateFacturaTotals(f.lineas);
+        return {
+          ...f,
+          codigo: f.numero,
+          titulo: f.observaciones || 'Certificación de obra',
+          baseImponible: totals.baseImponible,
+          iva: 21,
+          total: totals.total,
+          fechaEmision: f.fechaEmision,
+          fechaVencimiento: f.fechaVencimiento,
+          estado: f.estado
+        };
       });
-    }
+  }, [facturas, obra.id]);
 
-    if (obra.estado === 'Entregada') {
-      const importFase2 = obra.importe - importFase1;
-      const totalF2 = Math.round(importFase2 * 1.21);
-      list.push({
-        id: 'm_fac_2',
-        codigo: `FAC-2026-${obra.codigo.replace('OBR-', '')}-2`,
-        titulo: 'Certificación de Entrega y Acabados Finales',
-        baseImponible: importFase2,
-        iva: 21,
-        total: totalF2,
-        estado: 'Emitida' as const,
-        fechaEmision: obra.fechaFinReal || new Date().toISOString().split('T')[0],
-        fechaVencimiento: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      });
-    }
+  // Filter and map real budgets to match layout requirements
+  const presupuestosDeObra = useMemo(() => {
+    return presupuestos
+      .filter(p => p.obraId === obra.id)
+      .map(p => ({
+        ...p,
+        codigo: p.numero,
+        titulo: p.descripcion,
+        importe: p.importeTotal,
+        fechaEmision: p.fechaCreacion,
+        estado: p.estado
+      }));
+  }, [presupuestos, obra.id]);
 
-    return list;
-  }, [obra]);
+  // Filter real notes
+  const notasDeObra = useMemo(() => {
+    return notas.filter(n => n.obraId === obra.id);
+  }, [notas, obra.id]);
 
   // Derived financial stats
   const stats = useMemo(() => {
-    const totalB = mockPresupuestos.reduce((sum, p) => sum + p.importe, 0);
-    const acceptedB = mockPresupuestos.filter(p => p.estado === 'Aceptado').reduce((sum, p) => sum + p.importe, 0);
-    const invoiced = mockFacturas.reduce((sum, f) => sum + f.total, 0);
-    const collected = mockFacturas.filter(f => f.estado === 'Cobrada').reduce((sum, f) => sum + f.total, 0);
+    const totalB = presupuestosDeObra.reduce((sum, p) => sum + p.importe, 0);
+    const acceptedB = presupuestosDeObra.filter(p => p.estado === 'Aprobado').reduce((sum, p) => sum + p.importe, 0);
+    const invoiced = facturasDeObra.reduce((sum, f) => sum + f.total, 0);
+    const collected = facturasDeObra.filter(f => f.estado === 'Cobrada').reduce((sum, f) => sum + f.total, 0);
 
     return {
       totalB,
@@ -267,7 +251,7 @@ export default function ObraDetail({
       invoiced,
       collected
     };
-  }, [mockPresupuestos, mockFacturas]);
+  }, [presupuestosDeObra, facturasDeObra]);
 
   // Handlers for interactive actions
   const handleAddNote = (e: React.FormEvent) => {
@@ -276,12 +260,13 @@ export default function ObraDetail({
 
     const added: MockNote = {
       id: `n_added_${Date.now()}`,
+      obraId: obra.id,
       contenido: newNote.trim(),
       fechaCreacion: new Date().toISOString(),
       autor: 'Usuario de Verini (Tú)'
     };
 
-    setLocalNotes([added, ...localNotes]);
+    setNotas([added, ...notas]);
     setNewNote('');
   };
 
@@ -444,15 +429,15 @@ export default function ObraDetail({
         <div className="flex border-b border-slate-100 overflow-x-auto bg-slate-50/50">
           {(
             [
-              { id: 'generales', label: 'Datos Generales', icon: Sparkles },
-              { id: 'presupuestos', label: `Presupuestos (${mockPresupuestos.length})`, icon: DollarSign },
-              { id: 'facturas', label: `Facturas (${mockFacturas.length})`, icon: FileText },
-              { id: 'horas', label: `Control de Horas (${horasObraList.length})`, icon: Clock },
-              { id: 'materiales', label: `Gastos de Materiales (${materialLines.length})`, icon: Package },
-              { id: 'documentos', label: `Documentación (${localDocs.length})`, icon: Upload },
-              { id: 'notas', label: `Notas de Bitácora (${localNotes.length})`, icon: StickyNote }
-            ] as const
-          ).map((tab) => {
+              { id: 'generales', label: 'Datos Generales', icon: Sparkles, show: true },
+              { id: 'presupuestos', label: `Presupuestos (${presupuestosDeObra.length})`, icon: DollarSign, show: presupuestosDeObra.length > 0 },
+              { id: 'facturas', label: `Facturas (${facturasDeObra.length})`, icon: FileText, show: facturasDeObra.length > 0 },
+              { id: 'horas', label: `Control de Horas (${horasObraList.length})`, icon: Clock, show: true },
+              { id: 'materiales', label: `Gastos de Materiales (${materialLines.length})`, icon: Package, show: true },
+              { id: 'documentos', label: `Documentación (${localDocs.length})`, icon: Upload, show: true },
+              { id: 'notas', label: `Notas de Bitácora (${notasDeObra.length})`, icon: StickyNote, show: true }
+            ]
+          ).filter(tab => tab.show).map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
@@ -493,6 +478,17 @@ export default function ObraDetail({
                   <div className="flex flex-col text-left sm:text-right text-[11px] text-slate-500 font-medium">
                     <span>Email: {client.email || '-'}</span>
                     <span>Móvil: {client.movil || client.telefono || '-'}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Optional Empty State Message */}
+              {presupuestosDeObra.length === 0 && facturasDeObra.length === 0 && notasDeObra.length === 0 && (
+                <div className="flex items-center gap-3 p-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 text-slate-500">
+                  <AlertCircle className="h-5 w-5 text-slate-400 shrink-0" />
+                  <div className="text-xs">
+                    <p className="font-semibold text-slate-700">Obra sin expedientes iniciales</p>
+                    <p className="text-slate-500 mt-0.5">Esta obra aún no tiene presupuestos aprobados, facturas emitidas ni anotaciones en la bitácora de seguimiento.</p>
                   </div>
                 </div>
               )}
@@ -593,52 +589,54 @@ export default function ObraDetail({
 
           {/* TAB 2: PRESUPUESTOS */}
           {activeTab === 'presupuestos' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Expedientes de Presupuesto</h3>
-                <span className="text-xs text-slate-500 font-semibold">Valor Total: {stats.totalB.toLocaleString('es-ES')} €</span>
-              </div>
+            presupuestosDeObra.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Expedientes de Presupuesto</h3>
+                  <span className="text-xs text-slate-500 font-semibold">Valor Total: {stats.totalB.toLocaleString('es-ES')} €</span>
+                </div>
 
-              <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 text-[11px] font-semibold text-slate-600 border-b border-slate-200">
-                      <th className="px-4 py-2.5">Código</th>
-                      <th className="px-4 py-2.5">Descripción de Partida</th>
-                      <th className="px-4 py-2.5">Fecha</th>
-                      <th className="px-4 py-2.5">Importe</th>
-                      <th className="px-4 py-2.5">Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {mockPresupuestos.map(p => (
-                      <tr key={p.id} className="border-b border-slate-100 text-xs hover:bg-slate-50/50">
-                        <td className="px-4 py-3 font-mono font-semibold text-slate-900">{p.codigo}</td>
-                        <td className="px-4 py-3 font-medium text-slate-850">{p.titulo}</td>
-                        <td className="px-4 py-3 font-mono text-slate-500">{new Date(p.fechaEmision).toLocaleDateString('es-ES')}</td>
-                        <td className="px-4 py-3 font-mono font-semibold text-slate-900">{p.importe.toLocaleString('es-ES')} €</td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold leading-none bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/10`}>
-                            {p.estado}
-                          </span>
-                        </td>
+                <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50 text-[11px] font-semibold text-slate-600 border-b border-slate-200">
+                        <th className="px-4 py-2.5">Código</th>
+                        <th className="px-4 py-2.5">Descripción de Partida</th>
+                        <th className="px-4 py-2.5">Fecha</th>
+                        <th className="px-4 py-2.5">Importe</th>
+                        <th className="px-4 py-2.5">Estado</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {presupuestosDeObra.map(p => (
+                        <tr key={p.id} className="border-b border-slate-100 text-xs hover:bg-slate-50/50">
+                          <td className="px-4 py-3 font-mono font-semibold text-slate-900">{p.codigo}</td>
+                          <td className="px-4 py-3 font-medium text-slate-850">{p.titulo}</td>
+                          <td className="px-4 py-3 font-mono text-slate-500">{new Date(p.fechaEmision).toLocaleDateString('es-ES')}</td>
+                          <td className="px-4 py-3 font-mono font-semibold text-slate-900">{p.importe.toLocaleString('es-ES')} €</td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold leading-none bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/10`}>
+                              {p.estado}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+            )
           )}
 
           {/* TAB 3: FACTURAS */}
           {activeTab === 'facturas' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Facturación Generada</h3>
-                <span className="text-xs text-slate-500 font-semibold">Emitido: {stats.invoiced.toLocaleString('es-ES')} € (con IVA)</span>
-              </div>
+            facturasDeObra.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Facturación Generada</h3>
+                  <span className="text-xs text-slate-500 font-semibold">Emitido: {stats.invoiced.toLocaleString('es-ES')} € (con IVA)</span>
+                </div>
 
-              {mockFacturas.length > 0 ? (
                 <div className="overflow-x-auto border border-slate-200 rounded-xl">
                   <table className="w-full text-left border-collapse">
                     <thead>
@@ -653,7 +651,7 @@ export default function ObraDetail({
                       </tr>
                     </thead>
                     <tbody>
-                      {mockFacturas.map(f => (
+                      {facturasDeObra.map(f => (
                         <tr key={f.id} className="border-b border-slate-100 text-xs hover:bg-slate-50/50">
                           <td className="px-4 py-3 font-mono font-semibold text-slate-900">{f.codigo}</td>
                           <td className="px-4 py-3 font-medium text-slate-850">{f.titulo}</td>
@@ -672,16 +670,8 @@ export default function ObraDetail({
                     </tbody>
                   </table>
                 </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-10 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                  <FileText className="h-8 w-8 text-slate-300 mb-2" />
-                  <p className="text-xs font-semibold text-slate-600 mb-1">Sin facturas emitidas</p>
-                  <p className="text-[11px] text-slate-400 max-w-sm">
-                    Las facturas se emitirán de forma automática una vez la obra salga de la fase inicial de Presupuesto.
-                  </p>
-                </div>
-              )}
-            </div>
+              </div>
+            )
           )}
 
           {/* TAB 4: DOCUMENTOS */}
@@ -768,9 +758,9 @@ export default function ObraDetail({
               </form>
 
               {/* Comment thread */}
-              <div className="space-y-4">
-                {localNotes.length > 0 ? (
-                  localNotes.map(note => (
+              {notasDeObra.length > 0 && (
+                <div className="space-y-4">
+                  {notasDeObra.map(note => (
                     <div key={note.id} className="p-4 bg-slate-50 border border-slate-100 rounded-xl space-y-2">
                       <div className="flex items-center justify-between text-[11px] text-slate-400">
                         <span className="font-bold text-slate-800">{note.autor}</span>
@@ -780,13 +770,9 @@ export default function ObraDetail({
                       </div>
                       <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-line">{note.contenido}</p>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center py-6 text-xs text-slate-400 italic">
-                    No hay notas en la bitácora de seguimiento.
-                  </div>
-                )}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
