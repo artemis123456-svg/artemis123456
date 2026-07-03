@@ -143,7 +143,7 @@ export default function FacturasProveedor() {
     <div className="space-y-6 max-w-[1600px] mx-auto p-1 sm:p-2">
       
       {/* HEADER SECTION */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 print:hidden">
         <div>
           <div className="flex items-center gap-2">
             <div className="h-9 w-9 rounded-xl bg-verini-black flex items-center justify-center text-white">
@@ -154,7 +154,7 @@ export default function FacturasProveedor() {
                 Facturas de Proveedor
                 <span className="text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full uppercase">Materiales e Imputaciones</span>
               </h1>
-              <p className="text-xs text-slate-500">Imputación directa de gastos de materiales, albaranes de proveedores y control fiscal de compras.</p>
+              <p className="text-xs text-slate-500">Imputación directa de gastos de materiales, albaranes de proveedores and control fiscal de compras.</p>
             </div>
           </div>
         </div>
@@ -162,7 +162,7 @@ export default function FacturasProveedor() {
 
       {/* STATS KPIs DASHBOARD GRID */}
       {viewState === 'list' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 print:hidden">
           
           {/* KPI 1: Total Facturado por Proveedores */}
           <Card className="border-slate-200/80 shadow-xs bg-white hover:border-slate-300 transition-colors">
@@ -236,7 +236,7 @@ export default function FacturasProveedor() {
       )}
 
       {/* WORKFLOW VIEW DISPATCHER */}
-      <div className="bg-white border border-slate-150 rounded-2xl p-4 sm:p-6 shadow-sm">
+      <div className="bg-white border border-slate-150 rounded-2xl p-4 sm:p-6 shadow-sm print:border-none print:p-0 print:shadow-none">
         {viewState === 'list' && (
           <FacturaProveedorTable
             facturas={facturasProveedor}
