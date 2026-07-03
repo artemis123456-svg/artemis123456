@@ -3,6 +3,8 @@ import { useDatosEmpresa } from '../hooks/useDatosEmpresa';
 import { DatosEmpresa } from '../types/datosEmpresa';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { supabase } from '../lib/supabaseClient';
 import { 
   Settings, 
   Building2, 
@@ -15,7 +17,10 @@ import {
   Mail, 
   MapPin, 
   User,
-  Loader2
+  Loader2,
+  Lock,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 export default function Configuracion() {
@@ -35,6 +40,21 @@ export default function Configuracion() {
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Estado para cambio de contraseña
+  const [passwordState, setPasswordState] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false
+  });
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   // Synchronize local state when Supabase completes loading
   useEffect(() => {
@@ -65,6 +85,58 @@ export default function Configuracion() {
       setSaveError(err.message || 'Error al guardar los datos de la empresa');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Manejador para cambio de contraseña
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPasswordState(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsChangingPassword(true);
+    setPasswordSuccess(false);
+    setPasswordError(null);
+
+    try {
+      // Validación básica
+      if (!passwordState.currentPassword) {
+        throw new Error('Debes introducir tu contraseña actual');
+      }
+      if (!passwordState.newPassword) {
+        throw new Error('Debes introducir una nueva contraseña');
+      }
+      if (passwordState.newPassword.length < 6) {
+        throw new Error('La contraseña debe tener al menos 6 caracteres');
+      }
+      if (passwordState.newPassword !== passwordState.confirmPassword) {
+        throw new Error('Las contraseñas no coinciden');
+      }
+
+      // Cambiar contraseña con Supabase
+      const { error } = await supabase.auth.updateUser({
+        password: passwordState.newPassword
+      });
+
+      if (error) throw error;
+
+      // Limpiar formulario y mostrar éxito
+      setPasswordState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      setPasswordSuccess(true);
+      setTimeout(() => setPasswordSuccess(false), 4000);
+    } catch (err: any) {
+      setPasswordError(err.message || 'Error al cambiar la contraseña');
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -337,6 +409,157 @@ export default function Configuracion() {
               </Button>
             </div>
 
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* TARJETA: CAMBIO DE CONTRASEÑA */}
+      <Card className="border border-slate-200 shadow-sm rounded-xl overflow-hidden bg-white">
+        <div className="bg-gradient-to-r from-slate-50 to-slate-50/50 border-b border-slate-100 py-4 px-6">
+          <div className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center">
+              <Lock className="h-4 w-4 text-amber-700" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-slate-950">Cambiar Contraseña</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Actualiza tu contraseña de acceso a la aplicación</p>
+            </div>
+          </div>
+        </div>
+
+        <CardContent className="p-6">
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            {/* Contraseña Actual */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wide">
+                Contraseña Actual <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <Input
+                  type={showPasswords.current ? 'text' : 'password'}
+                  name="currentPassword"
+                  placeholder="Introduce tu contraseña actual"
+                  value={passwordState.currentPassword}
+                  onChange={handlePasswordChange}
+                  className="text-xs h-9.5 bg-slate-50/20 font-medium text-slate-900 pr-10"
+                  disabled={isChangingPassword}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasswords(prev => ({
+                    ...prev,
+                    current: !prev.current
+                  }))}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                  {showPasswords.current ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Nueva Contraseña */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wide">
+                Nueva Contraseña <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <Input
+                  type={showPasswords.new ? 'text' : 'password'}
+                  name="newPassword"
+                  placeholder="Introduce una nueva contraseña (mínimo 6 caracteres)"
+                  value={passwordState.newPassword}
+                  onChange={handlePasswordChange}
+                  className="text-xs h-9.5 bg-slate-50/20 font-medium text-slate-900 pr-10"
+                  disabled={isChangingPassword}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasswords(prev => ({
+                    ...prev,
+                    new: !prev.new
+                  }))}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                  {showPasswords.new ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Confirmar Nueva Contraseña */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-600 uppercase tracking-wide">
+                Confirmar Nueva Contraseña <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <Input
+                  type={showPasswords.confirm ? 'text' : 'password'}
+                  name="confirmPassword"
+                  placeholder="Repite la nueva contraseña"
+                  value={passwordState.confirmPassword}
+                  onChange={handlePasswordChange}
+                  className="text-xs h-9.5 bg-slate-50/20 font-medium text-slate-900 pr-10"
+                  disabled={isChangingPassword}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasswords(prev => ({
+                    ...prev,
+                    confirm: !prev.confirm
+                  }))}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                  {showPasswords.confirm ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Mensajes de estado */}
+            {passwordSuccess && (
+              <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2.5 text-emerald-800 text-xs font-semibold">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                <span>Contraseña cambiada correctamente</span>
+              </div>
+            )}
+
+            {passwordError && (
+              <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2.5 text-red-800 text-xs font-semibold">
+                <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />
+                <span>{passwordError}</span>
+              </div>
+            )}
+
+            {/* Botón de envío */}
+            <div className="flex items-center justify-end pt-4 border-t border-slate-100">
+              <Button
+                type="submit"
+                disabled={isChangingPassword}
+                className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs h-10 px-5 rounded-lg flex items-center gap-2 transition-all cursor-pointer shadow-sm disabled:opacity-50"
+              >
+                {isChangingPassword ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Cambiando contraseña...</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="h-4 w-4" />
+                    <span>Cambiar Contraseña</span>
+                  </>
+                )}
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
