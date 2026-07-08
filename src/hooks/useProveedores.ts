@@ -3,6 +3,32 @@ import { Proveedor, CompraProveedor, DocumentoProveedor, NotaProveedor } from '.
 import { supabase } from '../lib/supabaseClient';
 
 function provFromRow(row: any): Proveedor {
+  let contactosList: any[] = [];
+  let displayPersona = row.persona_contacto || '';
+  if (row.persona_contacto && (row.persona_contacto.startsWith('[') || row.persona_contacto.startsWith('{'))) {
+    try {
+      const parsed = JSON.parse(row.persona_contacto);
+      if (Array.isArray(parsed)) {
+        contactosList = parsed;
+        if (contactosList.length > 0) {
+          displayPersona = contactosList[0].nombre || '';
+        }
+      }
+    } catch (e) {
+      contactosList = [];
+    }
+  }
+  
+  if (contactosList.length === 0 && row.persona_contacto) {
+    contactosList = [{
+      id: 'contact_default',
+      nombre: row.persona_contacto,
+      telefono: row.movil || row.telefono || '',
+      email: row.email || '',
+      puesto: 'Comercial'
+    }];
+  }
+
   return {
     id: row.id,
     codigo: row.codigo,
@@ -10,7 +36,8 @@ function provFromRow(row: any): Proveedor {
     tipo: row.tipo,
     categoria: row.categoria,
     nifCif: row.nif_cif,
-    personaContacto: row.persona_contacto,
+    personaContacto: displayPersona,
+    contactos: contactosList,
     telefono: row.telefono,
     movil: row.movil,
     email: row.email,
@@ -32,7 +59,13 @@ function provToRow(prov: Partial<Proveedor>): any {
   if (prov.tipo !== undefined) row.tipo = prov.tipo;
   if (prov.categoria !== undefined) row.categoria = prov.categoria;
   if (prov.nifCif !== undefined) row.nif_cif = prov.nifCif;
-  if (prov.personaContacto !== undefined) row.persona_contacto = prov.personaContacto;
+  
+  if (prov.contactos !== undefined) {
+    row.persona_contacto = JSON.stringify(prov.contactos);
+  } else if (prov.personaContacto !== undefined) {
+    row.persona_contacto = prov.personaContacto;
+  }
+  
   if (prov.telefono !== undefined) row.telefono = prov.telefono;
   if (prov.movil !== undefined) row.movil = prov.movil;
   if (prov.email !== undefined) row.email = prov.email;

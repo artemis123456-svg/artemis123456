@@ -26,7 +26,8 @@ import {
   Calendar,
   DollarSign,
   ArrowUpDown,
-  AlertCircle
+  AlertCircle,
+  Download
 } from 'lucide-react';
 
 interface FacturaProveedorTableProps {
@@ -60,6 +61,50 @@ export default function FacturaProveedorTable({
   // Sorting State
   const [sortField, setSortField] = useState<SortField>('numero');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+
+  // Excel/CSV Export logic
+  const handleExportExcel = () => {
+    // Columns: Número, Proveedor, Fecha Emisión, Fecha Vencimiento, Base Imponible, IVA, Total, Estado, Gestoría, Observaciones
+    const headers = [
+      'Número Factura',
+      'Proveedor',
+      'Fecha Emisión',
+      'Fecha Vencimiento',
+      'Base Imponible (€)',
+      'Impuestos (IVA €)',
+      'Importe Total (€)',
+      'Estado',
+      'Entregado Gestoría',
+      'Observaciones'
+    ];
+
+    const rows = processedFacturas.map(f => [
+      f.numero,
+      f.proveedorName,
+      f.fechaEmision,
+      f.fechaVencimiento,
+      f.baseImponible.toString().replace('.', ','),
+      f.totalIva.toString().replace('.', ','),
+      f.total.toString().replace('.', ','),
+      f.estado,
+      f.entregadoGestoria ? 'SÍ' : 'NO',
+      f.observaciones || ''
+    ]);
+
+    const csvContent = [
+      headers.join(';'),
+      ...rows.map(r => r.map(val => `"${val.replace(/"/g, '""')}"`).join(';'))
+    ].join('\n');
+
+    // Add UTF-8 BOM so Excel opens Spanish accents correctly
+    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', `Verini_Facturas_Proveedores_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -205,6 +250,16 @@ export default function FacturaProveedorTable({
         </div>
 
         <div className="flex w-full md:w-auto items-center justify-end gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportExcel}
+            className="text-xs h-10 gap-1.5 border-slate-200 cursor-pointer text-slate-600 hover:text-slate-900"
+            title="Exportar listado completo a Excel/CSV"
+          >
+            <Download className="h-4 w-4 text-emerald-600" />
+            Exportar Excel
+          </Button>
+
           <Button
             variant="outline"
             onClick={() => setShowFilters(!showFilters)}

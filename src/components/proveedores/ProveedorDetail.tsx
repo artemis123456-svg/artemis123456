@@ -27,7 +27,9 @@ import {
   Check,
   CreditCard,
   Truck,
-  Briefcase
+  Briefcase,
+  Eye,
+  Download
 } from 'lucide-react';
 
 interface ProveedorDetailProps {
@@ -444,6 +446,44 @@ export default function ProveedorDetail({
                 </div>
               </div>
 
+              {/* Múltiples Contactos section */}
+              <div className="space-y-4 pt-4 border-t border-slate-100">
+                <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 pb-0.5">
+                  <User className="h-4 w-4 text-gray-700" />
+                  Múltiples Contactos de la Empresa ({proveedor.contactos?.length || 0})
+                </h4>
+                {proveedor.contactos && proveedor.contactos.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {proveedor.contactos.map((contacto) => (
+                      <div key={contacto.id} className="p-3.5 bg-slate-50/50 rounded-xl border border-slate-150 space-y-2.5 shadow-3xs">
+                        <div className="flex justify-between items-start gap-2">
+                          <span className="font-bold text-slate-900 text-xs truncate" title={contacto.nombre}>{contacto.nombre}</span>
+                          <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-800 ring-1 ring-inset ring-slate-600/10 shrink-0">
+                            {contacto.puesto}
+                          </span>
+                        </div>
+                        <div className="space-y-1 text-xs text-slate-600">
+                          {contacto.telefono && (
+                            <div className="flex items-center gap-1.5 font-mono">
+                              <Phone className="h-3 w-3 text-slate-400 shrink-0" />
+                              <span>{contacto.telefono}</span>
+                            </div>
+                          )}
+                          {contacto.email && (
+                            <div className="flex items-center gap-1.5 font-mono truncate" title={contacto.email}>
+                              <Mail className="h-3 w-3 text-slate-400 shrink-0" />
+                              <a href={`mailto:${contacto.email}`} className="hover:underline text-slate-750">{contacto.email}</a>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-400 italic">No hay contactos específicos registrados para este proveedor. Edita el proveedor para añadirlos.</p>
+                )}
+              </div>
+
               {/* Observaciones box */}
               {proveedor.observaciones && (
                 <div className="p-4 bg-amber-50/40 border border-amber-100 rounded-xl space-y-1">
@@ -664,14 +704,47 @@ export default function ProveedorDetail({
                           <p className="text-[10px] text-slate-400 mt-0.5">Tamaño: {doc.tamano || '1.2 MB'} • Subido: {new Date(doc.fechaSubida).toLocaleDateString('es-ES')}</p>
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onDeleteDocumento(doc.id)}
-                        className="h-8 w-8 text-slate-400 hover:text-red-600 rounded-lg"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            // Dummy dynamic document file download
+                            const element = document.createElement('a');
+                            const fileContent = "Fichero PDF simulado para: " + doc.nombre;
+                            const file = new Blob([fileContent], {type: 'text/plain'});
+                            element.href = URL.createObjectURL(file);
+                            element.download = doc.nombre;
+                            document.body.appendChild(element);
+                            element.click();
+                            document.body.removeChild(element);
+                          }}
+                          className="h-8 w-8 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100"
+                          title="Descargar documento adjunto"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            alert(`Visualizando archivo: ${doc.nombre}\n\nDetalles del Expediente:\n- Tipo: ${doc.tipo}\n- Tamaño: ${doc.tamano || '1.2 MB'}\n- Fecha de Subida: ${new Date(doc.fechaSubida).toLocaleDateString('es-ES')}\n\nEn un entorno real, esta acción cargaría un visor PDF incrustado o una pestaña nueva con el recurso firmado de almacenamiento en la nube.`);
+                          }}
+                          className="h-8 w-8 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100"
+                          title="Visualizar documento"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onDeleteDocumento(doc.id)}
+                          className="h-8 w-8 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50"
+                          title="Eliminar documento"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))
                 ) : (

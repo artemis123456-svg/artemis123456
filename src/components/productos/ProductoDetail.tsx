@@ -232,7 +232,7 @@ export default function ProductoDetail({
       </div>
 
       {/* Hero Stats Dashboard */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Precio Venta PVP</span>
@@ -266,17 +266,6 @@ export default function ProductoDetail({
           <p className="text-[10px] text-emerald-400 font-medium mt-0.5">
             +{marginStats.markupPct.toFixed(1)}% Markup / +{marginStats.profitMarginPct.toFixed(1)}% margen comercial
           </p>
-        </div>
-
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Stock Disponible</span>
-            <Layers className="h-4 w-4 text-slate-400" />
-          </div>
-          <p className="mt-2 text-xl font-bold text-slate-900 font-mono">
-            {producto.stock !== undefined ? producto.stock : 0} <span className="text-xs text-slate-400 font-normal font-sans">{producto.unidad}</span>
-          </p>
-          <p className="text-[10px] text-slate-400 font-medium mt-0.5">Control de existencias actuales</p>
         </div>
       </div>
 
@@ -356,25 +345,23 @@ export default function ProductoDetail({
                   </ul>
                 </div>
 
-                {/* Stock details */}
+                {/* Supplier details */}
                 <div className="space-y-4">
                   <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                    <Layers className="h-3.5 w-3.5 text-gray-700" />
-                    Detalles de Existencias y Stock
+                    <Store className="h-3.5 w-3.5 text-gray-700" />
+                    Proveedor Suministrador
                   </h4>
                   <ul className="space-y-3 text-xs">
                     <li className="flex justify-between items-center py-0.5">
-                      <span className="font-semibold text-slate-400 shrink-0">Stock actual:</span>
-                      <span className="font-mono font-bold text-slate-900">
-                        {producto.stock !== undefined ? `${producto.stock} ${producto.unidad}` : '0 ud'}
-                      </span>
-                    </li>
-                    <li className="flex justify-between items-center py-0.5">
-                      <span className="font-semibold text-slate-400">Proveedor Suministrador:</span>
-                      <span className="font-bold text-gray-900 hover:underline cursor-pointer flex items-center gap-1" onClick={() => setActiveTab('proveedor')}>
-                        {associatedProvider ? associatedProvider.nombre : 'Sin proveedor asignado'}
-                        <ExternalLink className="h-3 w-3 inline-block" />
-                      </span>
+                      <span className="font-semibold text-slate-400">Proveedor Vinculado:</span>
+                      {associatedProvider ? (
+                        <span className="font-bold text-gray-900 hover:underline cursor-pointer flex items-center gap-1" onClick={() => setActiveTab('proveedor')}>
+                          {associatedProvider.nombre}
+                          <ExternalLink className="h-3 w-3 inline-block" />
+                        </span>
+                      ) : (
+                        <span className="font-bold text-slate-400 italic">Sin proveedor vinculado</span>
+                      )}
                     </li>
                   </ul>
                 </div>
@@ -528,68 +515,76 @@ export default function ProductoDetail({
             <div className="space-y-6">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Proveedor de Suministros Asociado</h3>
 
-              {associatedProvider ? (
-                <div className="bg-slate-50/70 p-5 rounded-xl border border-slate-200/80 space-y-4 animate-in fade-in">
-                  <div className="flex justify-between items-start flex-wrap gap-2">
-                    <div>
-                      <p className="text-[10px] font-mono font-bold text-gray-800 bg-gray-100 border border-gray-100 px-2 py-0.5 rounded inline-block">
-                        {associatedProvider.codigo}
-                      </p>
-                      <h4 className="text-sm font-bold text-slate-900 mt-1">{associatedProvider.nombre}</h4>
-                      <p className="text-xs text-slate-500 mt-0.5">Categoría: {associatedProvider.categoria} ({associatedProvider.tipo})</p>
+              {producto.proveedorId ? (
+                associatedProvider ? (
+                  <div className="bg-slate-50/70 p-5 rounded-xl border border-slate-200/80 space-y-4 animate-in fade-in">
+                    <div className="flex justify-between items-start flex-wrap gap-2">
+                      <div>
+                        <p className="text-[10px] font-mono font-bold text-gray-800 bg-gray-100 border border-gray-100 px-2 py-0.5 rounded inline-block">
+                          {associatedProvider.codigo}
+                        </p>
+                        <h4 className="text-sm font-bold text-slate-900 mt-1">{associatedProvider.nombre}</h4>
+                        <p className="text-xs text-slate-500 mt-0.5">Categoría: {associatedProvider.categoria} ({associatedProvider.tipo})</p>
+                      </div>
+
+                      <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold
+                        ${associatedProvider.activo ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/10' : 'bg-slate-150 text-slate-700'}`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${associatedProvider.activo ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                        {associatedProvider.activo ? 'Activo' : 'Inactivo'}
+                      </span>
                     </div>
 
-                    <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold
-                      ${associatedProvider.activo ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/10' : 'bg-slate-150 text-slate-700'}`}>
-                      <span className={`h-1.5 w-1.5 rounded-full ${associatedProvider.activo ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-                      {associatedProvider.activo ? 'Activo' : 'Inactivo'}
-                    </span>
+                    {/* Provider Quick Data fields */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-2 border-t border-slate-200">
+                      <div className="space-y-2">
+                        <p className="flex items-center gap-2 text-slate-600">
+                          <User className="h-4 w-4 text-slate-400 shrink-0" />
+                          <span className="font-semibold text-slate-500">Contacto:</span>
+                          <span className="font-bold text-slate-800">{associatedProvider.personaContacto || 'No declarada'}</span>
+                        </p>
+                        <p className="flex items-center gap-2 text-slate-600">
+                          <Phone className="h-4 w-4 text-slate-400 shrink-0" />
+                          <span className="font-semibold text-slate-500">Teléfonos:</span>
+                          <span className="font-mono text-slate-800">{associatedProvider.telefono} {associatedProvider.movil && ` / ${associatedProvider.movil}`}</span>
+                        </p>
+                        <p className="flex items-center gap-2 text-slate-600">
+                          <Mail className="h-4 w-4 text-slate-400 shrink-0" />
+                          <span className="font-semibold text-slate-500">Email:</span>
+                          <span className="font-mono text-slate-800 text-gray-900 hover:underline">{associatedProvider.email || '-'}</span>
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <p className="flex items-start gap-2 text-slate-600">
+                          <MapPin className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
+                          <span className="font-semibold text-slate-500">Dirección:</span>
+                          <span className="font-medium text-slate-700 text-right">{associatedProvider.direccion}, {associatedProvider.ciudad} ({associatedProvider.provincia})</span>
+                        </p>
+                        <p className="flex items-center gap-2 text-slate-600">
+                          <CreditCard className="h-4 w-4 text-slate-400 shrink-0" />
+                          <span className="font-semibold text-slate-500">CIF / NIF:</span>
+                          <span className="font-mono font-bold text-slate-800">{associatedProvider.nifCif}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    {associatedProvider.observaciones && (
+                      <div className="p-3 bg-white border border-slate-150 rounded-lg text-xs text-slate-600 italic">
+                        " {associatedProvider.observaciones} "
+                      </div>
+                    )}
                   </div>
-
-                  {/* Provider Quick Data fields */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-2 border-t border-slate-200">
-                    <div className="space-y-2">
-                      <p className="flex items-center gap-2 text-slate-600">
-                        <User className="h-4 w-4 text-slate-400 shrink-0" />
-                        <span className="font-semibold text-slate-500">Contacto:</span>
-                        <span className="font-bold text-slate-800">{associatedProvider.personaContacto || 'No declarada'}</span>
-                      </p>
-                      <p className="flex items-center gap-2 text-slate-600">
-                        <Phone className="h-4 w-4 text-slate-400 shrink-0" />
-                        <span className="font-semibold text-slate-500">Teléfonos:</span>
-                        <span className="font-mono text-slate-800">{associatedProvider.telefono} {associatedProvider.movil && ` / ${associatedProvider.movil}`}</span>
-                      </p>
-                      <p className="flex items-center gap-2 text-slate-600">
-                        <Mail className="h-4 w-4 text-slate-400 shrink-0" />
-                        <span className="font-semibold text-slate-500">Email:</span>
-                        <span className="font-mono text-slate-800 text-gray-900 hover:underline">{associatedProvider.email || '-'}</span>
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <p className="flex items-start gap-2 text-slate-600">
-                        <MapPin className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
-                        <span className="font-semibold text-slate-500">Dirección:</span>
-                        <span className="font-medium text-slate-700 text-right">{associatedProvider.direccion}, {associatedProvider.ciudad} ({associatedProvider.provincia})</span>
-                      </p>
-                      <p className="flex items-center gap-2 text-slate-600">
-                        <CreditCard className="h-4 w-4 text-slate-400 shrink-0" />
-                        <span className="font-semibold text-slate-500">CIF / NIF:</span>
-                        <span className="font-mono font-bold text-slate-800">{associatedProvider.nifCif}</span>
-                      </p>
-                    </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-250 text-slate-400">
+                    <Store className="h-8 w-8 text-slate-300 mb-2" />
+                    <p className="text-xs font-semibold">El proveedor vinculado (ID: {producto.proveedorId}) ya no existe o se ha eliminado.</p>
                   </div>
-
-                  {associatedProvider.observaciones && (
-                    <div className="p-3 bg-white border border-slate-150 rounded-lg text-xs text-slate-600 italic">
-                      " {associatedProvider.observaciones} "
-                    </div>
-                  )}
-                </div>
+                )
               ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-250 text-slate-400">
-                  <Store className="h-8 w-8 text-slate-300 mb-2" />
-                  <p className="text-xs font-semibold">El proveedor vinculado (ID: {producto.proveedorId}) ya no existe o se ha eliminado.</p>
+                <div className="flex flex-col items-center justify-center py-12 text-center bg-slate-50 rounded-xl border border-dashed border-slate-250 text-slate-400">
+                  <Store className="h-10 w-10 text-slate-300 mb-3" />
+                  <p className="text-xs font-bold text-slate-700">Sin proveedor vinculado</p>
+                  <p className="text-[10px] text-slate-400 mt-1 max-w-sm">Este producto está catalogado de forma independiente sin estar vinculado a un proveedor de suministros.</p>
                 </div>
               )}
             </div>

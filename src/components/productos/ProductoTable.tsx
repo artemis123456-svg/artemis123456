@@ -307,9 +307,6 @@ export default function ProductoTable({
                 <TableHead onClick={() => handleSort('precioVenta')} className="cursor-pointer hover:bg-slate-100 transition-colors py-3 px-4 font-semibold text-xs text-slate-500 select-none w-28 text-right">
                   PVP {renderSortIcon('precioVenta')}
                 </TableHead>
-                <TableHead onClick={() => handleSort('stock')} className="cursor-pointer hover:bg-slate-100 transition-colors py-3 px-4 font-semibold text-xs text-slate-500 select-none w-28 text-right">
-                  Stock {renderSortIcon('stock')}
-                </TableHead>
                 <TableHead onClick={() => handleSort('activo')} className="cursor-pointer hover:bg-slate-100 transition-colors py-3 px-4 font-semibold text-xs text-slate-500 select-none w-24">
                   Estado {renderSortIcon('activo')}
                 </TableHead>
@@ -321,7 +318,7 @@ export default function ProductoTable({
             <TableBody>
               {paginatedProducts.length > 0 ? (
                 paginatedProducts.map((prod) => {
-                  const supplierName = providerMap.get(prod.proveedorId) || 'Desconocido';
+                  const supplierName = prod.proveedorId ? (providerMap.get(prod.proveedorId) || 'Desconocido') : 'Sin proveedor';
                   return (
                     <TableRow 
                       key={prod.id} 
@@ -374,9 +371,6 @@ export default function ProductoTable({
                       <TableCell className="py-3 px-4 text-right font-mono font-bold text-slate-950 text-xs">
                         {prod.precioVenta.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €
                         <span className="text-[10px] text-slate-400 font-normal block">P.C: {prod.precioCompra.toLocaleString('es-ES')} €</span>
-                      </TableCell>
-                      <TableCell className="py-3 px-4 text-right font-mono font-bold text-slate-900 text-xs">
-                        {prod.stock !== undefined ? `${prod.stock} ${prod.unidad}` : '0 ud'}
                       </TableCell>
                       <TableCell className="py-3 px-4">
                         {renderStatusBadge(prod.activo)}

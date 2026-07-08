@@ -1,3 +1,11 @@
+export interface ContactoProveedor {
+  id: string;
+  nombre: string;
+  telefono: string;
+  email: string;
+  puesto: 'Comercial' | 'Administración' | 'Logística' | 'Otro' | string;
+}
+
 export interface Proveedor {
   id: string;
   codigo: string;            // automático, patrón PRV-000001
@@ -6,6 +14,7 @@ export interface Proveedor {
   categoria: string;         // ej: "Azulejos", "Fontanería", "Iluminación", "Electricidad"
   nifCif: string;
   personaContacto: string;
+  contactos?: ContactoProveedor[];
   telefono: string;
   movil: string;
   email: string;

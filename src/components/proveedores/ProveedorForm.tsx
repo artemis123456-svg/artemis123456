@@ -3,7 +3,7 @@ import { Proveedor } from '../../types/proveedor';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
-import { User, Phone, Mail, MapPin, Landmark, FileText, ArrowLeft, Save, Truck, Briefcase } from 'lucide-react';
+import { User, Phone, Mail, MapPin, Landmark, FileText, ArrowLeft, Save, Truck, Briefcase, Plus, Trash2, Globe } from 'lucide-react';
 
 interface ProveedorFormProps {
   proveedorToEdit?: Proveedor | null;
@@ -17,7 +17,6 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
   const [tipo, setTipo] = useState<'Materiales' | 'Subcontrata'>('Materiales');
   const [categoria, setCategoria] = useState('');
   const [nifCif, setNifCif] = useState('');
-  const [personaContacto, setPersonaContacto] = useState('');
   const [telefono, setTelefono] = useState('');
   const [movil, setMovil] = useState('');
   const [email, setEmail] = useState('');
@@ -29,23 +28,38 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
   const [observaciones, setObservaciones] = useState('');
   const [activo, setActivo] = useState(true);
 
-  // Suggested categories lists depending on type
-  const availableCategories = [
-    'Pintura',
-    'Electricidad',
-    'Fontanería',
-    'Albañilería',
-    'Madera',
-    'Herramientas',
-    'Azulejos',
-    'Iluminación',
-    'Sanitarios',
-    'Climatización',
-    'Carpintería',
-    'Demolición',
-    'Limpieza',
-    'Vidrio/Perfilería'
+  // Contacts state
+  const [contactos, setContactos] = useState<any[]>([]);
+
+  // Individual contact fields for the "add contact" subform
+  const [nuevoContactoNombre, setNuevoContactoNombre] = useState('');
+  const [nuevoContactoTelefono, setNuevoContactoTelefono] = useState('');
+  const [nuevoContactoEmail, setNuevoContactoEmail] = useState('');
+  const [nuevoContactoPuesto, setNuevoContactoPuesto] = useState('Comercial');
+
+  // Predefined categories requested by user
+  const defaultCategories = [
+    'Alquileres',
+    'Suministros',
+    'Telefonía',
+    'Ofimática',
+    'Griferías',
+    'Muebles',
+    'Pavimentos',
+    'Parket',
+    'Arquitecto',
+    'Diseño',
+    'Pintor'
   ];
+
+  // State for categories list, initialized with default plus persistent local ones
+  const [availableCategories, setAvailableCategories] = useState<string[]>(() => {
+    const saved = localStorage.getItem('verini_custom_proveedor_categories');
+    const custom = saved ? JSON.parse(saved) : [];
+    return Array.from(new Set([...defaultCategories, ...custom]));
+  });
+
+  const [newCategoryText, setNewCategoryText] = useState('');
 
   const selectedCategories = useMemo(() => {
     if (!categoria) return [];
@@ -62,6 +76,67 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
     setCategoria(updated.join(', '));
   };
 
+  const handleAddCustomCategory = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const clean = newCategoryText.trim();
+    if (!clean) return;
+    if (!availableCategories.includes(clean)) {
+      const updated = [...availableCategories, clean];
+      setAvailableCategories(updated);
+      
+      const custom = updated.filter(c => !defaultCategories.includes(c));
+      localStorage.setItem('verini_custom_proveedor_categories', JSON.stringify(custom));
+    }
+    handleToggleCategory(clean);
+    setNewCategoryText('');
+  };
+
+  const handleCPChange = async (val: string) => {
+    setCodigoPostal(val);
+    const cleanCP = val.trim();
+    if (cleanCP.length === 5) {
+      try {
+        const res = await fetch(`https://api.zippopotam.us/es/${cleanCP}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.places && data.places.length > 0) {
+            const place = data.places[0];
+            setCiudad(place['place name'] || '');
+            setProvincia(place['state'] || '');
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching Spanish zip code:", err);
+      }
+    }
+  };
+
+  const handleAddContacto = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!nuevoContactoNombre.trim()) {
+      alert('Por favor introduzca al menos el nombre del contacto.');
+      return;
+    }
+    const newContactObj = {
+      id: `contact_${Date.now()}`,
+      nombre: nuevoContactoNombre.trim(),
+      telefono: nuevoContactoTelefono.trim(),
+      email: nuevoContactoEmail.trim().toLowerCase(),
+      puesto: nuevoContactoPuesto
+    };
+    setContactos(prev => [...prev, newContactObj]);
+    
+    // Clear fields
+    setNuevoContactoNombre('');
+    setNuevoContactoTelefono('');
+    setNuevoContactoEmail('');
+    setNuevoContactoPuesto('Comercial');
+  };
+
+  const handleRemoveContacto = (id: string) => {
+    setContactos(prev => prev.filter(c => c.id !== id));
+  };
+
   // Load provider data if editing
   useEffect(() => {
     if (proveedorToEdit) {
@@ -69,7 +144,6 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
       setTipo(proveedorToEdit.tipo || 'Materiales');
       setCategoria(proveedorToEdit.categoria || '');
       setNifCif(proveedorToEdit.nifCif || '');
-      setPersonaContacto(proveedorToEdit.personaContacto || '');
       setTelefono(proveedorToEdit.telefono || '');
       setMovil(proveedorToEdit.movil || '');
       setEmail(proveedorToEdit.email || '');
@@ -80,13 +154,13 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
       setIban(proveedorToEdit.iban || '');
       setObservaciones(proveedorToEdit.observaciones || '');
       setActivo(proveedorToEdit.activo !== undefined ? proveedorToEdit.activo : true);
+      setContactos(proveedorToEdit.contactos || []);
     } else {
       // Reset form
       setNombre('');
       setTipo('Materiales');
       setCategoria('');
       setNifCif('');
-      setPersonaContacto('');
       setTelefono('');
       setMovil('');
       setEmail('');
@@ -97,6 +171,7 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
       setIban('');
       setObservaciones('');
       setActivo(true);
+      setContactos([]);
     }
   }, [proveedorToEdit]);
 
@@ -116,15 +191,18 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
       return;
     }
 
+    const firstContact = contactos[0] || null;
+
     const provData = {
       nombre: nombre.trim(),
       tipo,
       categoria: categoria.trim(),
       nifCif: nifCif.trim().toUpperCase(),
-      personaContacto: personaContacto.trim(),
+      personaContacto: firstContact ? firstContact.nombre : '',
+      contactos,
       telefono: telefono.trim(),
-      movil: movil.trim(),
-      email: email.trim().toLowerCase(),
+      movil: movil.trim() || (firstContact ? firstContact.telefono : ''),
+      email: email.trim().toLowerCase() || (firstContact ? firstContact.email : ''),
       direccion: direccion.trim(),
       codigoPostal: codigoPostal.trim(),
       ciudad: ciudad.trim(),
@@ -215,7 +293,7 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
                   <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block">
                     Categorías / Especialidades <span className="text-red-500">*</span>
                   </label>
-                  <p className="text-[10px] text-slate-400 mb-1.5">Selecciona una o más especialidades para este proveedor:</p>
+                  <p className="text-[10px] text-slate-400 mb-1.5">Selecciona una o más especialidades para este proveedor, o añade una propia:</p>
                   <div className="flex flex-wrap gap-1.5 p-3.5 bg-slate-50 border border-slate-200/65 rounded-xl max-h-40 overflow-y-auto">
                     {availableCategories.map((cat) => {
                       const isSelected = selectedCategories.includes(cat);
@@ -234,16 +312,23 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
                       );
                     })}
                   </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Persona de Contacto</label>
-                  <Input
-                    placeholder="ej. Juan Martínez (Comercial)"
-                    value={personaContacto}
-                    onChange={(e) => setPersonaContacto(e.target.value)}
-                    className="text-xs h-9.5 bg-slate-50/20"
-                  />
+                  
+                  <div className="flex gap-2 mt-2 max-w-md">
+                    <Input
+                      placeholder="Nueva categoría propia (ej. Ofimática, Parket)"
+                      value={newCategoryText}
+                      onChange={(e) => setNewCategoryText(e.target.value)}
+                      className="text-xs h-8.5 bg-white"
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleAddCustomCategory}
+                      className="bg-slate-800 hover:bg-slate-700 text-white text-xs h-8.5 px-3 rounded-lg flex items-center gap-1 shrink-0"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Añadir
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="space-y-1">
@@ -260,11 +345,11 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
               </div>
             </div>
 
-            {/* Sección 2: Datos de Contacto */}
+            {/* Sección 2: Datos de Contacto de la Empresa */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
                 <Phone className="h-4 w-4 text-gray-700" />
-                Información de Contacto
+                Información de Contacto de la Empresa
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -279,7 +364,7 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Teléfono Móvil</label>
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Teléfono Móvil General</label>
                   <Input
                     placeholder="ej. 600123456"
                     value={movil}
@@ -289,7 +374,7 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Correo Electrónico</label>
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Correo Electrónico General</label>
                   <Input
                     type="email"
                     placeholder="ej. contacto@proveedor.com"
@@ -297,6 +382,122 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
                     onChange={(e) => setEmail(e.target.value)}
                     className="text-xs h-9.5 bg-slate-50/20 font-mono"
                   />
+                </div>
+              </div>
+            </div>
+
+            {/* Sección Nueva: Múltiples Contactos por Proveedor */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
+                <User className="h-4 w-4 text-gray-700" />
+                Múltiples Contactos por Proveedor
+              </h3>
+
+              {/* List of existing contacts */}
+              <div className="space-y-2.5">
+                {contactos.length > 0 ? (
+                  <div className="border border-slate-150 rounded-xl overflow-hidden divide-y divide-slate-100 bg-white shadow-3xs">
+                    {contactos.map((c) => (
+                      <div key={c.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-slate-50/20 text-xs gap-2 hover:bg-slate-50/50 transition-colors">
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 flex-1">
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase block">Función / Puesto</span>
+                            <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-800 ring-1 ring-inset ring-slate-600/10">
+                              {c.puesto}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase block">Nombre</span>
+                            <span className="font-bold text-slate-900">{c.nombre}</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase block">Teléfono</span>
+                            <span className="font-mono text-slate-750">{c.telefono || '-'}</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase block">Email</span>
+                            <span className="font-mono text-slate-750">{c.email || '-'}</span>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRemoveContacto(c.id)}
+                          className="h-8 w-8 text-slate-400 hover:text-red-600 rounded-lg shrink-0 self-end sm:self-center"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-5 text-xs text-slate-400 italic bg-slate-50/40 border border-slate-200/50 rounded-xl">
+                    No se han añadido contactos específicos para este proveedor. Añade uno abajo.
+                  </div>
+                )}
+              </div>
+
+              {/* Subform to add a new contact */}
+              <div className="p-4 bg-slate-50/50 border border-slate-200 rounded-xl space-y-4">
+                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">Nuevo Contacto</span>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">Nombre Completo</label>
+                    <Input
+                      placeholder="ej. Juan Pérez"
+                      value={nuevoContactoNombre}
+                      onChange={(e) => setNuevoContactoNombre(e.target.value)}
+                      className="text-xs h-9 bg-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">Teléfono</label>
+                    <Input
+                      placeholder="ej. 600123456"
+                      value={nuevoContactoTelefono}
+                      onChange={(e) => setNuevoContactoTelefono(e.target.value)}
+                      className="text-xs h-9 bg-white font-mono"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">Correo Electrónico</label>
+                    <Input
+                      type="email"
+                      placeholder="ej. comercial@proveedor.com"
+                      value={nuevoContactoEmail}
+                      onChange={(e) => setNuevoContactoEmail(e.target.value)}
+                      className="text-xs h-9 bg-white font-mono"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase">Puesto / Función</label>
+                    <select
+                      value={nuevoContactoPuesto}
+                      onChange={(e) => setNuevoContactoPuesto(e.target.value)}
+                      className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-750 outline-none focus:border-gray-700"
+                    >
+                      <option value="Comercial">Comercial</option>
+                      <option value="Administración">Administración</option>
+                      <option value="Logística">Logística</option>
+                      <option value="Otro">Otro</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-1">
+                  <Button
+                    type="button"
+                    onClick={handleAddContacto}
+                    className="bg-slate-900 hover:bg-slate-850 text-white text-xs h-8.5 px-3.5 gap-1.5 rounded-lg font-semibold"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Añadir Contacto
+                  </Button>
                 </div>
               </div>
             </div>
@@ -324,7 +525,7 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
                   <Input
                     placeholder="ej. 46980"
                     value={codigoPostal}
-                    onChange={(e) => setCodigoPostal(e.target.value)}
+                    onChange={(e) => handleCPChange(e.target.value)}
                     className="text-xs h-9.5 bg-slate-50/20"
                   />
                 </div>

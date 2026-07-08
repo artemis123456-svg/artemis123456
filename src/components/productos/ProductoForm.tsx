@@ -40,19 +40,25 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
   const [imagenUrl, setImagenUrl] = useState('');
   const [stock, setStock] = useState('0');
 
-  // Suggested categories for auto-complete datalist
-  const suggestedCategories = [
-    'Azulejos', 
-    'Mamparas', 
-    'Iluminación', 
-    'Sanitarios', 
-    'Grifería', 
-    'Carpintería',
-    'Pintura',
-    'Climatización',
-    'Electrodomésticos',
-    'Mármoles'
-  ];
+  // Load persistent custom product categories
+  const [customCategories, setCustomCategories] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('verini_custom_product_categories');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [
+      'Azulejos', 
+      'Mamparas', 
+      'Iluminación', 
+      'Sanitarios', 
+      'Grifería', 
+      'Carpintería',
+      'Pintura',
+      'Climatización',
+      'Electrodomésticos',
+      'Mármoles'
+    ];
+  });
 
   // Quick preset Unsplash images depending on the selected category to help the user
   const quickImagePresets = [
@@ -82,7 +88,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
       setNombre('');
       setCategoria('Azulejos');
       setDescripcion('');
-      setProveedorId(proveedores.length > 0 ? proveedores[0].id : '');
+      setProveedorId('');
       setPrecioCompra('');
       setPrecioVenta('');
       setUnidad('ud');
@@ -90,7 +96,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
       setImagenUrl('');
       setStock('0');
     }
-  }, [productoToEdit, proveedores]);
+  }, [productoToEdit]);
 
   // Form submission handler
   const handleSubmit = (e: React.FormEvent) => {
@@ -108,9 +114,13 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
       alert('La Categoría es obligatoria.');
       return;
     }
-    if (!proveedorId) {
-      alert('Debe seleccionar un Proveedor Suministrador.');
-      return;
+
+    // Persist new custom product category dynamically
+    const trimmedCat = categoria.trim();
+    if (trimmedCat && !customCategories.includes(trimmedCat)) {
+      const updated = [...customCategories, trimmedCat];
+      setCustomCategories(updated);
+      localStorage.setItem('verini_custom_product_categories', JSON.stringify(updated));
     }
 
     const compPrice = Number(precioCompra) || 0;
@@ -125,15 +135,15 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
     const prodData = {
       codigo: codigo.trim(),
       nombre: nombre.trim(),
-      categoria: categoria.trim(),
+      categoria: trimmedCat,
       descripcion: descripcion.trim(),
-      proveedorId,
+      proveedorId: proveedorId || null,
       precioCompra: compPrice,
       precioVenta: ventPrice,
       unidad,
       activo,
       imagenUrl: imagenUrl.trim() || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=600&q=80',
-      stock: Number(stock) || 0
+      stock: 0
     };
 
     onSave(prodData);
@@ -211,7 +221,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
                     className="text-xs h-9.5 bg-slate-50/20 font-semibold"
                   />
                   <datalist id="suggested-product-categories">
-                    {suggestedCategories.map((cat) => (
+                    {customCategories.map((cat) => (
                       <option key={cat} value={cat} />
                     ))}
                   </datalist>
@@ -219,24 +229,20 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
 
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                    Proveedor Suministrador <span className="text-red-500">*</span>
+                    Proveedor Suministrador <span className="text-slate-400 font-normal">(Opcional)</span>
                   </label>
                   <select
-                    required
-                    value={proveedorId}
+                    value={proveedorId || ''}
                     onChange={(e) => setProveedorId(e.target.value)}
                     className="w-full text-xs h-9.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 font-medium outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700/20"
                   >
-                    <option value="" disabled>Seleccione un proveedor...</option>
+                    <option value="">Sin proveedor vinculado</option>
                     {proveedores.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.nombre} ({p.tipo})
                       </option>
                     ))}
                   </select>
-                  {proveedores.length === 0 && (
-                    <p className="text-[10px] text-red-500 mt-1">¡No hay proveedores guardados! Regístrelos primero.</p>
-                  )}
                 </div>
 
                 <div className="space-y-1">
@@ -317,30 +323,6 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
                     <p className="text-xs italic text-slate-400 mt-1">Introduzca precios para calcular</p>
                   )}
                 </div>
-              </div>
-            </div>
-
-            {/* Sección 3: Control de Stock */}
-            <div className="space-y-4">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                <Boxes className="h-4 w-4 text-gray-700" />
-                Control de Stock
-              </h3>
-
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                  Cantidad disponible en stock (obligatorio)
-                </label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="any"
-                  placeholder="ej. 15, 2.5..."
-                  value={stock}
-                  onChange={(e) => setStock(e.target.value)}
-                  className="text-xs h-9.5 bg-slate-50/20 text-slate-900"
-                  required
-                />
               </div>
             </div>
 

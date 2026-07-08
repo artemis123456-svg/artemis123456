@@ -18,7 +18,9 @@ import {
   Percent,
   Search,
   ShoppingCart,
-  CreditCard
+  CreditCard,
+  Lock,
+  Unlock
 } from 'lucide-react';
 
 interface FacturaProveedorFormProps {
@@ -56,6 +58,58 @@ export default function FacturaProveedorForm({
 
   // Product search code state per line
   const [searchCodes, setSearchCodes] = useState<Record<string, string>>({});
+
+  // Autocomplete state for Proveedor
+  const [provSearchQuery, setProvSearchQuery] = useState('');
+  const [showProvDropdown, setShowProvDropdown] = useState(false);
+
+  // Load blocked material IDs from localStorage
+  const [blockedMaterialIds, setBlockedMaterialIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('verini_blocked_materials');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Toggle lock status of material
+  const toggleLockMaterial = (id: string) => {
+    if (!id) return;
+    setBlockedMaterialIds(prev => {
+      const updated = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+      localStorage.setItem('verini_blocked_materials', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  // Filtered providers for autocomplete
+  const filteredProveedores = useMemo(() => {
+    const query = provSearchQuery.trim().toLowerCase();
+    if (!query) return proveedores;
+    return proveedores.filter(p => p.nombre.toLowerCase().includes(query));
+  }, [proveedores, provSearchQuery]);
+
+  // Handle product selection verifying if it's locked
+  const handleProductSelection = (index: number, value: string) => {
+    if (blockedMaterialIds.includes(value)) {
+      alert('Este material/servicio está bloqueado temporalmente y no puede asociarse a más facturas.');
+      return;
+    }
+    handleLineChange(index, 'productoId', value);
+  };
+
+  // Synchronize search query when editing or supplier selected
+  useEffect(() => {
+    if (proveedorId) {
+      const selected = proveedores.find(p => p.id === proveedorId);
+      if (selected) {
+        setProvSearchQuery(selected.nombre);
+      }
+    } else {
+      setProvSearchQuery('');
+    }
+  }, [proveedorId, proveedores]);
 
   // Lines state
   const [lineas, setLineas] = useState<LineaFacturaProveedor[]>([]);
@@ -269,19 +323,70 @@ export default function FacturaProveedorForm({
           />
         </div>
 
-        <div className="space-y-1">
+        <div className="space-y-1 relative">
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Proveedor <span className="text-red-500">*</span></label>
-          <select
-            required
-            value={proveedorId}
-            onChange={e => setProveedorId(e.target.value)}
-            className="w-full h-9 bg-white border border-slate-200 rounded-lg px-3 text-xs focus:outline-none focus:ring-1 focus:ring-verini-black font-semibold text-slate-800"
-          >
-            <option value="" disabled>Seleccione proveedor...</option>
-            {proveedores.map(p => (
-              <option key={p.id} value={p.id}>{p.nombre}</option>
-            ))}
-          </select>
+          <div className="relative">
+            <Input
+              required
+              placeholder="Escribe para buscar proveedor..."
+              value={provSearchQuery}
+              onChange={e => {
+                setProvSearchQuery(e.target.value);
+                setShowProvDropdown(true);
+                const exactMatch = proveedores.find(p => p.nombre.toLowerCase() === e.target.value.trim().toLowerCase());
+                if (exactMatch) {
+                  setProveedorId(exactMatch.id);
+                } else {
+                  setProveedorId('');
+                }
+              }}
+              onFocus={() => setShowProvDropdown(true)}
+              className="text-xs h-9 font-semibold text-slate-800 pr-8 border-slate-200 focus-visible:ring-verini-black"
+            />
+            <button
+              type="button"
+              onClick={() => setShowProvDropdown(!showProvDropdown)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded-md"
+            >
+              <Search className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          {showProvDropdown && (
+            <>
+              <div 
+                className="fixed inset-0 z-10" 
+                onClick={() => setShowProvDropdown(false)} 
+              />
+              <div className="absolute left-0 right-0 top-[54px] z-20 max-h-56 overflow-y-auto bg-white border border-slate-200 rounded-lg shadow-lg py-1 divide-y divide-slate-50">
+                {filteredProveedores.length > 0 ? (
+                  filteredProveedores.map(p => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        setProveedorId(p.id);
+                        setProvSearchQuery(p.nombre);
+                        setShowProvDropdown(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-xs font-semibold hover:bg-slate-50 transition-colors flex items-center justify-between ${
+                        p.id === proveedorId ? 'bg-slate-50 text-verini-black font-bold' : 'text-slate-700'
+                      }`}
+                    >
+                      <span>{p.nombre}</span>
+                      <span className="text-[9px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                        {p.codigo}
+                      </span>
+                    </button>
+                  ))
+                ) : (
+                  <div className="px-3 py-2 text-xs text-slate-400 italic">
+                    Ningún proveedor coincide
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         <div className="space-y-1">
@@ -454,19 +559,44 @@ export default function FacturaProveedorForm({
                 {/* Selector de Producto */}
                 <div className="md:col-span-3 space-y-1">
                   <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
-                    Seleccionar Material
+                    Seleccionar Material / Servicio
                   </label>
-                  <select
-                    required
-                    value={linea.productoId || ''}
-                    onChange={e => handleLineChange(index, 'productoId', e.target.value)}
-                    className="w-full h-9 bg-white border border-slate-200 rounded-lg px-2 text-xs focus:outline-none focus:ring-1 focus:ring-verini-black font-semibold text-slate-800"
-                  >
-                    <option value="" disabled>Seleccione material...</option>
-                    {productos.map(p => (
-                      <option key={p.id} value={p.id}>{p.nombre} ({p.precioCompra} €)</option>
-                    ))}
-                  </select>
+                  <div className="flex gap-1.5 items-center">
+                    <select
+                      required
+                      value={linea.productoId || ''}
+                      onChange={e => handleProductSelection(index, e.target.value)}
+                      className="flex-1 h-9 bg-white border border-slate-200 rounded-lg px-2 text-xs focus:outline-none focus:ring-1 focus:ring-verini-black font-semibold text-slate-800"
+                    >
+                      <option value="" disabled>Seleccione material...</option>
+                      {productos.map(p => {
+                        const isBlocked = blockedMaterialIds.includes(p.id);
+                        return (
+                          <option key={p.id} value={p.id}>
+                            {isBlocked ? `🔒 [BLOQUEADO] ${p.nombre}` : `${p.nombre} (${p.precioCompra} €)`}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    {linea.productoId && (
+                      <button
+                        type="button"
+                        onClick={() => toggleLockMaterial(linea.productoId!)}
+                        className={`p-2 rounded-lg border h-9 w-9 flex items-center justify-center transition-colors shrink-0 ${
+                          blockedMaterialIds.includes(linea.productoId)
+                            ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
+                            : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100 hover:text-slate-600'
+                        }`}
+                        title={blockedMaterialIds.includes(linea.productoId) ? 'Desbloquear material/servicio' : 'Bloquear material/servicio'}
+                      >
+                        {blockedMaterialIds.includes(linea.productoId) ? (
+                          <Lock className="h-4 w-4" />
+                        ) : (
+                          <Unlock className="h-4 w-4" />
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Imputación de Obra (Opcional) */}

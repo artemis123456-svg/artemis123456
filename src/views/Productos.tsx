@@ -79,23 +79,18 @@ export default function Productos() {
     setViewMode('create');
   };
 
-  const handleSaveForm = async (prodData: any) => {
-    try {
-      if (viewMode === 'edit' && selectedProducto) {
-        await updateProducto(selectedProducto.id, prodData);
-
-        // Update selected product state so detail view has latest info
-        const latest = { ...selectedProducto, ...prodData };
-        setSelectedProducto(latest);
-        setViewMode('detail');
-      } else {
-        const created = await addProducto(prodData);
-        setSelectedProducto(created);
-        setViewMode('detail');
-      }
-    } catch (err) {
-      console.error('Error al guardar el producto:', err);
-      alert('No se pudo guardar el producto. Revisa la conexión e inténtalo de nuevo.');
+  const handleSaveForm = (prodData: any) => {
+    if (viewMode === 'edit' && selectedProducto) {
+      updateProducto(selectedProducto.id, prodData);
+      
+      // Update selected product state so detail view has latest info
+      const latest = { ...selectedProducto, ...prodData };
+      setSelectedProducto(latest);
+      setViewMode('detail');
+    } else {
+      const created = addProducto(prodData);
+      setSelectedProducto(created);
+      setViewMode('detail');
     }
   };
 
