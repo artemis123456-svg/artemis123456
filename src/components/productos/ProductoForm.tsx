@@ -4,6 +4,7 @@ import { useProveedores } from '../../hooks/useProveedores';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
+import { supabase } from '../../lib/supabaseClient';
 import { 
   ArrowLeft, 
   Save, 
@@ -23,6 +24,19 @@ interface ProductoFormProps {
   onCancel: () => void;
 }
 
+const DEFAULT_CATEGORIES = [
+  'Azulejos', 
+  'Mamparas', 
+  'Iluminación', 
+  'Sanitarios', 
+  'Grifería', 
+  'Carpintería',
+  'Pintura',
+  'Climatización',
+  'Electrodomésticos',
+  'Mármoles'
+];
+
 export default function ProductoForm({ productoToEdit, onSave, onCancel }: ProductoFormProps) {
   // Load list of providers to show in dropdown selector
   const { proveedores } = useProveedores();
@@ -41,24 +55,39 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
   const [stock, setStock] = useState('0');
 
   // Load persistent custom product categories
-  const [customCategories, setCustomCategories] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem('verini_custom_product_categories');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return [
-      'Azulejos', 
-      'Mamparas', 
-      'Iluminación', 
-      'Sanitarios', 
-      'Grifería', 
-      'Carpintería',
-      'Pintura',
-      'Climatización',
-      'Electrodomésticos',
-      'Mármoles'
-    ];
-  });
+  const [customCategories, setCustomCategories] = useState<string[]>(DEFAULT_CATEGORIES);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('categorias_producto')
+          .select('nombre')
+          .order('nombre', { ascending: true });
+        
+        if (error) {
+          throw error;
+        }
+
+        if (data && data.length > 0) {
+          setCustomCategories(data.map(d => d.nombre));
+        } else {
+          // Seed defaults if database/table is empty
+          const seeds = DEFAULT_CATEGORIES.map((cat, i) => ({
+            id: `cat_${Date.now()}_${i}`,
+            nombre: cat
+          }));
+          await supabase.from('categorias_producto').insert(seeds);
+          setCustomCategories(DEFAULT_CATEGORIES);
+        }
+      } catch (err) {
+        console.error('Error loading categories from Supabase, falling back to local defaults:', err);
+        setCustomCategories(DEFAULT_CATEGORIES);
+      }
+    };
+
+    loadCategories();
+  }, []);
 
   // Quick preset Unsplash images depending on the selected category to help the user
   const quickImagePresets = [
@@ -99,7 +128,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
   }, [productoToEdit]);
 
   // Form submission handler
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!codigo.trim()) {
@@ -117,10 +146,22 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
 
     // Persist new custom product category dynamically
     const trimmedCat = categoria.trim();
-    if (trimmedCat && !customCategories.includes(trimmedCat)) {
-      const updated = [...customCategories, trimmedCat];
-      setCustomCategories(updated);
-      localStorage.setItem('verini_custom_product_categories', JSON.stringify(updated));
+    const exists = customCategories.some(c => c.toLowerCase() === trimmedCat.toLowerCase());
+    if (trimmedCat && !exists) {
+      try {
+        const catId = `cat_${Date.now()}`;
+        const { error } = await supabase
+          .from('categorias_producto')
+          .insert([{ id: catId, nombre: trimmedCat }]);
+        
+        if (error) {
+          console.error('Error inserting new category:', error);
+        } else {
+          setCustomCategories(prev => [...prev, trimmedCat].sort());
+        }
+      } catch (err) {
+        console.error('Error persisting category:', err);
+      }
     }
 
     const compPrice = Number(precioCompra) || 0;

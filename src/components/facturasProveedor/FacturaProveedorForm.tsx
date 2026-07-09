@@ -18,9 +18,7 @@ import {
   Percent,
   Search,
   ShoppingCart,
-  CreditCard,
-  Lock,
-  Unlock
+  CreditCard
 } from 'lucide-react';
 
 interface FacturaProveedorFormProps {
@@ -63,41 +61,12 @@ export default function FacturaProveedorForm({
   const [provSearchQuery, setProvSearchQuery] = useState('');
   const [showProvDropdown, setShowProvDropdown] = useState(false);
 
-  // Load blocked material IDs from localStorage
-  const [blockedMaterialIds, setBlockedMaterialIds] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem('verini_blocked_materials');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  // Toggle lock status of material
-  const toggleLockMaterial = (id: string) => {
-    if (!id) return;
-    setBlockedMaterialIds(prev => {
-      const updated = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
-      localStorage.setItem('verini_blocked_materials', JSON.stringify(updated));
-      return updated;
-    });
-  };
-
   // Filtered providers for autocomplete
   const filteredProveedores = useMemo(() => {
     const query = provSearchQuery.trim().toLowerCase();
     if (!query) return proveedores;
     return proveedores.filter(p => p.nombre.toLowerCase().includes(query));
   }, [proveedores, provSearchQuery]);
-
-  // Handle product selection verifying if it's locked
-  const handleProductSelection = (index: number, value: string) => {
-    if (blockedMaterialIds.includes(value)) {
-      alert('Este material/servicio está bloqueado temporalmente y no puede asociarse a más facturas.');
-      return;
-    }
-    handleLineChange(index, 'productoId', value);
-  };
 
   // Synchronize search query when editing or supplier selected
   useEffect(() => {
@@ -128,6 +97,20 @@ export default function FacturaProveedorForm({
       setMetodoPago(factura.metodoPago || 'Transferencia');
       setPlazosDias(factura.plazosDias || 0);
       setReferenciaBancaria(factura.referenciaBancaria || '');
+
+      // Pre-populate searchCodes for existing lines
+      const codes: Record<string, string> = {};
+      factura.lineas.forEach(l => {
+        if (l.productoId) {
+          const p = productos.find(prod => prod.id === l.productoId);
+          if (p) {
+            codes[l.id] = p.codigo;
+          }
+        } else if (l.tipo === 'libre') {
+          codes[l.id] = '.';
+        }
+      });
+      setSearchCodes(codes);
     } else {
       const today = new Date().toISOString().split('T')[0];
       const nextMonth = new Date();
@@ -165,23 +148,40 @@ export default function FacturaProveedorForm({
 
   // Search product by code and autofill line
   const handleCodeSearch = (index: number, code: string) => {
-    if (!code) return;
-    const found = productos.find(p => p.codigo.trim().toLowerCase() === code.trim().toLowerCase());
-    if (found) {
-      const updated = [...lineas];
-      updated[index] = {
-        ...updated[index],
-        tipo: 'producto',
-        productoId: found.id,
-        concepto: found.nombre,
-        precioUnitario: found.precioCompra || 0
-      };
-      setLineas(updated);
+    const updated = [...lineas];
+    const targetLine = { ...updated[index] };
+    const trimmedCode = code.trim();
 
-      if (found.proveedorId) {
-        setProveedorId(found.proveedorId);
+    if (trimmedCode === '.') {
+      // Free text mode
+      targetLine.tipo = 'libre';
+      targetLine.productoId = null;
+    } else if (!trimmedCode) {
+      // Empty code
+      targetLine.productoId = null;
+      targetLine.tipo = 'libre';
+    } else {
+      // Search for product by code
+      const found = productos.find(p => p.codigo.trim().toLowerCase() === trimmedCode.toLowerCase());
+      if (found) {
+        targetLine.tipo = 'producto';
+        targetLine.productoId = found.id;
+        targetLine.concepto = found.nombre;
+        targetLine.precioUnitario = found.precioCompra || 0;
+
+        // Auto-select provider of the product if available
+        if (found.proveedorId) {
+          setProveedorId(found.proveedorId);
+        }
+      } else {
+        // No matching product found, becomes editable free text line
+        targetLine.productoId = null;
+        targetLine.tipo = 'libre';
       }
     }
+
+    updated[index] = targetLine;
+    setLineas(updated);
   };
 
   // Handle adding a new empty line
@@ -218,16 +218,7 @@ export default function FacturaProveedorForm({
     const updated = [...lineas];
     const targetLine = { ...updated[index] };
 
-    if (field === 'productoId') {
-      targetLine.productoId = value;
-      const prod = productos.find(p => p.id === value);
-      if (prod) {
-        targetLine.concepto = prod.nombre;
-        targetLine.precioUnitario = prod.precioCompra || 0;
-      }
-    } else {
-      (targetLine as any)[field] = value;
-    }
+    (targetLine as any)[field] = value;
 
     updated[index] = targetLine;
     setLineas(updated);
@@ -531,22 +522,22 @@ export default function FacturaProveedorForm({
                   {index + 1}
                 </div>
 
-                {/* Buscar producto por código */}
+                {/* Referencia / Código */}
                 <div className="md:col-span-3 space-y-1">
                   <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
                     <Search className="h-3 w-3 text-slate-450" />
-                    Buscar por Código
+                    Referencia / Código
                   </label>
                   <div className="relative">
                     <Input
-                      placeholder="PRD-000001"
+                      placeholder="ej. PRD-001 o . para libre"
                       value={searchCodeVal}
                       onChange={e => {
                         const val = e.target.value;
                         setSearchCodes(prev => ({ ...prev, [linea.id]: val }));
                         handleCodeSearch(index, val);
                       }}
-                      className="text-xs h-9 bg-white border-slate-200 focus-visible:ring-verini-black pr-7 font-mono"
+                      className="text-xs h-9 bg-white border-slate-200 focus-visible:ring-verini-black pr-7 font-mono font-semibold"
                     />
                     {linea.productoId && (
                       <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-emerald-600 font-bold" title="Producto Encontrado">
@@ -556,47 +547,22 @@ export default function FacturaProveedorForm({
                   </div>
                 </div>
 
-                {/* Selector de Producto */}
+                {/* Material / Descripción */}
                 <div className="md:col-span-3 space-y-1">
                   <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
-                    Seleccionar Material / Servicio
+                    Material / Descripción
                   </label>
-                  <div className="flex gap-1.5 items-center">
-                    <select
-                      required
-                      value={linea.productoId || ''}
-                      onChange={e => handleProductSelection(index, e.target.value)}
-                      className="flex-1 h-9 bg-white border border-slate-200 rounded-lg px-2 text-xs focus:outline-none focus:ring-1 focus:ring-verini-black font-semibold text-slate-800"
-                    >
-                      <option value="" disabled>Seleccione material...</option>
-                      {productos.map(p => {
-                        const isBlocked = blockedMaterialIds.includes(p.id);
-                        return (
-                          <option key={p.id} value={p.id}>
-                            {isBlocked ? `🔒 [BLOQUEADO] ${p.nombre}` : `${p.nombre} (${p.precioCompra} €)`}
-                          </option>
-                        );
-                      })}
-                    </select>
-                    {linea.productoId && (
-                      <button
-                        type="button"
-                        onClick={() => toggleLockMaterial(linea.productoId!)}
-                        className={`p-2 rounded-lg border h-9 w-9 flex items-center justify-center transition-colors shrink-0 ${
-                          blockedMaterialIds.includes(linea.productoId)
-                            ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
-                            : 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100 hover:text-slate-600'
-                        }`}
-                        title={blockedMaterialIds.includes(linea.productoId) ? 'Desbloquear material/servicio' : 'Bloquear material/servicio'}
-                      >
-                        {blockedMaterialIds.includes(linea.productoId) ? (
-                          <Lock className="h-4 w-4" />
-                        ) : (
-                          <Unlock className="h-4 w-4" />
-                        )}
-                      </button>
-                    )}
-                  </div>
+                  <Input
+                    required
+                    placeholder="ej. Azulejo Porcelánico Crema, Mano de obra..."
+                    value={linea.concepto}
+                    onChange={e => handleLineChange(index, 'concepto', e.target.value)}
+                    readOnly={!!linea.productoId}
+                    disabled={!!linea.productoId}
+                    className={`text-xs h-9 font-semibold border-slate-200 focus-visible:ring-verini-black ${
+                      linea.productoId ? 'bg-slate-100 text-slate-500 cursor-not-allowed font-medium' : 'bg-white text-slate-800'
+                    }`}
+                  />
                 </div>
 
                 {/* Imputación de Obra (Opcional) */}

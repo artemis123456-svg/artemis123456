@@ -8,7 +8,6 @@ import { Producto, TarifaProducto, ImagenProducto } from '../types/producto';
 import { Card, CardContent } from '../components/ui/card';
 import { 
   Package, 
-  AlertTriangle, 
   Tags, 
   TrendingUp, 
   Store, 
@@ -42,9 +41,6 @@ export default function Productos() {
   const stats = useMemo(() => {
     const total = productos.length;
     
-    // Products with zero stock
-    const outOfStockCount = productos.filter(p => p.stock === 0).length;
-    
     // Unique categories count
     const categories = new Set(productos.map(p => p.categoria).filter(Boolean));
     const uniqueCatsCount = categories.size;
@@ -57,7 +53,6 @@ export default function Productos() {
 
     return {
       total,
-      outOfStockCount,
       uniqueCatsCount,
       avgMarginPct
     };
@@ -79,18 +74,23 @@ export default function Productos() {
     setViewMode('create');
   };
 
-  const handleSaveForm = (prodData: any) => {
-    if (viewMode === 'edit' && selectedProducto) {
-      updateProducto(selectedProducto.id, prodData);
-      
-      // Update selected product state so detail view has latest info
-      const latest = { ...selectedProducto, ...prodData };
-      setSelectedProducto(latest);
-      setViewMode('detail');
-    } else {
-      const created = addProducto(prodData);
-      setSelectedProducto(created);
-      setViewMode('detail');
+  const handleSaveForm = async (prodData: any) => {
+    try {
+      if (viewMode === 'edit' && selectedProducto) {
+        await updateProducto(selectedProducto.id, prodData);
+        
+        // Update selected product state so detail view has latest info
+        const latest = { ...selectedProducto, ...prodData };
+        setSelectedProducto(latest);
+        setViewMode('detail');
+      } else {
+        const created = await addProducto(prodData);
+        setSelectedProducto(created);
+        setViewMode('detail');
+      }
+    } catch (err) {
+      console.error('Error al guardar el producto:', err);
+      alert('No se pudo guardar el producto. Revisa la conexión e inténtalo de nuevo.');
     }
   };
 
@@ -135,7 +135,7 @@ export default function Productos() {
 
       {/* Dashboard KPI Stats Widgets (Only on list view for clean spacing) */}
       {viewMode === 'list' && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           
           {/* Total catalog items */}
           <Card className="border border-slate-200/80 shadow-xs rounded-xl bg-white">
@@ -147,25 +147,6 @@ export default function Productos() {
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Catálogo Activo</span>
                 <p className="text-lg font-extrabold text-slate-900 leading-none mt-1 font-mono">{stats.total}</p>
                 <p className="text-[10px] text-slate-400 mt-1 truncate">Referencias en CRM</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Alertas de Stock card */}
-          <Card className={`border shadow-xs rounded-xl bg-white ${stats.outOfStockCount > 0 ? 'border-amber-200 ring-2 ring-amber-500/5' : 'border-slate-200/80'}`}>
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 border
-                ${stats.outOfStockCount > 0 
-                  ? 'bg-amber-50 border-amber-100 text-amber-600' 
-                  : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
-                <AlertTriangle className={`h-5.5 w-5.5 ${stats.outOfStockCount > 0 ? 'text-amber-600' : 'text-slate-400'}`} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Sin Stock</span>
-                <p className={`text-lg font-extrabold leading-none mt-1 font-mono ${stats.outOfStockCount > 0 ? 'text-amber-700' : 'text-slate-900'}`}>{stats.outOfStockCount}</p>
-                <p className="text-[10px] text-slate-400 mt-1 truncate">
-                  {stats.outOfStockCount > 0 ? 'Artículos sin existencias' : 'Todos con stock disponible'}
-                </p>
               </div>
             </CardContent>
           </Card>
