@@ -165,14 +165,23 @@ export function useFacturas() {
     return `${prefix}${String(nextNum).padStart(4, '0')}`;
   };
 
-  const addFactura = async (facturaData: Omit<Factura, 'id' | 'numero'>) => {
+  const addFactura = async (facturaData: Omit<Factura, 'id'>) => {
     try {
+      // Check duplicate number before inserting
+      const { data: existing } = await supabase
+        .from('facturas')
+        .select('id')
+        .eq('numero', facturaData.numero)
+        .maybeSingle();
+
+      if (existing) {
+        throw new Error(`Ya existe una factura con número: ${facturaData.numero}`);
+      }
+
       const newId = `fac_${Date.now()}`;
-      const nextNumero = generateNextNumero();
       const newFactura: Factura = {
         ...facturaData,
-        id: newId,
-        numero: nextNumero
+        id: newId
       };
 
       // 1. Insert parent

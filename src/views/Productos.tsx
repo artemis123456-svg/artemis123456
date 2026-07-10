@@ -4,7 +4,7 @@ import { useProveedores } from '../hooks/useProveedores';
 import ProductoTable from '../components/productos/ProductoTable';
 import ProductoForm from '../components/productos/ProductoForm';
 import ProductoDetail from '../components/productos/ProductoDetail';
-import { Producto, TarifaProducto, ImagenProducto } from '../types/producto';
+import { Producto, TarifaProducto, ImagenProducto, ProductoProveedor } from '../types/producto';
 import { Card, CardContent } from '../components/ui/card';
 import { 
   Package, 
@@ -19,6 +19,7 @@ type ViewState = 'list' | 'create' | 'edit' | 'detail';
 export default function Productos() {
   const {
     productos,
+    productosProveedores,
     tarifas,
     imagenes,
     addProducto,
@@ -45,10 +46,15 @@ export default function Productos() {
     const categories = new Set(productos.map(p => p.categoria).filter(Boolean));
     const uniqueCatsCount = categories.size;
 
-    // Average Margin percentage (markup)
-    const productsWithPrices = productos.filter(p => p.precioCompra > 0);
-    const avgMarginPct = productsWithPrices.length > 0
-      ? productsWithPrices.reduce((sum, p) => sum + getMargin(p).markupPct, 0) / productsWithPrices.length
+    // Average Margin percentage (markup) using productosProveedores
+    const allPPs = Object.values(productosProveedores).flat() as ProductoProveedor[];
+    const ppsWithPrices = allPPs.filter(pp => pp.precioCompra > 0);
+    const avgMarginPct = ppsWithPrices.length > 0
+      ? ppsWithPrices.reduce((sum, pp) => {
+          const diff = pp.precioVenta - pp.precioCompra;
+          const markup = (diff / pp.precioCompra) * 100;
+          return sum + markup;
+        }, 0) / ppsWithPrices.length
       : 0;
 
     return {
@@ -56,7 +62,7 @@ export default function Productos() {
       uniqueCatsCount,
       avgMarginPct
     };
-  }, [productos, getMargin]);
+  }, [productos, productosProveedores]);
 
   // Handlers
   const handleSelectProducto = (prod: Producto) => {
@@ -190,6 +196,7 @@ export default function Productos() {
           <ProductoTable
             productos={productos}
             proveedores={proveedores}
+            productosProveedores={productosProveedores}
             onSelectProducto={handleSelectProducto}
             onEditProducto={handleEditProducto}
             onDeleteProducto={handleDeleteProducto}
@@ -203,6 +210,7 @@ export default function Productos() {
             tarifas={tarifas}
             imagenes={imagenes}
             proveedores={proveedores}
+            productosProveedores={productosProveedores}
             onBack={handleBackToList}
             onEdit={handleEditProducto}
             onDelete={handleDeleteProducto}
@@ -216,6 +224,8 @@ export default function Productos() {
         {(viewMode === 'create' || viewMode === 'edit') && (
           <ProductoForm
             productoToEdit={selectedProducto}
+            proveedores={proveedores}
+            productosProveedores={productosProveedores}
             onSave={handleSaveForm}
             onCancel={viewMode === 'edit' ? () => setViewMode('detail') : handleBackToList}
           />

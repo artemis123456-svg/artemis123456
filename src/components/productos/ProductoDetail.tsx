@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Producto, TarifaProducto, ImagenProducto } from '../../types/producto';
+import { Producto, TarifaProducto, ImagenProducto, ProductoProveedor } from '../../types/producto';
 import { Proveedor } from '../../types/proveedor';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -43,6 +43,7 @@ interface ProductoDetailProps {
   tarifas: TarifaProducto[];
   imagenes: ImagenProducto[];
   proveedores: Proveedor[];
+  productosProveedores: Record<string, ProductoProveedor[]>;
   onBack: () => void;
   onEdit: (prod: Producto) => void;
   onDelete: (id: string) => void;
@@ -59,6 +60,7 @@ export default function ProductoDetail({
   tarifas,
   imagenes,
   proveedores,
+  productosProveedores,
   onBack,
   onEdit,
   onDelete,
@@ -68,11 +70,6 @@ export default function ProductoDetail({
   onDeleteImagenProducto
 }: ProductoDetailProps) {
   const [activeTab, setActiveTab] = useState<TabType>('generales');
-
-  // Resolve associated provider
-  const associatedProvider = useMemo(() => {
-    return proveedores.find(p => p.id === producto.proveedorId) || null;
-  }, [proveedores, producto.proveedorId]);
 
   // Filter rates belonging to this product
   const productTarifas = useMemo(() => {
@@ -84,17 +81,89 @@ export default function ProductoDetail({
     return imagenes.filter(img => img.productoId === producto.id);
   }, [imagenes, producto.id]);
 
-  // Margin Calculations
+  // Resolve associated suppliers list
+  const currentPPs = useMemo(() => {
+    return productosProveedores[producto.id] || [];
+  }, [productosProveedores, producto.id]);
+
+  const associatedProvider = useMemo(() => {
+    if (currentPPs.length === 0) return null;
+    return proveedores.find(p => p.id === currentPPs[0].proveedorId) || null;
+  }, [currentPPs, proveedores]);
+
+  // Margin Calculations based on first supplier relation as default
   const marginStats = useMemo(() => {
-    const diff = producto.precioVenta - producto.precioCompra;
-    const markupPct = producto.precioCompra > 0 ? (diff / producto.precioCompra) * 100 : 0;
-    const profitMarginPct = producto.precioVenta > 0 ? (diff / producto.precioVenta) * 100 : 0;
+    if (currentPPs.length === 0) {
+      return {
+        absolute: 0,
+        markupPct: 0,
+        profitMarginPct: 0,
+        compra: 0,
+        venta: 0
+      };
+    }
+    const first = currentPPs[0];
+    const diff = first.precioVenta - first.precioCompra;
+    const markupPct = first.precioCompra > 0 ? (diff / first.precioCompra) * 100 : 0;
+    const profitMarginPct = first.precioVenta > 0 ? (diff / first.precioVenta) * 100 : 0;
     return {
       absolute: diff,
       markupPct,
-      profitMarginPct
+      profitMarginPct,
+      compra: first.precioCompra,
+      venta: first.precioVenta
     };
-  }, [producto.precioCompra, producto.precioVenta]);
+  }, [currentPPs]);
+
+  const priceDisplayStats = useMemo(() => {
+    const count = currentPPs.length;
+    if (count === 0) {
+      return {
+        pvp: '—',
+        coste: '—',
+        margen: '—',
+        margenSubtext: 'Sin proveedores vinculados'
+      };
+    }
+    if (count === 1) {
+      return {
+        pvp: `${currentPPs[0].precioVenta.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €`,
+        coste: `${currentPPs[0].precioCompra.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €`,
+        margen: `${marginStats.absolute.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €`,
+        margenSubtext: `+${marginStats.markupPct.toFixed(1)}% Markup / +${marginStats.profitMarginPct.toFixed(1)}% margen`
+      };
+    }
+    // Multiple suppliers
+    const PVPs = currentPPs.map(p => p.precioVenta).filter(v => v !== undefined && v !== null);
+    const Compra = currentPPs.map(p => p.precioCompra).filter(v => v !== undefined && v !== null);
+    const minPVP = PVPs.length > 0 ? Math.min(...PVPs) : 0;
+    const maxPVP = PVPs.length > 0 ? Math.max(...PVPs) : 0;
+    const minCompra = Compra.length > 0 ? Math.min(...Compra) : 0;
+    const maxCompra = Compra.length > 0 ? Math.max(...Compra) : 0;
+    
+    const pvpStr = minPVP === maxPVP 
+      ? `${minPVP.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €`
+      : `${minPVP.toLocaleString('es-ES')} - ${maxPVP.toLocaleString('es-ES')} €`;
+      
+    const costeStr = minCompra === maxCompra
+      ? `${minCompra.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €`
+      : `${minCompra.toLocaleString('es-ES')} - ${maxCompra.toLocaleString('es-ES')} €`;
+
+    // Margins (average/first or range)
+    const margins = currentPPs.map(p => p.precioVenta - p.precioCompra);
+    const minMargen = margins.length > 0 ? Math.min(...margins) : 0;
+    const maxMargen = margins.length > 0 ? Math.max(...margins) : 0;
+    const margenStr = minMargen === maxMargen
+      ? `${minMargen.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €`
+      : `${minMargen.toLocaleString('es-ES')} - ${maxMargen.toLocaleString('es-ES')} €`;
+
+    return {
+      pvp: pvpStr,
+      coste: costeStr,
+      margen: margenStr,
+      margenSubtext: `Varios precios según proveedor (${count})`
+    };
+  }, [currentPPs, marginStats]);
 
   // State for new rate form
   const [isTarifaFormOpen, setIsTarifaFormOpen] = useState(false);
@@ -239,7 +308,7 @@ export default function ProductoDetail({
             <DollarSign className="h-4 w-4 text-gray-700" />
           </div>
           <p className="mt-2 text-xl font-bold text-gray-800 font-mono">
-            {producto.precioVenta.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €
+            {priceDisplayStats.pvp}
           </p>
           <p className="text-[10px] text-slate-400 font-medium mt-0.5">Por {producto.unidad}</p>
         </div>
@@ -250,7 +319,7 @@ export default function ProductoDetail({
             <Tag className="h-4 w-4 text-slate-400" />
           </div>
           <p className="mt-2 text-xl font-bold text-slate-800 font-mono">
-            {producto.precioCompra.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €
+            {priceDisplayStats.coste}
           </p>
           <p className="text-[10px] text-slate-400 font-medium mt-0.5">Coste del proveedor</p>
         </div>
@@ -261,10 +330,10 @@ export default function ProductoDetail({
             <TrendingUp className="h-4 w-4 text-emerald-500" />
           </div>
           <p className="mt-2 text-xl font-bold text-emerald-600 font-mono">
-            {marginStats.absolute.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €
+            {priceDisplayStats.margen}
           </p>
           <p className="text-[10px] text-emerald-400 font-medium mt-0.5">
-            +{marginStats.markupPct.toFixed(1)}% Markup / +{marginStats.profitMarginPct.toFixed(1)}% margen comercial
+            {priceDisplayStats.margenSubtext}
           </p>
         </div>
       </div>
@@ -326,11 +395,11 @@ export default function ProductoDetail({
                     </li>
                     <li className="flex justify-between items-center py-0.5">
                       <span className="font-semibold text-slate-400">Precio Compra Base (Excl. IVA):</span>
-                      <span className="font-mono font-bold text-slate-800">{producto.precioCompra.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
+                      <span className="font-mono font-bold text-slate-800">{marginStats.compra.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
                     </li>
                     <li className="flex justify-between items-center py-0.5">
                       <span className="font-semibold text-slate-400">Precio Venta Recomendado (PVP):</span>
-                      <span className="font-mono font-bold text-gray-800 bg-gray-100/50 px-2 py-0.5 rounded border border-gray-200">{producto.precioVenta.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
+                      <span className="font-mono font-bold text-gray-800 bg-gray-100/50 px-2 py-0.5 rounded border border-gray-200">{marginStats.venta.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
                     </li>
                     <li className="flex justify-between items-center py-0.5 border-t border-dashed border-slate-100 mt-2 pt-2">
                       <span className="font-bold text-slate-500">Rendimiento Comercial Bruto:</span>
@@ -469,8 +538,9 @@ export default function ProductoDetail({
                   </thead>
                   <tbody>
                     {productTarifas.map(t => {
-                      const discountPct = producto.precioVenta > 0 
-                        ? ((producto.precioVenta - t.precio) / producto.precioVenta) * 100 
+                      const baseVenta = marginStats.venta || 0;
+                      const discountPct = baseVenta > 0 
+                        ? ((baseVenta - t.precio) / baseVenta) * 100 
                         : 0;
                       return (
                         <tr key={t.id} className="border-b border-slate-100 text-xs hover:bg-slate-50/50">
@@ -513,78 +583,98 @@ export default function ProductoDetail({
           {/* TAB 3: PROVEEDOR SUMINISTRADOR */}
           {activeTab === 'proveedor' && (
             <div className="space-y-6">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Proveedor de Suministros Asociado</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Proveedores de Suministros Asociados ({currentPPs.length})</h3>
 
-              {producto.proveedorId ? (
-                associatedProvider ? (
-                  <div className="bg-slate-50/70 p-5 rounded-xl border border-slate-200/80 space-y-4 animate-in fade-in">
-                    <div className="flex justify-between items-start flex-wrap gap-2">
-                      <div>
-                        <p className="text-[10px] font-mono font-bold text-gray-800 bg-gray-100 border border-gray-100 px-2 py-0.5 rounded inline-block">
-                          {associatedProvider.codigo}
-                        </p>
-                        <h4 className="text-sm font-bold text-slate-900 mt-1">{associatedProvider.nombre}</h4>
-                        <p className="text-xs text-slate-500 mt-0.5">Categoría: {associatedProvider.categoria} ({associatedProvider.tipo})</p>
+              {currentPPs.length > 0 ? (
+                <div className="space-y-4">
+                  {currentPPs.map((pp) => {
+                    const prov = proveedores.find(p => p.id === pp.proveedorId);
+                    if (!prov) return null;
+                    const diff = pp.precioVenta - pp.precioCompra;
+                    const markupPct = pp.precioCompra > 0 ? (diff / pp.precioCompra) * 100 : 0;
+                    
+                    return (
+                      <div key={pp.id} className="bg-slate-50/70 p-5 rounded-xl border border-slate-200/80 space-y-4 animate-in fade-in">
+                        <div className="flex justify-between items-start flex-wrap gap-2">
+                          <div>
+                            <p className="text-[10px] font-mono font-bold text-gray-800 bg-gray-100 border border-gray-100 px-2 py-0.5 rounded inline-block">
+                              {prov.codigo}
+                            </p>
+                            <h4 className="text-sm font-bold text-slate-900 mt-1">{prov.nombre}</h4>
+                            <p className="text-xs text-slate-500 mt-0.5">Categoría: {prov.categoria} ({prov.tipo})</p>
+                          </div>
+
+                          <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold
+                            ${prov.activo ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/10' : 'bg-slate-150 text-slate-700'}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${prov.activo ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                            {prov.activo ? 'Activo' : 'Inactivo'}
+                          </span>
+                        </div>
+
+                        {/* Specific pricing for this supplier */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white p-3 rounded-lg border border-slate-150 text-xs font-mono">
+                          <div>
+                            <span className="text-[10px] uppercase font-bold text-slate-400 font-sans block">Precio Venta (PVP)</span>
+                            <span className="font-bold text-slate-900">{pp.precioVenta.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] uppercase font-bold text-slate-400 font-sans block">Precio Compra</span>
+                            <span className="font-bold text-slate-800">{pp.precioCompra.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] uppercase font-bold text-slate-400 font-sans block">Margen (Markup)</span>
+                            <span className="font-bold text-emerald-600">+{diff.toLocaleString('es-ES', { minimumFractionDigits: 2 })} € ({markupPct.toFixed(1)}%)</span>
+                          </div>
+                        </div>
+
+                        {/* Provider Quick Contact fields */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-2 border-t border-slate-200">
+                          <div className="space-y-2">
+                            <p className="flex items-center gap-2 text-slate-600">
+                              <User className="h-4 w-4 text-slate-400 shrink-0" />
+                              <span className="font-semibold text-slate-500">Contacto:</span>
+                              <span className="font-bold text-slate-800">{prov.personaContacto || 'No declarada'}</span>
+                            </p>
+                            <p className="flex items-center gap-2 text-slate-600">
+                              <Phone className="h-4 w-4 text-slate-400 shrink-0" />
+                              <span className="font-semibold text-slate-500">Teléfonos:</span>
+                              <span className="font-mono text-slate-800">{prov.telefono} {prov.movil && ` / ${prov.movil}`}</span>
+                            </p>
+                            <p className="flex items-center gap-2 text-slate-600">
+                              <Mail className="h-4 w-4 text-slate-400 shrink-0" />
+                              <span className="font-semibold text-slate-500">Email:</span>
+                              <span className="font-mono text-slate-800 text-gray-900 hover:underline">{prov.email || '-'}</span>
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            <p className="flex items-start gap-2 text-slate-600">
+                              <MapPin className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
+                              <span className="font-semibold text-slate-500">Dirección:</span>
+                              <span className="font-medium text-slate-700 text-right">{prov.direccion}, {prov.ciudad} ({prov.provincia})</span>
+                            </p>
+                            <p className="flex items-center gap-2 text-slate-600">
+                              <CreditCard className="h-4 w-4 text-slate-400 shrink-0" />
+                              <span className="font-semibold text-slate-500">CIF / NIF:</span>
+                              <span className="font-mono font-bold text-slate-800">{prov.nifCif}</span>
+                            </p>
+                          </div>
+                        </div>
+
+                        {prov.observaciones && (
+                          <div className="p-3 bg-white border border-slate-150 rounded-lg text-xs text-slate-600 italic">
+                            " {prov.observaciones} "
+                          </div>
+                        )}
                       </div>
-
-                      <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold
-                        ${associatedProvider.activo ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/10' : 'bg-slate-150 text-slate-700'}`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${associatedProvider.activo ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-                        {associatedProvider.activo ? 'Activo' : 'Inactivo'}
-                      </span>
-                    </div>
-
-                    {/* Provider Quick Data fields */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-2 border-t border-slate-200">
-                      <div className="space-y-2">
-                        <p className="flex items-center gap-2 text-slate-600">
-                          <User className="h-4 w-4 text-slate-400 shrink-0" />
-                          <span className="font-semibold text-slate-500">Contacto:</span>
-                          <span className="font-bold text-slate-800">{associatedProvider.personaContacto || 'No declarada'}</span>
-                        </p>
-                        <p className="flex items-center gap-2 text-slate-600">
-                          <Phone className="h-4 w-4 text-slate-400 shrink-0" />
-                          <span className="font-semibold text-slate-500">Teléfonos:</span>
-                          <span className="font-mono text-slate-800">{associatedProvider.telefono} {associatedProvider.movil && ` / ${associatedProvider.movil}`}</span>
-                        </p>
-                        <p className="flex items-center gap-2 text-slate-600">
-                          <Mail className="h-4 w-4 text-slate-400 shrink-0" />
-                          <span className="font-semibold text-slate-500">Email:</span>
-                          <span className="font-mono text-slate-800 text-gray-900 hover:underline">{associatedProvider.email || '-'}</span>
-                        </p>
-                      </div>
-
-                      <div className="space-y-2">
-                        <p className="flex items-start gap-2 text-slate-600">
-                          <MapPin className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
-                          <span className="font-semibold text-slate-500">Dirección:</span>
-                          <span className="font-medium text-slate-700 text-right">{associatedProvider.direccion}, {associatedProvider.ciudad} ({associatedProvider.provincia})</span>
-                        </p>
-                        <p className="flex items-center gap-2 text-slate-600">
-                          <CreditCard className="h-4 w-4 text-slate-400 shrink-0" />
-                          <span className="font-semibold text-slate-500">CIF / NIF:</span>
-                          <span className="font-mono font-bold text-slate-800">{associatedProvider.nifCif}</span>
-                        </p>
-                      </div>
-                    </div>
-
-                    {associatedProvider.observaciones && (
-                      <div className="p-3 bg-white border border-slate-150 rounded-lg text-xs text-slate-600 italic">
-                        " {associatedProvider.observaciones} "
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-250 text-slate-400">
-                    <Store className="h-8 w-8 text-slate-300 mb-2" />
-                    <p className="text-xs font-semibold">El proveedor vinculado (ID: {producto.proveedorId}) ya no existe o se ha eliminado.</p>
-                  </div>
-                )
+                    );
+                  })}
+                </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-12 text-center bg-slate-50 rounded-xl border border-dashed border-slate-250 text-slate-400">
                   <Store className="h-10 w-10 text-slate-300 mb-3" />
-                  <p className="text-xs font-bold text-slate-700">Sin proveedor vinculado</p>
-                  <p className="text-[10px] text-slate-400 mt-1 max-w-sm">Este producto está catalogado de forma independiente sin estar vinculado a un proveedor de suministros.</p>
+                  <p className="text-xs font-bold text-slate-700">Sin proveedores vinculados</p>
+                  <p className="text-[10px] text-slate-400 mt-1 max-w-sm">Este producto está catalogado de forma independiente sin estar vinculado a proveedores de suministros en este momento.</p>
                 </div>
               )}
             </div>

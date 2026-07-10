@@ -29,6 +29,7 @@ import { useProveedores } from '../../hooks/useProveedores';
 import { useFacturasProveedor } from '../../hooks/useFacturasProveedor';
 import { useFacturas, calculateFacturaTotals } from '../../hooks/useFacturas';
 import { usePresupuestos } from '../../hooks/usePresupuestos';
+import MaterialesEscogidos from './MaterialesEscogidos';
 
 interface ObraDetailProps {
   obra: Obra;
@@ -42,7 +43,7 @@ interface ObraDetailProps {
   deleteHoraObra: (id: string) => Promise<void>;
 }
 
-type TabType = 'generales' | 'presupuestos' | 'facturas' | 'documentos' | 'notas' | 'horas' | 'materiales';
+type TabType = 'generales' | 'presupuestos' | 'facturas' | 'documentos' | 'notas' | 'horas' | 'materiales' | 'materiales_escogidos';
 
 interface MockDocument {
   id: string;
@@ -434,6 +435,7 @@ export default function ObraDetail({
               { id: 'facturas', label: `Facturas (${facturasDeObra.length})`, icon: FileText, show: facturasDeObra.length > 0 },
               { id: 'horas', label: `Control de Horas (${horasObraList.length})`, icon: Clock, show: true },
               { id: 'materiales', label: `Gastos de Materiales (${materialLines.length})`, icon: Package, show: true },
+              { id: 'materiales_escogidos', label: 'Materiales Escogidos', icon: Wrench, show: true },
               { id: 'documentos', label: `Documentación (${localDocs.length})`, icon: Upload, show: true },
               { id: 'notas', label: `Notas de Bitácora (${notasDeObra.length})`, icon: StickyNote, show: true }
             ]
@@ -993,6 +995,13 @@ export default function ObraDetail({
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* TAB: MATERIALES ESCOGIDOS */}
+          {activeTab === 'materiales_escogidos' && (
+            <div className="animate-in fade-in-40 duration-150">
+              <MaterialesEscogidos obraId={obra.id} />
             </div>
           )}
         </div>

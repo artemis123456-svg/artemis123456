@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Producto } from '../../types/producto';
+import { Producto, ProductoProveedor } from '../../types/producto';
 import { Proveedor } from '../../types/proveedor';
 import { 
   Table, 
@@ -35,18 +35,20 @@ import {
 interface ProductoTableProps {
   productos: Producto[];
   proveedores: Proveedor[];
+  productosProveedores: Record<string, ProductoProveedor[]>;
   onSelectProducto: (prod: Producto) => void;
   onEditProducto: (prod: Producto) => void;
   onDeleteProducto: (id: string) => void;
   onNewProducto: () => void;
 }
 
-type SortField = 'codigo' | 'nombre' | 'categoria' | 'precioVenta' | 'activo' | 'stock';
+type SortField = 'codigo' | 'nombre' | 'categoria' | 'precioVenta' | 'activo';
 type SortOrder = 'asc' | 'desc';
 
 export default function ProductoTable({
   productos,
   proveedores,
+  productosProveedores,
   onSelectProducto,
   onEditProducto,
   onDeleteProducto,
@@ -114,7 +116,10 @@ export default function ProductoTable({
 
     // Proveedor Filter
     if (proveedorFilter !== 'all') {
-      result = result.filter(p => p.proveedorId === proveedorFilter);
+      result = result.filter(p => {
+        const pps = productosProveedores[p.id] || [];
+        return pps.some(pp => pp.proveedorId === proveedorFilter);
+      });
     }
 
     // Status Filter (Activo / Inactivo)
@@ -125,8 +130,18 @@ export default function ProductoTable({
 
     // Sorting
     result.sort((a, b) => {
-      let valA: any = a[sortField];
-      let valB: any = b[sortField];
+      let valA: any;
+      let valB: any;
+
+      if (sortField === 'precioVenta') {
+        const ppsA = productosProveedores[a.id] || [];
+        const ppsB = productosProveedores[b.id] || [];
+        valA = ppsA.length > 0 ? Math.min(...ppsA.map(p => p.precioVenta)) : 0;
+        valB = ppsB.length > 0 ? Math.min(...ppsB.map(p => p.precioVenta)) : 0;
+      } else {
+        valA = a[sortField as keyof Producto];
+        valB = b[sortField as keyof Producto];
+      }
 
       if (typeof valA === 'string') {
         valA = valA.toLowerCase();
@@ -142,7 +157,7 @@ export default function ProductoTable({
     });
 
     return result;
-  }, [productos, searchQuery, categoriaFilter, proveedorFilter, statusFilter, sortField, sortOrder]);
+  }, [productos, productosProveedores, searchQuery, categoriaFilter, proveedorFilter, statusFilter, sortField, sortOrder]);
 
   // Reset pagination if search or filters change
   React.useEffect(() => {
@@ -318,7 +333,37 @@ export default function ProductoTable({
             <TableBody>
               {paginatedProducts.length > 0 ? (
                 paginatedProducts.map((prod) => {
-                  const supplierName = prod.proveedorId ? (providerMap.get(prod.proveedorId) || 'Desconocido') : 'Sin proveedor';
+                  const pps = productosProveedores[prod.id] || [];
+                  const count = pps.length;
+                  let supplierDisplay = 'Sin proveedor';
+                  if (count === 1) {
+                    supplierDisplay = providerMap.get(pps[0].proveedorId) || 'Desconocido';
+                  } else if (count > 1) {
+                    supplierDisplay = `Varios (${count})`;
+                  }
+
+                  let priceDisplay = '—';
+                  let costDisplay = '—';
+                  if (count === 1) {
+                    priceDisplay = `${pps[0].precioVenta.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €`;
+                    costDisplay = `P.C: ${pps[0].precioCompra.toLocaleString('es-ES')} €`;
+                  } else if (count > 1) {
+                    const PVPs = pps.map(p => p.precioVenta).filter(v => v !== undefined && v !== null);
+                    const Compra = pps.map(p => p.precioCompra).filter(v => v !== undefined && v !== null);
+                    const minPVP = PVPs.length > 0 ? Math.min(...PVPs) : 0;
+                    const maxPVP = PVPs.length > 0 ? Math.max(...PVPs) : 0;
+                    const minCompra = Compra.length > 0 ? Math.min(...Compra) : 0;
+                    const maxCompra = Compra.length > 0 ? Math.max(...Compra) : 0;
+                    
+                    priceDisplay = minPVP === maxPVP 
+                      ? `${minPVP.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €`
+                      : `${minPVP.toLocaleString('es-ES')} - ${maxPVP.toLocaleString('es-ES')} €`;
+                    
+                    costDisplay = minCompra === maxCompra 
+                      ? `P.C: ${minCompra.toLocaleString('es-ES')} €`
+                      : `P.C: ${minCompra.toLocaleString('es-ES')} - ${maxCompra.toLocaleString('es-ES')} €`;
+                  }
+
                   return (
                     <TableRow 
                       key={prod.id} 
@@ -365,12 +410,12 @@ export default function ProductoTable({
                       <TableCell className="py-3 px-4 text-xs font-semibold text-slate-700 max-w-[180px] truncate">
                         <span className="inline-flex items-center gap-1">
                           <Store className="h-3.5 w-3.5 text-slate-400" />
-                          {supplierName}
+                          {supplierDisplay}
                         </span>
                       </TableCell>
                       <TableCell className="py-3 px-4 text-right font-mono font-bold text-slate-950 text-xs">
-                        {prod.precioVenta.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €
-                        <span className="text-[10px] text-slate-400 font-normal block">P.C: {prod.precioCompra.toLocaleString('es-ES')} €</span>
+                        {priceDisplay}
+                        <span className="text-[10px] text-slate-400 font-normal block">{costDisplay}</span>
                       </TableCell>
                       <TableCell className="py-3 px-4">
                         {renderStatusBadge(prod.activo)}

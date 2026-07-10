@@ -40,7 +40,12 @@ export function usePresupuestos() {
           id: row.id,
           descripcion: row.descripcion,
           cantidad: Number(row.cantidad),
-          precioUnitario: Number(row.precio_unitario)
+          precioUnitario: Number(row.precio_unitario),
+          ivaPorcentaje: row.iva_porcentaje !== undefined ? Number(row.iva_porcentaje) as 21 | 10 | 0 : 21,
+          tipo: row.tipo || 'libre',
+          productoId: row.producto_id || undefined,
+          referenciaProducto: row.referencia_producto || undefined,
+          fotoUrl: row.foto_url || undefined
         });
       });
 
@@ -53,7 +58,7 @@ export function usePresupuestos() {
         fechaValidez: pRow.fecha_validez || null,
         descripcion: pRow.descripcion || '',
         importeTotal: Number(pRow.importe_total || 0),
-        estado: pRow.estado as 'Borrador' | 'Enviado' | 'Aprobado' | 'Rechazado',
+        estado: pRow.estado as 'Borrador' | 'Enviado' | 'Aprobado' | 'Aceptado' | 'Rechazado',
         lineas: lineasMap[pRow.id] || []
       }));
 
@@ -137,19 +142,21 @@ export function usePresupuestos() {
     return `${prefix}${String(nextNum).padStart(4, '0')}`;
   };
 
-  const addPresupuesto = async (budgetData: Omit<PresupuestoNew, 'id' | 'numero' | 'importeTotal'>) => {
+  const addPresupuesto = async (budgetData: Omit<PresupuestoNew, 'id' | 'importeTotal'>) => {
     const newId = `pre_${Date.now()}`;
-    const nextNumero = generateNextNumero();
     const totals = calculatePresupuestoTotals(budgetData.lineas);
     
     const newPres: PresupuestoNew = {
       ...budgetData,
       id: newId,
-      numero: nextNumero,
       importeTotal: totals.total
     };
 
     if (isUsingFallback) {
+      const isDuplicate = presupuestos.some(p => p.numero.trim().toLowerCase() === budgetData.numero.trim().toLowerCase());
+      if (isDuplicate) {
+        throw new Error(`Ya existe un presupuesto con número: ${budgetData.numero}`);
+      }
       const updated = [newPres, ...presupuestos];
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updated));
       setPresupuestos(updated);
@@ -157,6 +164,16 @@ export function usePresupuestos() {
     }
 
     try {
+      // Verificar duplicados en Supabase
+      const { data: existing } = await supabase
+        .from('presupuestos')
+        .select('id')
+        .eq('numero', budgetData.numero);
+      
+      if (existing && existing.length > 0) {
+        throw new Error(`Ya existe un presupuesto con número: ${budgetData.numero}`);
+      }
+
       // 1. Insert parent
       const { error: err } = await supabase
         .from('presupuestos')
@@ -164,7 +181,7 @@ export function usePresupuestos() {
           id: newId,
           cliente_id: newPres.clientId,
           obra_id: newPres.obraId,
-          numero: nextNumero,
+          numero: newPres.numero,
           fecha_creacion: new Date(newPres.fechaCreacion).toISOString(),
           fecha_validez: newPres.fechaValidez,
           descripcion: newPres.descripcion,
@@ -181,7 +198,12 @@ export function usePresupuestos() {
           presupuesto_id: newId,
           descripcion: l.descripcion,
           cantidad: l.cantidad,
-          precio_unitario: l.precioUnitario
+          precio_unitario: l.precioUnitario,
+          iva_porcentaje: l.ivaPorcentaje ?? 21,
+          tipo: l.tipo || 'libre',
+          producto_id: l.productoId || null,
+          referencia_producto: l.referenciaProducto || null,
+          foto_url: l.fotoUrl || null
         }));
 
         const { error: linesErr } = await supabase
@@ -255,7 +277,12 @@ export function usePresupuestos() {
             presupuesto_id: id,
             descripcion: l.descripcion,
             cantidad: l.cantidad,
-            precio_unitario: l.precioUnitario
+            precio_unitario: l.precioUnitario,
+            iva_porcentaje: l.ivaPorcentaje ?? 21,
+            tipo: l.tipo || 'libre',
+            producto_id: l.productoId || null,
+            referencia_producto: l.referenciaProducto || null,
+            foto_url: l.fotoUrl || null
           }));
 
           const { error: insErr } = await supabase

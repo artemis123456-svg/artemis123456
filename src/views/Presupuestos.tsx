@@ -99,7 +99,7 @@ export default function Presupuestos() {
     setViewState('create');
   };
 
-  const handleFormSubmit = async (formData: Omit<PresupuestoNew, 'id' | 'numero' | 'importeTotal'>) => {
+  const handleFormSubmit = async (formData: Omit<PresupuestoNew, 'id' | 'importeTotal'>) => {
     try {
       if (viewState === 'create') {
         await addPresupuesto(formData);
@@ -313,7 +313,12 @@ export default function Presupuestos() {
                   id: `lin_dup_${Date.now()}_${idx}`,
                   descripcion: l.descripcion,
                   cantidad: l.cantidad,
-                  precioUnitario: l.precioUnitario
+                  precioUnitario: l.precioUnitario,
+                  ivaPorcentaje: l.ivaPorcentaje ?? 21,
+                  tipo: l.tipo || 'libre',
+                  productoId: l.productoId,
+                  referenciaProducto: l.referenciaProducto,
+                  fotoUrl: l.fotoUrl
                 }))
               } : undefined}
               clients={clients}

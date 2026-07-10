@@ -113,7 +113,7 @@ export default function Facturas() {
   }, [facturas]);
 
   // Form submit handler
-  const handleFormSubmit = (formData: Omit<Factura, 'id' | 'numero'>) => {
+  const handleFormSubmit = (formData: Omit<Factura, 'id'>) => {
     if (viewState === 'create') {
       addFactura(formData);
     } else if (viewState === 'edit' && selectedFactura) {

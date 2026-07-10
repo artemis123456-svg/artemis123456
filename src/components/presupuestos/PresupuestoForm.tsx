@@ -5,6 +5,8 @@ import { Obra } from '../../types/obra';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Card, CardContent } from '../ui/card';
+import { DecimalInput } from '../ui/DecimalInput';
+import { useProductos } from '../../hooks/useProductos';
 import { 
   Plus, 
   Trash2, 
@@ -20,7 +22,7 @@ interface PresupuestoFormProps {
   presupuesto?: PresupuestoNew;
   clients: Client[];
   obras: Obra[];
-  onSubmit: (data: Omit<PresupuestoNew, 'id' | 'numero' | 'importeTotal'>) => void;
+  onSubmit: (data: Omit<PresupuestoNew, 'id' | 'importeTotal'>) => void;
   onCancel: () => void;
   nextNumero: string;
 }
@@ -33,6 +35,10 @@ export default function PresupuestoForm({
   onCancel,
   nextNumero
 }: PresupuestoFormProps) {
+  const { productos, productosProveedores } = useProductos();
+  const [activeSearchLineId, setActiveSearchLineId] = useState<string | null>(null);
+  const [productSearchQuery, setProductSearchQuery] = useState('');
+  const [numeroManual, setNumeroManual] = useState(presupuesto?.numero || nextNumero || '');
   const [clientId, setClientId] = useState(presupuesto?.clientId || '');
   const [obraId, setObraId] = useState(presupuesto?.obraId || '');
   
@@ -89,7 +95,9 @@ export default function PresupuestoForm({
       id: `lin_temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       descripcion: '',
       cantidad: 1,
-      precioUnitario: 0
+      precioUnitario: 0,
+      ivaPorcentaje: 21,
+      tipo: 'libre'
     };
     setLineas(prev => [...prev, newLine]);
   };
@@ -101,7 +109,9 @@ export default function PresupuestoForm({
           id: `lin_init_reset_${Date.now()}`,
           descripcion: '',
           cantidad: 1,
-          precioUnitario: 0
+          precioUnitario: 0,
+          ivaPorcentaje: 21,
+          tipo: 'libre'
         }
       ]);
       return;
@@ -113,7 +123,21 @@ export default function PresupuestoForm({
     setLineas(prev =>
       prev.map(l => {
         if (l.id === id) {
-          return { ...l, [field]: value } as LineaPresupuesto;
+          const updated = { ...l, [field]: value } as LineaPresupuesto;
+          if (field === 'tipo') {
+            if (value === 'libre') {
+              updated.productoId = undefined;
+              updated.referenciaProducto = undefined;
+              updated.fotoUrl = undefined;
+              updated.descripcion = '';
+            } else if (value === 'producto') {
+              updated.productoId = undefined;
+              updated.referenciaProducto = undefined;
+              updated.fotoUrl = undefined;
+              updated.descripcion = '';
+            }
+          }
+          return updated;
         }
         return l;
       })
@@ -124,6 +148,28 @@ export default function PresupuestoForm({
     return calculatePresupuestoTotals(lineas);
   }, [lineas]);
 
+  const handleSelectProductForLine = (lineId: string, p: any) => {
+    const pps = productosProveedores[p.id] || [];
+    const sellingPrice = pps.length > 0 ? pps[0].precioVenta : 0;
+    
+    setLineas(prev => prev.map(l => {
+      if (l.id === lineId) {
+        return {
+          ...l,
+          tipo: 'producto',
+          productoId: p.id,
+          referenciaProducto: p.codigo,
+          descripcion: p.nombre,
+          precioUnitario: sellingPrice,
+          fotoUrl: p.imagenUrl || ''
+        };
+      }
+      return l;
+    }));
+    setActiveSearchLineId(null);
+    setProductSearchQuery('');
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
@@ -133,15 +179,26 @@ export default function PresupuestoForm({
       return;
     }
 
+    if (!numeroManual.trim()) {
+      setFormError('Por favor, introduce un número de presupuesto');
+      return;
+    }
+
     const hasEmptyDescription = lineas.some(l => !l.descripcion.trim());
     if (hasEmptyDescription) {
       setFormError('Todas las líneas de presupuesto deben tener una descripción');
       return;
     }
 
-    const hasInvalidNumbers = lineas.some(l => l.cantidad <= 0 || l.precioUnitario < 0);
+    // Valores negativos permitidos para descuentos a cuenta y devoluciones
+    const hasInvalidNumbers = lineas.some(l => l.cantidad === 0);
     if (hasInvalidNumbers) {
-      setFormError('Las cantidades deben ser superiores a 0 y los precios no pueden ser negativos');
+      setFormError('Las cantidades deben ser diferentes de 0');
+      return;
+    }
+
+    if (obraId && estado !== 'Aceptado') {
+      setFormError('Solo puedes asignar a obra cuando el presupuesto está "Aceptado"');
       return;
     }
 
@@ -152,6 +209,7 @@ export default function PresupuestoForm({
       fechaValidez: fechaValidez || null,
       descripcion,
       estado,
+      numero: numeroManual,
       lineas
     });
   };
@@ -192,22 +250,30 @@ export default function PresupuestoForm({
                 </select>
               </div>
 
-              {/* Obra / Proyecto */}
+              {/* Asignar a Obra */}
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                  Obra / Proyecto Asociado
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  Asignar a Obra
                 </label>
-                <select
-                  value={obraId}
-                  onChange={(e) => setObraId(e.target.value)}
-                  className="w-full h-9.5 bg-slate-50/20 border border-slate-200 rounded-lg px-3 text-xs focus:outline-none focus:ring-1 focus:ring-gray-900 font-semibold text-slate-800"
-                  disabled={!clientId}
-                >
-                  <option value="">{clientId ? 'No asociar a ninguna obra' : 'Selecciona un cliente primero'}</option>
-                  {clientObras.map(o => (
-                    <option key={o.id} value={o.id}>{o.titulo}</option>
-                  ))}
-                </select>
+                
+                {estado !== 'Aceptado' ? (
+                  <div className="h-9.5 flex items-center px-3 rounded-lg bg-slate-100 border border-slate-200 text-xs text-slate-500 italic">
+                    ⚠️ Acepta el presupuesto para asignar a una obra
+                  </div>
+                ) : (
+                  <select
+                    value={obraId || ''}
+                    onChange={(e) => setObraId(e.target.value || null)}
+                    className="w-full h-9.5 bg-slate-50/20 border border-slate-200 rounded-lg px-3 text-xs focus:outline-none focus:ring-1 focus:ring-gray-900 font-semibold text-slate-800"
+                  >
+                    <option value="">-- Selecciona una obra --</option>
+                    {clientObras.map(obra => (
+                      <option key={obra.id} value={obra.id}>
+                        {obra.titulo}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               {/* Fecha de Creación */}
@@ -261,26 +327,35 @@ export default function PresupuestoForm({
           <CardContent className="p-5 space-y-4">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Metadatos del Presupuesto</h3>
             
-            {/* Budget Number (Automatic) */}
+            {/* Código de Presupuesto (Manual) */}
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Código Presupuesto</label>
-              <div className="h-9.5 flex items-center px-3 bg-slate-100 border border-slate-200 rounded-lg text-xs font-bold font-mono text-slate-800 select-all">
-                {presupuesto?.numero || nextNumero}
-                <span className="ml-auto text-[8.5px] font-bold bg-slate-250 text-slate-600 px-1.5 py-0.5 rounded uppercase">Autogenerado</span>
-              </div>
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                Número de Presupuesto
+              </label>
+              <Input
+                type="text"
+                placeholder={`Ej: ${nextNumero}`}
+                value={numeroManual}
+                onChange={(e) => setNumeroManual(e.target.value)}
+                className="h-9.5 text-xs border-slate-200 font-semibold focus-visible:ring-gray-900 bg-white"
+                required
+              />
             </div>
 
             {/* Estado del Presupuesto */}
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Estado</label>
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                Estado del Presupuesto
+              </label>
               <select
                 value={estado}
                 onChange={(e) => setEstado(e.target.value as PresupuestoNew['estado'])}
                 className="w-full h-9.5 bg-slate-50/20 border border-slate-200 rounded-lg px-3 text-xs focus:outline-none focus:ring-1 focus:ring-gray-900 font-bold text-slate-800"
               >
                 <option value="Borrador">Borrador</option>
-                <option value="Enviado">Enviado (a Cliente)</option>
-                <option value="Aprobado">Aprobado / Aceptado</option>
+                <option value="Enviado">Enviado</option>
+                <option value="Aprobado">Aprobado</option>
+                <option value="Aceptado">Aceptado (cliente)</option>
                 <option value="Rechazado">Rechazado</option>
               </select>
             </div>
@@ -289,9 +364,9 @@ export default function PresupuestoForm({
             <div className="p-4 bg-gray-50 border border-gray-150 rounded-xl space-y-2 mt-4">
               <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 <span>Total Estimado (+IVA)</span>
-                <span className="text-gray-900">21% IVA Incl.</span>
+                <span className="text-gray-900">IVA Variable</span>
               </div>
-              <div className="text-2xl font-mono font-black text-slate-900 text-right">
+              <div className={`text-2xl font-mono font-black text-right ${totals.total < 0 ? 'text-red-600' : 'text-slate-900'}`}>
                 {totals.total.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
               </div>
             </div>
@@ -322,69 +397,131 @@ export default function PresupuestoForm({
           <div className="space-y-4">
             {lineas.map((linea, index) => {
               const subtotal = linea.cantidad * linea.precioUnitario;
+              const isProducto = linea.tipo === 'producto';
+
               return (
                 <div 
                   key={linea.id}
                   className="grid grid-cols-1 md:grid-cols-12 gap-3 p-3 bg-slate-50/40 hover:bg-slate-50/75 border border-slate-150 rounded-xl transition-colors items-end relative"
                 >
-                  {/* Concepto / Descripción */}
-                  <div className="md:col-span-6 space-y-1">
-                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Concepto / Descripción del servicio <span className="text-red-500">*</span></label>
-                    <Input
-                      required
-                      placeholder="ej. Suministro e instalación de plato de ducha..."
-                      value={linea.descripcion}
-                      onChange={e => handleUpdateLine(linea.id, 'descripcion', e.target.value)}
-                      className="text-xs h-9 bg-white border-slate-200 focus-visible:ring-gray-900"
-                    />
+                  {/* Selector de Tipo */}
+                  <div className="md:col-span-2 space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Tipo</label>
+                    <select
+                      value={linea.tipo || 'libre'}
+                      onChange={(e) => handleUpdateLine(linea.id, 'tipo', e.target.value as 'producto' | 'libre')}
+                      className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2 py-1 text-slate-700 outline-none focus:border-gray-900 font-semibold"
+                    >
+                      <option value="libre">Concepto libre</option>
+                      <option value="producto">Del Catálogo</option>
+                    </select>
+                  </div>
+
+                  {/* Concepto / Descripción o Selector */}
+                  <div className="md:col-span-4 space-y-1">
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
+                      Concepto / Descripción <span className="text-red-500">*</span>
+                    </label>
+                    {isProducto ? (
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            setActiveSearchLineId(linea.id);
+                            setProductSearchQuery('');
+                          }}
+                          className="h-9 text-xs flex items-center gap-1.5 px-2.5 border-slate-200 hover:bg-slate-50 shrink-0 font-bold"
+                        >
+                          🔍 Buscar
+                        </Button>
+                        <Input
+                          required
+                          placeholder="Ningún producto seleccionado"
+                          value={linea.descripcion}
+                          onChange={e => handleUpdateLine(linea.id, 'descripcion', e.target.value)}
+                          className="text-xs h-9 bg-white border-slate-200 focus-visible:ring-gray-900 flex-1 font-semibold"
+                        />
+                      </div>
+                    ) : (
+                      <Input
+                        required
+                        placeholder="ej. Suministro e instalación de plato de ducha..."
+                        value={linea.descripcion}
+                        onChange={e => handleUpdateLine(linea.id, 'descripcion', e.target.value)}
+                        className="text-xs h-9 bg-white border-slate-200 focus-visible:ring-gray-900 font-semibold"
+                      />
+                    )}
                   </div>
 
                   {/* Cantidad */}
-                  <div className="md:col-span-1.5 space-y-1">
+                  <div className="md:col-span-1 space-y-1">
                     <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Cant.</label>
-                    <Input
-                      required
-                      type="number"
-                      min="0.01"
-                      step="any"
-                      value={linea.cantidad || ''}
-                      onChange={e => handleUpdateLine(linea.id, 'cantidad', Math.max(0.01, Number(e.target.value) || 0))}
+                    <DecimalInput
+                      value={linea.cantidad}
+                      onChange={(val) => handleUpdateLine(linea.id, 'cantidad', val)}
                       className="text-xs h-9 bg-white border-slate-200 focus-visible:ring-gray-900 font-semibold"
                     />
                   </div>
 
                   {/* Precio Unitario */}
-                  <div className="md:col-span-2 space-y-1">
+                  <div className="md:col-span-1.5 space-y-1">
                     <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Precio Unitario</label>
                     <div className="relative">
-                      <Input
-                        required
-                        type="number"
-                        min="0"
-                        step="any"
-                        value={linea.precioUnitario || ''}
-                        onChange={e => handleUpdateLine(linea.id, 'precioUnitario', Math.max(0, Number(e.target.value) || 0))}
-                        className="text-xs h-9 bg-white pr-6 font-mono font-bold border-slate-200 focus-visible:ring-gray-900"
+                      <DecimalInput
+                        value={linea.precioUnitario}
+                        onChange={(val) => handleUpdateLine(linea.id, 'precioUnitario', val)}
+                        className="text-xs h-9 bg-white pr-5 font-mono font-bold border-slate-200 focus-visible:ring-gray-900"
                       />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold">€</span>
+                      <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] text-slate-400 font-bold">€</span>
                     </div>
+                  </div>
+
+                  {/* IVA Percentage */}
+                  <div className="md:col-span-1 space-y-1">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">IVA %</label>
+                    <select
+                      value={linea.ivaPorcentaje || 21}
+                      onChange={(e) => handleUpdateLine(linea.id, 'ivaPorcentaje', parseInt(e.target.value) as 21 | 10 | 0)}
+                      className="w-full h-9 text-xs rounded-lg border border-slate-200 bg-white px-1.5 py-1 text-slate-700 outline-none focus:border-gray-900 font-semibold"
+                    >
+                      <option value="21">21%</option>
+                      <option value="10">10%</option>
+                      <option value="0">0%</option>
+                    </select>
                   </div>
 
                   {/* Total de Línea (Calculado Automáticamente) */}
                   <div className="md:col-span-1.5 space-y-1">
-                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Total Línea</label>
-                    <div className="h-9 flex items-center justify-end px-3 bg-slate-100 border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-800">
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Subtotal</label>
+                    <div className={`h-9 flex items-center justify-end px-2 bg-slate-100 border border-slate-200 rounded-lg text-xs font-mono font-bold ${subtotal < 0 ? 'text-red-600' : 'text-slate-800'}`}>
                       {subtotal.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                     </div>
                   </div>
 
-                  {/* Eliminar Línea */}
-                  <div className="md:col-span-1 flex items-end justify-end">
+                  {/* Eliminar Línea / Miniatura */}
+                  <div className="md:col-span-1 flex items-center justify-between gap-1.5 self-center">
+                    {/* Si hay fotoUrl, mostrar miniatura */}
+                    {linea.fotoUrl ? (
+                      <div className="relative shrink-0">
+                        <img 
+                          src={linea.fotoUrl} 
+                          alt={linea.referenciaProducto || 'foto'} 
+                          className="w-8 h-8 object-cover rounded-md border border-slate-200"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-8 h-8 flex items-center justify-center border border-dashed border-slate-200 rounded-md text-[8px] text-slate-300 uppercase shrink-0 select-none">
+                        s/f
+                      </div>
+                    )}
+                    
                     <Button
                       type="button"
                       variant="ghost"
                       onClick={() => handleRemoveLine(linea.id)}
-                      className="h-9 w-9 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 cursor-pointer shrink-0 flex items-center justify-center"
+                      className="h-8 w-8 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 cursor-pointer shrink-0 flex items-center justify-center p-0"
                       title="Eliminar línea"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -398,21 +535,57 @@ export default function PresupuestoForm({
           {/* Table Totals break down */}
           <div className="mt-6 border-t border-slate-100 pt-5 flex flex-col md:flex-row md:items-start justify-between gap-4">
             <p className="text-[11px] font-semibold text-slate-400 max-w-sm">
-              * El IVA de los presupuestos se calcula con el tipo general estándar del 21%. Se desglosará fiscalmente en las facturas de certificación correspondientes.
+              * El IVA del presupuesto se puede seleccionar individualmente por línea (21%, 10% o 0%).
             </p>
 
             <div className="w-full md:w-80 space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200/50">
               <div className="flex justify-between items-center text-xs text-slate-600 font-medium">
                 <span>Base Imponible:</span>
-                <span className="font-mono text-slate-900 font-bold">{totals.baseImponible.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</span>
+                <span className={`font-mono font-bold ${totals.baseImponible < 0 ? 'text-red-600' : 'text-slate-900'}`}>{totals.baseImponible.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</span>
               </div>
-              <div className="flex justify-between items-center text-xs text-slate-600 font-medium pb-2 border-b border-slate-200/60">
-                <span>Suma IVA (21%):</span>
-                <span className="font-mono text-slate-900 font-bold">{totals.totalIva.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</span>
+              
+              {/* Dynamic breakdown */}
+              {totals.desgloseIva[21].base > 0 && (
+                <div className="space-y-1 pl-2 border-l-2 border-slate-200">
+                  <div className="flex justify-between text-[11px] text-slate-500">
+                    <span>Base (21%):</span>
+                    <span>{totals.desgloseIva[21].base.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
+                  </div>
+                  <div className="flex justify-between text-[11px] text-slate-500">
+                    <span>Cuota IVA (21%):</span>
+                    <span>{totals.desgloseIva[21].cuota.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
+                  </div>
+                </div>
+              )}
+              {totals.desgloseIva[10].base > 0 && (
+                <div className="space-y-1 pl-2 border-l-2 border-slate-200">
+                  <div className="flex justify-between text-[11px] text-slate-500">
+                    <span>Base (10%):</span>
+                    <span>{totals.desgloseIva[10].base.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
+                  </div>
+                  <div className="flex justify-between text-[11px] text-slate-500">
+                    <span>Cuota IVA (10%):</span>
+                    <span>{totals.desgloseIva[10].cuota.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
+                  </div>
+                </div>
+              )}
+              {totals.desgloseIva[0].base > 0 && (
+                <div className="space-y-1 pl-2 border-l-2 border-slate-200">
+                  <div className="flex justify-between text-[11px] text-slate-500">
+                    <span>Base (0% - Exento):</span>
+                    <span>{totals.desgloseIva[0].base.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center text-xs text-slate-600 font-medium pb-2 border-b border-slate-200/60 pt-1">
+                <span>Total IVA:</span>
+                <span className={`font-mono font-bold ${totals.totalIva < 0 ? 'text-red-600' : 'text-slate-900'}`}>{totals.totalIva.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</span>
               </div>
+              
               <div className="flex justify-between items-center text-xs font-black text-slate-900 pt-1">
                 <span className="uppercase tracking-wider">Importe Total:</span>
-                <span className="font-mono text-lg">{totals.total.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</span>
+                <span className={`font-mono text-lg ${totals.total < 0 ? 'text-red-600' : ''}`}>{totals.total.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €</span>
               </div>
             </div>
           </div>
@@ -437,6 +610,93 @@ export default function PresupuestoForm({
           {presupuesto ? 'Guardar Cambios' : 'Generar Presupuesto'}
         </Button>
       </div>
+
+      {/* Product Selection Modal Overlay */}
+      {activeSearchLineId !== null && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="p-4 bg-slate-50 border-b border-slate-150 flex items-center justify-between">
+              <h3 className="font-bold text-xs text-slate-700 uppercase tracking-wider">Buscar Producto Catálogo</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveSearchLineId(null);
+                  setProductSearchQuery('');
+                }}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-4 border-b border-slate-100">
+              <Input
+                type="text"
+                placeholder="Escribe para buscar por nombre o código de producto..."
+                value={productSearchQuery}
+                onChange={(e) => setProductSearchQuery(e.target.value)}
+                className="text-xs h-9.5"
+                autoFocus
+              />
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-2 space-y-1">
+              {(() => {
+                const query = productSearchQuery.trim().toLowerCase();
+                const filtered = productos.filter(p => 
+                  p.activo && (
+                    p.nombre.toLowerCase().includes(query) ||
+                    p.codigo.toLowerCase().includes(query) ||
+                    (p.descripcion && p.descripcion.toLowerCase().includes(query))
+                  )
+                );
+                
+                if (filtered.length === 0) {
+                  return (
+                    <div className="p-8 text-center text-xs text-slate-400 italic">
+                      No se encontraron productos que coincidan.
+                    </div>
+                  );
+                }
+                
+                return filtered.map(p => {
+                  const pps = productosProveedores[p.id] || [];
+                  const sellingPrice = pps.length > 0 ? pps[0].precioVenta : 0;
+                  
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => handleSelectProductForLine(activeSearchLineId, p)}
+                      className="w-full flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg text-left transition-colors border-b border-slate-50"
+                    >
+                      {p.imagenUrl ? (
+                        <img
+                          src={p.imagenUrl}
+                          alt={p.nombre}
+                          className="w-10 h-10 object-cover rounded-md border border-slate-200"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 bg-slate-100 rounded-md border border-slate-200 flex items-center justify-center text-[10px] text-slate-400">
+                          Sin foto
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-bold text-slate-800 truncate">{p.nombre}</div>
+                        <div className="text-[10px] text-slate-400 font-mono">Cód: {p.codigo}</div>
+                      </div>
+                      <div className="text-xs font-bold text-slate-900 shrink-0 font-mono">
+                        {sellingPrice.toFixed(2)} €
+                      </div>
+                    </button>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

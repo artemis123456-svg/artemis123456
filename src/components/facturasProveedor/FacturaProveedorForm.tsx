@@ -4,8 +4,10 @@ import { Proveedor } from '../../types/proveedor';
 import { Obra } from '../../types/obra';
 import { Producto } from '../../types/producto';
 import { calculateFacturaProveedorTotals } from '../../hooks/useFacturasProveedor';
+import { useProductos } from '../../hooks/useProductos';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { DecimalInput } from '../ui/DecimalInput';
 import { 
   Plus, 
   Trash2, 
@@ -39,6 +41,7 @@ export default function FacturaProveedorForm({
   onCancel
 }: FacturaProveedorFormProps) {
   const isEdit = !!factura;
+  const { productosProveedores } = useProductos();
 
   // Header state
   const [numero, setNumero] = useState('');
@@ -167,11 +170,22 @@ export default function FacturaProveedorForm({
         targetLine.tipo = 'producto';
         targetLine.productoId = found.id;
         targetLine.concepto = found.nombre;
-        targetLine.precioUnitario = found.precioCompra || 0;
 
-        // Auto-select provider of the product if available
-        if (found.proveedorId) {
-          setProveedorId(found.proveedorId);
+        const pps = productosProveedores[found.id] || [];
+        const matchingPP = pps.find(pp => pp.proveedorId === proveedorId);
+
+        if (matchingPP) {
+          targetLine.precioUnitario = matchingPP.precioCompra;
+        } else if (pps.length > 0) {
+          // Fallback to first associated supplier if selected supplier doesn't match
+          targetLine.precioUnitario = pps[0].precioCompra;
+
+          // Auto-select provider of the product if none is selected
+          if (!proveedorId) {
+            setProveedorId(pps[0].proveedorId);
+          }
+        } else {
+          targetLine.precioUnitario = 0;
         }
       } else {
         // No matching product found, becomes editable free text line
@@ -249,8 +263,8 @@ export default function FacturaProveedorForm({
         alert(`La línea #${i + 1} debe tener una descripción/concepto.`);
         return;
       }
-      if (l.cantidad <= 0) {
-        alert(`La cantidad en la línea #${i + 1} debe ser mayor que cero.`);
+      if (l.cantidad === 0) {
+        alert(`La cantidad en la línea #${i + 1} debe ser diferente de cero.`);
         return;
       }
     }
@@ -418,13 +432,9 @@ export default function FacturaProveedorForm({
         <div className="space-y-1">
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Retención IRPF (%)</label>
           <div className="relative">
-            <Input
-              type="number"
-              min="0"
-              max="100"
-              placeholder="0"
-              value={retencionIrpf === 0 ? '' : retencionIrpf}
-              onChange={e => setRetencionIrpf(Math.max(0, Number(e.target.value) || 0))}
+            <DecimalInput
+              value={retencionIrpf}
+              onChange={val => setRetencionIrpf(val)}
               className="text-xs h-9 border-slate-200 focus-visible:ring-verini-black pr-8 font-semibold text-slate-800"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-semibold pointer-events-none">%</span>
@@ -586,14 +596,9 @@ export default function FacturaProveedorForm({
                 {/* Cantidad */}
                 <div className="md:col-span-1 space-y-1">
                   <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Cant.</label>
-                  <Input
-                    required
-                    type="number"
-                    min="0.01"
-                    step="any"
-                    placeholder="1"
-                    value={linea.cantidad === 0 ? '' : linea.cantidad}
-                    onChange={e => handleLineChange(index, 'cantidad', Math.max(0, Number(e.target.value) || 0))}
+                  <DecimalInput
+                    value={linea.cantidad}
+                    onChange={val => handleLineChange(index, 'cantidad', val)}
                     className="text-xs h-9 bg-white text-center font-mono font-bold border-slate-200 focus-visible:ring-verini-black"
                   />
                 </div>
@@ -602,14 +607,9 @@ export default function FacturaProveedorForm({
                 <div className="md:col-span-1 space-y-1">
                   <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Precio</label>
                   <div className="relative">
-                    <Input
-                      required
-                      type="number"
-                      min="0"
-                      step="any"
-                      placeholder="0.00"
-                      value={linea.precioUnitario === 0 ? '' : linea.precioUnitario}
-                      onChange={e => handleLineChange(index, 'precioUnitario', Math.max(0, Number(e.target.value) || 0))}
+                    <DecimalInput
+                      value={linea.precioUnitario}
+                      onChange={val => handleLineChange(index, 'precioUnitario', val)}
                       className="text-xs h-9 bg-white pr-4 font-mono font-bold border-slate-200 focus-visible:ring-verini-black"
                     />
                     <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[8px] text-slate-400 font-bold">€</span>
@@ -665,12 +665,12 @@ export default function FacturaProveedorForm({
         <div className="bg-slate-50/50 border border-slate-150 rounded-2xl p-5 space-y-3">
           <div className="flex justify-between items-center text-xs">
             <span className="text-slate-500 font-medium">Base Imponible</span>
-            <span className="font-mono text-slate-800 font-bold">{liveTotals.baseImponible.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
+            <span className={`font-mono font-bold ${liveTotals.baseImponible < 0 ? 'text-red-600' : 'text-slate-800'}`}>{liveTotals.baseImponible.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
           </div>
 
           <div className="flex justify-between items-center text-xs border-t border-slate-200/50 pt-2">
             <span className="text-slate-500 font-medium">Impuestos (IVA)</span>
-            <span className="font-mono text-slate-800 font-bold">{liveTotals.totalIva.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
+            <span className={`font-mono font-bold ${liveTotals.totalIva < 0 ? 'text-red-600' : 'text-slate-800'}`}>{liveTotals.totalIva.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
           </div>
 
           {retencionIrpf > 0 && (
@@ -682,7 +682,7 @@ export default function FacturaProveedorForm({
 
           <div className="flex justify-between items-center text-sm font-black border-t border-slate-200 pt-3">
             <span className="text-slate-900 uppercase tracking-wide">TOTAL ESTIMADO</span>
-            <span className="font-mono text-base text-slate-950 font-black">{liveTotals.total.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
+            <span className={`font-mono text-base font-black ${liveTotals.total < 0 ? 'text-red-600' : 'text-slate-950'}`}>{liveTotals.total.toLocaleString('es-ES', { minimumFractionDigits: 2 })} €</span>
           </div>
         </div>
       </div>

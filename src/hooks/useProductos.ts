@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Producto, TarifaProducto, ImagenProducto } from '../types/producto';
+import { Producto, TarifaProducto, ImagenProducto, ProductoProveedor } from '../types/producto';
 import { supabase } from '../lib/supabaseClient';
 
 function prodFromRow(row: any): Producto {
@@ -9,13 +9,9 @@ function prodFromRow(row: any): Producto {
     nombre: row.nombre,
     categoria: row.categoria,
     descripcion: row.descripcion,
-    proveedorId: row.proveedor_id,
-    precioCompra: Number(row.precio_compra),
-    precioVenta: Number(row.precio_venta),
     unidad: row.unidad,
     activo: !!row.activo,
-    imagenUrl: row.imagen_url || '',
-    stock: row.stock !== undefined && row.stock !== null ? Number(row.stock) : 0
+    imagenUrl: row.imagen_url || ''
   };
 }
 
@@ -26,14 +22,34 @@ function prodToRow(prod: Partial<Producto>): any {
   if (prod.nombre !== undefined) row.nombre = prod.nombre;
   if (prod.categoria !== undefined) row.categoria = prod.categoria;
   if (prod.descripcion !== undefined) row.descripcion = prod.descripcion;
-  if (prod.proveedorId !== undefined) row.proveedor_id = prod.proveedorId;
-  if (prod.precioCompra !== undefined) row.precio_compra = prod.precioCompra;
-  if (prod.precioVenta !== undefined) row.precio_venta = prod.precioVenta;
   if (prod.unidad !== undefined) row.unidad = prod.unidad;
   if (prod.activo !== undefined) row.activo = prod.activo;
   if (prod.imagenUrl !== undefined) row.imagen_url = prod.imagenUrl;
-  if (prod.stock !== undefined) row.stock = prod.stock;
   return row;
+}
+
+function productoProveedorFromRow(row: any): ProductoProveedor {
+  return {
+    id: row.id,
+    productoId: row.producto_id,
+    proveedorId: row.proveedor_id,
+    precioCompra: Number(row.precio_compra),
+    precioVenta: Number(row.precio_venta),
+    referenciaProveedor: row.referencia_proveedor,
+    activo: !!row.activo
+  };
+}
+
+function productoProveedorToRow(pp: ProductoProveedor): any {
+  return {
+    id: pp.id,
+    producto_id: pp.productoId,
+    proveedor_id: pp.proveedorId,
+    precio_compra: pp.precioCompra,
+    precio_venta: pp.precioVenta,
+    referencia_proveedor: pp.referenciaProveedor,
+    activo: pp.activo
+  };
 }
 
 function tarifaFromRow(row: any): TarifaProducto {
@@ -78,25 +94,40 @@ export function useProductos() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [tarifas, setTarifas] = useState<TarifaProducto[]>([]);
   const [imagenes, setImagenes] = useState<ImagenProducto[]>([]);
+  const [productosProveedores, setProductosProveedores] = useState<Record<string, ProductoProveedor[]>>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchAllData = useCallback(async () => {
     try {
       setLoading(true);
-      const [prodRes, tarifaRes, imgRes] = await Promise.all([
+      const [prodRes, tarifaRes, imgRes, ppRes] = await Promise.all([
         supabase.from('productos').select('*').order('created_at', { ascending: false }),
         supabase.from('tarifas_producto').select('*').order('id', { ascending: true }),
-        supabase.from('imagenes_producto').select('*').order('id', { ascending: true })
+        supabase.from('imagenes_producto').select('*').order('id', { ascending: true }),
+        supabase.from('producto_proveedor').select('*').order('id', { ascending: true })
       ]);
 
       if (prodRes.error) throw prodRes.error;
       if (tarifaRes.error) throw tarifaRes.error;
       if (imgRes.error) throw imgRes.error;
+      if (ppRes.error) throw ppRes.error;
 
       if (prodRes.data) setProductos(prodRes.data.map(prodFromRow));
       if (tarifaRes.data) setTarifas(tarifaRes.data.map(tarifaFromRow));
       if (imgRes.data) setImagenes(imgRes.data.map(imgFromRow));
+
+      const ppMap: Record<string, ProductoProveedor[]> = {};
+      if (ppRes.data) {
+        ppRes.data.forEach((row: any) => {
+          const pp = productoProveedorFromRow(row);
+          if (!ppMap[pp.productoId]) {
+            ppMap[pp.productoId] = [];
+          }
+          ppMap[pp.productoId].push(pp);
+        });
+      }
+      setProductosProveedores(ppMap);
     } catch (err: any) {
       console.error('Error fetching products data:', err);
       setError(err.message || 'Error al cargar los productos');
@@ -125,49 +156,43 @@ export function useProductos() {
     return `PRD-${String(nextNum).padStart(6, '0')}`;
   };
 
-  const addProducto = async (prodData: Omit<Producto, 'id'>) => {
+  const addProducto = async (productoData: Omit<Producto, 'id'>) => {
     try {
-      const newId = `prd_${Date.now()}`;
-      const newProd: Producto = {
-        ...prodData,
+      // Verificar que codigo no sea duplicado
+      const { data: existing, error: checkError } = await supabase
+        .from('productos')
+        .select('id, codigo')
+        .eq('codigo', productoData.codigo)
+        .single();
+
+      if (existing) {
+        throw new Error(
+          `⚠️ Ya existe un producto con referencia "${productoData.codigo}" (ID: ${existing.id}). ` +
+          `¿Deseas editar ese producto en lugar de crear uno nuevo?`
+        );
+      }
+
+      // Si check_error es "no rows", continue (es OK, no hay duplicado)
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      const newId = `prod_${Date.now()}`;
+      const newProducto: Producto = {
+        ...productoData,
         id: newId
       };
 
-      // 1. Insert product
-      const { error: err } = await supabase
+      const { error: insertError } = await supabase
         .from('productos')
-        .insert([prodToRow(newProd)]);
-      if (err) throw err;
-
-      // 2. Insert main image if present
-      if (prodData.imagenUrl) {
-        const newImg: ImagenProducto = {
-          id: `img_${Date.now()}`,
-          productoId: newId,
-          url: prodData.imagenUrl,
-          esPrincipal: true
-        };
-        await supabase
-          .from('imagenes_producto')
-          .insert([imgToRow(newImg)]);
-      }
-
-      // 3. Create general PVP rate
-      const newTarifa: TarifaProducto = {
-        id: `trf_${Date.now()}`,
-        productoId: newId,
-        nombre: 'Tarifa General PVP',
-        precio: prodData.precioVenta,
-        fechaVigencia: new Date().toISOString().split('T')[0]
-      };
-      await supabase
-        .from('tarifas_producto')
-        .insert([tarifaToRow(newTarifa)]);
+        .insert([prodToRow(newProducto)]);
+      
+      if (insertError) throw insertError;
 
       await fetchAllData();
-      return newProd;
+      return newProducto;
     } catch (err: any) {
-      console.error('Error adding product:', err);
+      console.error('Error adding producto:', err);
       setError(err.message || 'Error al añadir el producto');
       throw err;
     }
@@ -184,7 +209,6 @@ export function useProductos() {
 
       // 2. Update main image if url changed
       if (updatedFields.imagenUrl) {
-        // Find existing main image in our state or just upsert in DB
         const existingMain = imagenes.find(img => img.productoId === id && img.esPrincipal);
         if (existingMain) {
           await supabase
@@ -204,28 +228,6 @@ export function useProductos() {
         }
       }
 
-      // 3. Update or ensure general PVP rate matches updated precioVenta
-      if (updatedFields.precioVenta !== undefined) {
-        const pvpTarifa = tarifas.find(t => t.productoId === id && t.nombre === 'Tarifa General PVP');
-        if (pvpTarifa) {
-          await supabase
-            .from('tarifas_producto')
-            .update({ precio: updatedFields.precioVenta })
-            .eq('id', pvpTarifa.id);
-        } else {
-          const newTarifa: TarifaProducto = {
-            id: `trf_up_${Date.now()}`,
-            productoId: id,
-            nombre: 'Tarifa General PVP',
-            precio: updatedFields.precioVenta,
-            fechaVigencia: new Date().toISOString().split('T')[0]
-          };
-          await supabase
-            .from('tarifas_producto')
-            .insert([tarifaToRow(newTarifa)]);
-        }
-      }
-
       await fetchAllData();
     } catch (err: any) {
       console.error('Error updating product:', err);
@@ -238,6 +240,7 @@ export function useProductos() {
     try {
       // Delete child relations manually to avoid FK errors
       await Promise.all([
+        supabase.from('producto_proveedor').delete().eq('producto_id', id),
         supabase.from('tarifas_producto').delete().eq('producto_id', id),
         supabase.from('imagenes_producto').delete().eq('producto_id', id)
       ]);
@@ -374,11 +377,73 @@ export function useProductos() {
     }
   };
 
+  const addProductoProveedor = async (
+    productoId: string,
+    proveedorId: string,
+    precioCompra: number,
+    precioVenta: number,
+    referenciaProveedor?: string
+  ) => {
+    try {
+      const newId = `pp_${Date.now()}`;
+      const { error } = await supabase
+        .from('producto_proveedor')
+        .insert([{
+          id: newId,
+          producto_id: productoId,
+          proveedor_id: proveedorId,
+          precio_compra: precioCompra,
+          precio_venta: precioVenta,
+          referencia_proveedor: referenciaProveedor,
+          activo: true
+        }]);
+
+      if (error) throw error;
+      await fetchAllData();
+    } catch (err: any) {
+      console.error('Error adding producto-proveedor:', err);
+      setError(err.message || 'Error al añadir el proveedor del producto');
+      throw err;
+    }
+  };
+
+  const deleteProductoProveedor = async (ppId: string) => {
+    try {
+      const { error } = await supabase
+        .from('producto_proveedor')
+        .delete()
+        .eq('id', ppId);
+
+      if (error) throw error;
+      await fetchAllData();
+    } catch (err: any) {
+      console.error('Error deleting producto-proveedor:', err);
+      setError(err.message || 'Error al eliminar el proveedor del producto');
+      throw err;
+    }
+  };
+
+  const updateProductoProveedor = async (ppId: string, updates: Partial<ProductoProveedor>) => {
+    try {
+      const { error } = await supabase
+        .from('producto_proveedor')
+        .update(productoProveedorToRow(updates as ProductoProveedor))
+        .eq('id', ppId);
+
+      if (error) throw error;
+      await fetchAllData();
+    } catch (err: any) {
+      console.error('Error updating producto-proveedor:', err);
+      setError(err.message || 'Error al actualizar el proveedor del producto');
+      throw err;
+    }
+  };
+
   // Helper derived calculation
-  const getMargin = (producto: Producto) => {
-    const diff = producto.precioVenta - producto.precioCompra;
-    const pct = producto.precioCompra > 0 ? (diff / producto.precioCompra) * 100 : 0;
-    const profitMarginPct = producto.precioVenta > 0 ? (diff / producto.precioVenta) * 100 : 0;
+  const getMargin = (precioCompra: number, precioVenta: number) => {
+    const diff = precioVenta - precioCompra;
+    const pct = precioCompra > 0 ? (diff / precioCompra) * 100 : 0;
+    const profitMarginPct = precioVenta > 0 ? (diff / precioVenta) * 100 : 0;
     return {
       absolute: diff,
       markupPct: pct,          // Sobre coste (markup)
@@ -390,6 +455,7 @@ export function useProductos() {
     productos,
     tarifas,
     imagenes,
+    productosProveedores,
     loading,
     error,
     addProducto,
@@ -399,6 +465,9 @@ export function useProductos() {
     deleteTarifa,
     addImagenProducto,
     deleteImagenProducto,
+    addProductoProveedor,
+    updateProductoProveedor,
+    deleteProductoProveedor,
     getMargin
   };
 }

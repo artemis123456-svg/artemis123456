@@ -4,13 +4,19 @@ export interface Producto {
   nombre: string;
   categoria: string;         // ej: "Iluminación", "Mamparas", "Azulejos", "Sanitarios", "Grifería"
   descripcion: string;
-  proveedorId: string;       // vínculo al proveedor (MISMO id que usa el módulo Proveedores)
-  precioCompra: number;      // precio al que Verini lo compra
-  precioVenta: number;       // precio de venta al cliente (PVP)
   unidad: 'ud' | 'm2' | 'ml' | 'caja';  // unidad de medida
   activo: boolean;
   imagenUrl: string;         // URL de imagen (mock, puede ser un placeholder)
-  stock: number;             // cantidad en stock (numeric)
+}
+
+export interface ProductoProveedor {
+  id: string;
+  productoId: string;
+  proveedorId: string;
+  precioCompra: number;
+  precioVenta: number;
+  referenciaProveedor?: string;  // SKU/código del proveedor
+  activo: boolean;
 }
 
 export interface TarifaProducto {

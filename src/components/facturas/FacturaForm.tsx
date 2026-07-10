@@ -4,9 +4,11 @@ import { Client } from '../../types/client';
 import { Obra } from '../../types/obra';
 import { Producto } from '../../types/producto';
 import { calculateFacturaTotals } from '../../hooks/useFacturas';
+import { useProductos } from '../../hooks/useProductos';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Card, CardContent } from '../ui/card';
+import { DecimalInput } from '../ui/DecimalInput';
 import { 
   Plus, 
   Trash2, 
@@ -27,7 +29,7 @@ interface FacturaFormProps {
   clients: Client[];
   obras: Obra[];
   productos: Producto[];
-  onSubmit: (data: Omit<Factura, 'id' | 'numero'>) => void;
+  onSubmit: (data: Omit<Factura, 'id'>) => void;
   onCancel: () => void;
   nextNumero: string;
 }
@@ -41,9 +43,55 @@ export default function FacturaForm({
   onCancel,
   nextNumero
 }: FacturaFormProps) {
+  const { productosProveedores } = useProductos();
+
   // Main form states
   const [clientId, setClientId] = useState(factura?.clientId || '');
   const [obraId, setObraId] = useState(factura?.obraId || '');
+  const [numeroManual, setNumeroManual] = useState(factura?.numero || '');
+
+  // Autocomplete search states
+  const [clienteSearch, setClienteSearch] = useState(() => {
+    if (factura?.clientId) {
+      const match = clients.find(c => c.id === factura.clientId);
+      return match ? `${match.nombre} ${match.apellidos || ''}`.trim() : '';
+    }
+    return '';
+  });
+  const [clientesFiltrados, setClientesFiltrados] = useState<Client[]>([]);
+  const [mostrarDropdown, setMostrarDropdown] = useState(false);
+
+  useEffect(() => {
+    if (clienteSearch.trim().length === 0) {
+      setClientesFiltrados([]);
+      setMostrarDropdown(false);
+      return;
+    }
+    
+    // Skip if it matches selected client's name exactly
+    const activeClient = clients.find(c => c.id === clientId);
+    if (activeClient) {
+      const activeFullName = `${activeClient.nombre} ${activeClient.apellidos || ''}`.trim();
+      if (activeFullName === clienteSearch.trim()) {
+        return;
+      }
+    }
+
+    const query = clienteSearch.toLowerCase();
+    const filtered = clients.filter(c => {
+      const fullName = `${c.nombre} ${c.apellidos || ''}`.toLowerCase();
+      return fullName.includes(query) || (c.email && c.email.toLowerCase().includes(query));
+    });
+    
+    setClientesFiltrados(filtered);
+    setMostrarDropdown(true);
+  }, [clienteSearch, clients, clientId]);
+
+  const handleSelectCliente = (cliente: Client) => {
+    setClientId(cliente.id);
+    setClienteSearch(`${cliente.nombre} ${cliente.apellidos || ''}`.trim());
+    setMostrarDropdown(false);
+  };
   
   // Format dates correctly: YYYY-MM-DD
   const [fechaEmision, setFechaEmision] = useState(() => {
@@ -160,7 +208,8 @@ export default function FacturaForm({
               if (p) {
                 updated.productoId = p.id;
                 updated.concepto = p.nombre;
-                updated.precioUnitario = p.precioVenta;
+                const pps = productosProveedores[p.id] || [];
+                updated.precioUnitario = pps.length > 0 ? pps[0].precioVenta : 0;
               }
             }
           }
@@ -170,7 +219,8 @@ export default function FacturaForm({
             const p = productos.find(prod => prod.id === value);
             if (p) {
               updated.concepto = p.nombre;
-              updated.precioUnitario = p.precioVenta;
+              const pps = productosProveedores[p.id] || [];
+              updated.precioUnitario = pps.length > 0 ? pps[0].precioVenta : 0;
             }
           }
 
@@ -196,19 +246,15 @@ export default function FacturaForm({
       setFormError('Por favor, selecciona un cliente.');
       return;
     }
-    if (!obraId) {
-      setFormError('Por favor, asocia esta factura a una obra/proyecto.');
-      return;
-    }
     if (lineas.length === 0) {
       setFormError('La factura debe tener al menos una línea de concepto.');
       return;
     }
 
-    // Check empty line concepts or negative quantities/prices
-    const hasInvalidLine = lineas.some(l => !l.concepto.trim() || l.cantidad <= 0 || l.precioUnitario < 0);
+    // Valores negativos permitidos para descuentos a cuenta y devoluciones
+    const hasInvalidLine = lineas.some(l => !l.concepto.trim() || l.cantidad === 0);
     if (hasInvalidLine) {
-      setFormError('Revisa las líneas. Todos los conceptos deben tener descripción, cantidad mayor a 0 y precio positivo.');
+      setFormError('Revisa las líneas. Todos los conceptos deben tener descripción, cantidad diferente de 0.');
       return;
     }
 
@@ -223,9 +269,12 @@ export default function FacturaForm({
       ivaPorcentaje: Number(l.ivaPorcentaje) as 21 | 10 | 0
     }));
 
+    const finalNumero = numeroManual.trim() || nextNumero;
+
     onSubmit({
+      numero: finalNumero,
       clientId,
-      obraId,
+      obraId: obraId || null,
       fechaEmision,
       fechaVencimiento,
       lineas: cleanLines,
@@ -283,7 +332,7 @@ export default function FacturaForm({
               <h3 className="font-bold text-slate-900 text-xs border-b border-slate-100 pb-2">1. Datos de Facturación e Identificación</h3>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Invoice Number (Read only for display) */}
+                {/* Invoice Number (Manual/Editable with suggestion) */}
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
                     <FileText className="h-3.5 w-3.5 text-slate-400" />
@@ -291,10 +340,16 @@ export default function FacturaForm({
                   </label>
                   <Input
                     type="text"
-                    value={factura ? factura.numero : `${nextNumero} (Borrador)`}
-                    disabled
-                    className="h-9 text-xs bg-slate-50 border-slate-200 font-mono font-bold text-slate-800"
+                    placeholder={`Ej: ${nextNumero}`}
+                    value={numeroManual}
+                    onChange={(e) => setNumeroManual(e.target.value)}
+                    className="h-9 text-xs border-slate-200 font-semibold"
                   />
+                  {numeroManual && numeroManual !== nextNumero && (
+                    <p className="text-[10px] text-slate-500">
+                      Sugerencia: {nextNumero}
+                    </p>
+                  )}
                 </div>
 
                 {/* Status Selector */}
@@ -312,36 +367,54 @@ export default function FacturaForm({
                   </select>
                 </div>
 
-                {/* Client Selector */}
-                <div className="space-y-1">
+                {/* Client Selector (with Autocomplete) */}
+                <div className="relative space-y-1">
                   <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Cliente (Receptor)</label>
-                  <select
-                    value={clientId}
-                    onChange={(e) => setClientId(e.target.value)}
-                    disabled={!!factura} // Don't allow client modification on edit to maintain ledger consistency
-                    className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-verini-black focus:ring-1 focus:ring-verini-black/20 disabled:bg-slate-50 disabled:text-slate-500"
-                  >
-                    <option value="">-- Selecciona un cliente --</option>
-                    {clients.map(c => (
-                      <option key={c.id} value={c.id}>
-                        {c.nombre} {c.apellidos} {c.empresa ? `(${c.empresa})` : ''}
-                      </option>
-                    ))}
-                  </select>
+                  <Input
+                    type="text"
+                    placeholder="Escribe nombre, apellidos o email..."
+                    value={clienteSearch}
+                    onChange={(e) => setClienteSearch(e.target.value)}
+                    onFocus={() => !factura && clienteSearch && setMostrarDropdown(true)}
+                    disabled={!!factura}
+                    className="h-9 text-xs border-slate-200 font-semibold disabled:bg-slate-50"
+                  />
+                  
+                  {mostrarDropdown && clientesFiltrados.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 z-10 bg-white border border-slate-200 rounded-lg shadow-md max-h-60 overflow-y-auto mt-1">
+                      {clientesFiltrados.map(cliente => (
+                        <div
+                          key={cliente.id}
+                          onClick={() => handleSelectCliente(cliente)}
+                          className="px-4 py-2 hover:bg-slate-50 cursor-pointer text-xs border-b border-slate-100 last:border-b-0"
+                        >
+                          <div className="font-semibold text-slate-900">{cliente.nombre} {cliente.apellidos || ''}</div>
+                          <div className="text-slate-500 text-[10px]">{cliente.email || 'Sin email'} {cliente.empresa ? `• ${cliente.empresa}` : ''}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {mostrarDropdown && clientesFiltrados.length === 0 && clienteSearch && (
+                    <div className="absolute top-full left-0 right-0 z-10 bg-white border border-slate-200 rounded-lg shadow-md text-xs text-slate-500 italic px-4 py-2 mt-1">
+                      No hay clientes que coincidan
+                    </div>
+                  )}
                 </div>
 
                 {/* Project / Obra Selector */}
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Obra / Proyecto Relacionado</label>
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Obra / Proyecto Relacionado (Opcional)</label>
                   <select
-                    value={obraId}
+                    value={obraId || ''}
                     onChange={(e) => setObraId(e.target.value)}
                     disabled={!clientId || !!factura}
                     className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-verini-black focus:ring-1 focus:ring-verini-black/20 disabled:bg-slate-50 disabled:text-slate-400"
                   >
                     <option value="">
-                      {!clientId ? 'Selecciona un cliente primero' : clientObras.length === 0 ? 'Sin obras registradas para este cliente' : '-- Selecciona una obra --'}
+                      {!clientId ? 'Selecciona un cliente primero' : '-- Sin obra asociada (Opcional) --'}
                     </option>
+                    {clientId && <option value="">-- Sin obra asociada (Opcional) --</option>}
                     {clientObras.map(o => (
                       <option key={o.id} value={o.id}>{o.codigo} - {o.titulo}</option>
                     ))}
@@ -474,19 +547,30 @@ export default function FacturaForm({
                       {/* Concept detail / Product Selector */}
                       <div className="md:col-span-4 space-y-1">
                         {linea.tipo === 'producto' ? (
-                          <>
-                            {index === 0 && <label className="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Producto Catálogo</label>}
-                            <select
-                              value={linea.productoId || ''}
-                              onChange={(e) => handleUpdateLine(linea.id, 'productoId', e.target.value)}
-                              className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2 py-1 text-slate-700 outline-none"
-                            >
-                              <option value="">-- Elige un producto --</option>
-                              {activeProducts.map(p => (
-                                <option key={p.id} value={p.id}>{p.nombre} ({p.codigo})</option>
-                              ))}
-                            </select>
-                          </>
+                          <div className="space-y-2">
+                            <div>
+                              {index === 0 && <label className="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Producto Catálogo</label>}
+                              <select
+                                value={linea.productoId || ''}
+                                onChange={(e) => handleUpdateLine(linea.id, 'productoId', e.target.value)}
+                                className="w-full text-xs h-9 rounded-lg border border-slate-200 bg-white px-2 py-1 text-slate-700 outline-none"
+                              >
+                                <option value="">-- Elige un producto --</option>
+                                {activeProducts.map(p => (
+                                  <option key={p.id} value={p.id}>{p.nombre} ({p.codigo})</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <Input
+                                type="text"
+                                value={linea.concepto}
+                                onChange={(e) => handleUpdateLine(linea.id, 'concepto', e.target.value)}
+                                placeholder="Concepto personalizado del producto..."
+                                className="h-9 text-xs border-slate-200"
+                              />
+                            </div>
+                          </div>
                         ) : (
                           <>
                             {index === 0 && <label className="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Descripción Concepto</label>}
@@ -505,12 +589,9 @@ export default function FacturaForm({
                       <div className="md:col-span-1.5 space-y-1">
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest md:hidden">Cant</label>
                         {index === 0 && <label className="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cant</label>}
-                        <Input
-                          type="number"
-                          min="0.01"
-                          step="any"
+                        <DecimalInput
                           value={linea.cantidad}
-                          onChange={(e) => handleUpdateLine(linea.id, 'cantidad', parseFloat(e.target.value) || 0)}
+                          onChange={(val) => handleUpdateLine(linea.id, 'cantidad', val)}
                           className="h-9 text-xs border-slate-200"
                         />
                       </div>
@@ -520,12 +601,9 @@ export default function FacturaForm({
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest md:hidden">Precio</label>
                         {index === 0 && <label className="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Precio</label>}
                         <div className="relative">
-                          <Input
-                            type="number"
-                            min="0"
-                            step="any"
+                          <DecimalInput
                             value={linea.precioUnitario}
-                            onChange={(e) => handleUpdateLine(linea.id, 'precioUnitario', parseFloat(e.target.value) || 0)}
+                            onChange={(val) => handleUpdateLine(linea.id, 'precioUnitario', val)}
                             className="h-9 text-xs border-slate-200 pr-5"
                           />
                           <span className="absolute top-2 right-1.5 text-[10px] text-slate-400">€</span>
@@ -550,7 +628,7 @@ export default function FacturaForm({
                       {/* Total line (Read only) */}
                       <div className="md:col-span-1 space-y-1">
                         {index === 0 && <label className="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Subtotal</label>}
-                        <div className="h-9 flex items-center justify-end font-bold text-xs text-slate-900 pr-1 select-none">
+                        <div className={`h-9 flex items-center justify-end font-bold text-xs pr-1 select-none ${subtotal < 0 ? 'text-red-600' : 'text-slate-900'}`}>
                           {subtotal.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                         </div>
                       </div>
@@ -587,25 +665,29 @@ export default function FacturaForm({
               <div className="space-y-3 text-xs text-slate-600">
                 <div className="flex justify-between py-1 border-b border-slate-50">
                   <span className="font-medium text-slate-500">Base Imponible:</span>
-                  <span className="font-bold text-slate-800">
+                  <span className={`font-bold ${totals.baseImponible < 0 ? 'text-red-600' : 'text-slate-800'}`}>
                     {totals.baseImponible.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
                   </span>
                 </div>
 
                 {/* Subtax items */}
-                {totals.desgloseIva[21].base > 0 && (
+                {totals.desgloseIva[21].base !== 0 && (
                   <div className="flex justify-between text-[11px] text-slate-500 pl-2">
                     <span>IVA 21% (s/{totals.desgloseIva[21].base.toFixed(2)}):</span>
-                    <span>+{totals.desgloseIva[21].cuota.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span>
+                    <span className={totals.desgloseIva[21].cuota < 0 ? 'text-red-600' : ''}>
+                      {totals.desgloseIva[21].cuota > 0 ? '+' : ''}{totals.desgloseIva[21].cuota.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                    </span>
                   </div>
                 )}
-                {totals.desgloseIva[10].base > 0 && (
+                {totals.desgloseIva[10].base !== 0 && (
                   <div className="flex justify-between text-[11px] text-slate-500 pl-2">
                     <span>IVA 10% (s/{totals.desgloseIva[10].base.toFixed(2)}):</span>
-                    <span>+{totals.desgloseIva[10].cuota.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}</span>
+                    <span className={totals.desgloseIva[10].cuota < 0 ? 'text-red-600' : ''}>
+                      {totals.desgloseIva[10].cuota > 0 ? '+' : ''}{totals.desgloseIva[10].cuota.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+                    </span>
                   </div>
                 )}
-                {totals.desgloseIva[0].base > 0 && (
+                {totals.desgloseIva[0].base !== 0 && (
                   <div className="flex justify-between text-[11px] text-slate-500 pl-2">
                     <span>Exento 0% (s/{totals.desgloseIva[0].base.toFixed(2)}):</span>
                     <span>+0,00 €</span>
@@ -614,14 +696,14 @@ export default function FacturaForm({
 
                 <div className="flex justify-between py-1 border-b border-slate-100">
                   <span className="font-medium text-slate-500">Impuestos (IVA):</span>
-                  <span className="font-bold text-slate-800">
+                  <span className={`font-bold ${totals.totalIva < 0 ? 'text-red-600' : 'text-slate-800'}`}>
                     {totals.totalIva.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
                   </span>
                 </div>
 
                 <div className="flex justify-between py-3.5 bg-slate-50 px-4 rounded-xl border border-slate-200 text-slate-900">
                   <span className="font-extrabold text-xs">Total Neto Facturado:</span>
-                  <span className="font-black text-sm text-slate-950">
+                  <span className={`font-black text-sm ${totals.total < 0 ? 'text-red-600' : 'text-slate-950'}`}>
                     {totals.total.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
                   </span>
                 </div>

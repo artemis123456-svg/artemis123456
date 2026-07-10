@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Producto } from '../../types/producto';
-import { useProveedores } from '../../hooks/useProveedores';
+import { Producto, ProductoProveedor } from '../../types/producto';
+import { Proveedor } from '../../types/proveedor';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { DecimalInput } from '../ui/DecimalInput';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { supabase } from '../../lib/supabaseClient';
 import { 
@@ -10,17 +11,26 @@ import {
   Save, 
   Package, 
   Tag, 
-  Store, 
-  DollarSign, 
-  Boxes, 
   Image as ImageIcon, 
   FileText,
-  HelpCircle
+  Plus,
+  Trash2,
+  DollarSign
 } from 'lucide-react';
 
 interface ProductoFormProps {
   productoToEdit?: Producto | null;
-  onSave: (productoData: any) => void;
+  proveedores: Proveedor[];
+  productosProveedores?: Record<string, ProductoProveedor[]>;
+  onSave: (productoData: Omit<Producto, 'id'>) => void;
+  onAddProveedor?: (
+    productoId: string,
+    proveedorId: string,
+    precioCompra: number,
+    precioVenta: number,
+    referenciaProveedor?: string
+  ) => Promise<void>;
+  onDeleteProveedor?: (ppId: string) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -37,22 +47,31 @@ const DEFAULT_CATEGORIES = [
   'Mármoles'
 ];
 
-export default function ProductoForm({ productoToEdit, onSave, onCancel }: ProductoFormProps) {
-  // Load list of providers to show in dropdown selector
-  const { proveedores } = useProveedores();
-
+export default function ProductoForm({ 
+  productoToEdit, 
+  proveedores,
+  productosProveedores,
+  onSave, 
+  onAddProveedor,
+  onDeleteProveedor,
+  onCancel 
+}: ProductoFormProps) {
   // State variables for product fields
   const [codigo, setCodigo] = useState('');
+  const [codigoError, setCodigoError] = useState<string | null>(null);
   const [nombre, setNombre] = useState('');
   const [categoria, setCategoria] = useState('');
   const [descripcion, setDescripcion] = useState('');
-  const [proveedorId, setProveedorId] = useState('');
-  const [precioCompra, setPrecioCompra] = useState('');
-  const [precioVenta, setPrecioVenta] = useState('');
   const [unidad, setUnidad] = useState<Producto['unidad']>('ud');
   const [activo, setActivo] = useState(true);
   const [imagenUrl, setImagenUrl] = useState('');
-  const [stock, setStock] = useState('0');
+
+  // Add Provider subform states
+  const [mostrarProveedores, setMostrarProveedores] = useState(false);
+  const [proveedorSeleccionado, setProveedorSeleccionado] = useState('');
+  const [subPrecioCompra, setSubPrecioCompra] = useState<number>(0);
+  const [subPrecioVenta, setSubPrecioVenta] = useState<number>(0);
+  const [referenciaProveedor, setReferenciaProveedor] = useState('');
 
   // Load persistent custom product categories
   const [customCategories, setCustomCategories] = useState<string[]>(DEFAULT_CATEGORIES);
@@ -101,31 +120,59 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
   useEffect(() => {
     if (productoToEdit) {
       setCodigo(productoToEdit.codigo || '');
+      setCodigoError(null);
       setNombre(productoToEdit.nombre || '');
       setCategoria(productoToEdit.categoria || '');
       setDescripcion(productoToEdit.descripcion || '');
-      setProveedorId(productoToEdit.proveedorId || '');
-      setPrecioCompra(String(productoToEdit.precioCompra ?? ''));
-      setPrecioVenta(String(productoToEdit.precioVenta ?? ''));
       setUnidad(productoToEdit.unidad || 'ud');
       setActivo(productoToEdit.activo !== undefined ? productoToEdit.activo : true);
       setImagenUrl(productoToEdit.imagenUrl || '');
-      setStock(String(productoToEdit.stock ?? 0));
     } else {
       // Clear form for New Product Mode
       setCodigo('');
+      setCodigoError(null);
       setNombre('');
       setCategoria('Azulejos');
       setDescripcion('');
-      setProveedorId('');
-      setPrecioCompra('');
-      setPrecioVenta('');
       setUnidad('ud');
       setActivo(true);
       setImagenUrl('');
-      setStock('0');
     }
   }, [productoToEdit]);
+
+  // Real-time duplicate verification
+  const handleCodigoChange = async (value: string) => {
+    setCodigo(value);
+    
+    if (value.trim().length === 0) {
+      setCodigoError(null);
+      return;
+    }
+
+    // Solo verificar si es código nuevo (no editando) o si ha cambiado el código original
+    if (!productoToEdit || value.trim().toLowerCase() !== productoToEdit.codigo.trim().toLowerCase()) {
+      try {
+        const { data: existing } = await supabase
+          .from('productos')
+          .select('id')
+          .eq('codigo', value.trim())
+          .single();
+        
+        if (existing) {
+          setCodigoError(`⚠️ Referencia duplicada (ID: ${existing.id})`);
+        } else {
+          setCodigoError(null);
+        }
+      } catch (err: any) {
+        // No rows found = OK, sin duplicado
+        if (err.code === 'PGRST116') {
+          setCodigoError(null);
+        }
+      }
+    } else {
+      setCodigoError(null);
+    }
+  };
 
   // Form submission handler
   const handleSubmit = async (e: React.FormEvent) => {
@@ -133,6 +180,10 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
 
     if (!codigo.trim()) {
       alert('El Código / Referencia es obligatorio.');
+      return;
+    }
+    if (codigoError) {
+      alert('La referencia introducida está duplicada en el sistema.');
       return;
     }
     if (!nombre.trim()) {
@@ -164,30 +215,53 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
       }
     }
 
-    const compPrice = Number(precioCompra) || 0;
-    const ventPrice = Number(precioVenta) || 0;
-
-    if (ventPrice < compPrice) {
-      if (!confirm('Atención: El precio de venta (PVP) es menor que el precio de compra. ¿Desea guardar de todos modos?')) {
-        return;
-      }
-    }
-
     const prodData = {
       codigo: codigo.trim(),
       nombre: nombre.trim(),
       categoria: trimmedCat,
       descripcion: descripcion.trim(),
-      proveedorId: proveedorId || null,
-      precioCompra: compPrice,
-      precioVenta: ventPrice,
       unidad,
       activo,
-      imagenUrl: imagenUrl.trim() || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=600&q=80',
-      stock: 0
+      imagenUrl: imagenUrl.trim() || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=600&q=80'
     };
 
     onSave(prodData);
+  };
+
+  const productosProveedorActuales = productoToEdit
+    ? productosProveedores?.[productoToEdit.id] || []
+    : [];
+
+  const handleAgregarProveedor = async () => {
+    if (!productoToEdit || !proveedorSeleccionado || subPrecioCompra === 0) {
+      alert('Completa los campos requeridos (Proveedor y Precio Compra)');
+      return;
+    }
+
+    const compVal = subPrecioCompra;
+    const ventVal = subPrecioVenta;
+
+    if (compVal <= 0) {
+      alert('El precio de compra debe ser un número positivo');
+      return;
+    }
+
+    if (onAddProveedor) {
+      await onAddProveedor(
+        productoToEdit.id,
+        proveedorSeleccionado,
+        compVal,
+        ventVal,
+        referenciaProveedor.trim() || undefined
+      );
+    }
+
+    // Reset subform
+    setProveedorSeleccionado('');
+    setSubPrecioCompra(0);
+    setSubPrecioVenta(0);
+    setReferenciaProveedor('');
+    setMostrarProveedores(false);
   };
 
   return (
@@ -205,7 +279,7 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
         </Button>
       </div>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="space-y-4">
         <Card className="border border-slate-200 shadow-sm rounded-xl overflow-hidden bg-white">
           <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4 px-6">
             <CardTitle className="text-base font-bold text-slate-950 flex items-center gap-2">
@@ -244,9 +318,12 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
                     required
                     placeholder="ej. MAMP-01, AZU-15"
                     value={codigo}
-                    onChange={(e) => setCodigo(e.target.value)}
-                    className="text-xs h-9.5 bg-slate-50/20 font-bold text-slate-900 font-mono"
+                    onChange={(e) => handleCodigoChange(e.target.value)}
+                    className={`text-xs h-9.5 bg-slate-50/20 font-bold text-slate-900 font-mono ${codigoError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                   />
+                  {codigoError && (
+                    <p className="text-[10px] text-red-600 font-semibold mt-1">{codigoError}</p>
+                  )}
                 </div>
 
                 <div className="space-y-1">
@@ -266,24 +343,6 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
                       <option key={cat} value={cat} />
                     ))}
                   </datalist>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                    Proveedor Suministrador <span className="text-slate-400 font-normal">(Opcional)</span>
-                  </label>
-                  <select
-                    value={proveedorId || ''}
-                    onChange={(e) => setProveedorId(e.target.value)}
-                    className="w-full text-xs h-9.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 font-medium outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700/20"
-                  >
-                    <option value="">Sin proveedor vinculado</option>
-                    {proveedores.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.nombre} ({p.tipo})
-                      </option>
-                    ))}
-                  </select>
                 </div>
 
                 <div className="space-y-1">
@@ -312,57 +371,6 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
                     <option value="true">Activo / Visible</option>
                     <option value="false">Inactivo / Oculto</option>
                   </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Sección 2: Precios e Impuestos */}
-            <div className="space-y-4">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                <DollarSign className="h-4 w-4 text-gray-700" />
-                Precios y Rendimiento Económico
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Precio Compra Coste (€)</label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={precioCompra}
-                    onChange={(e) => setPrecioCompra(e.target.value)}
-                    className="text-xs h-9.5 bg-slate-50/20 font-mono font-bold"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Precio Venta PVP (€)</label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={precioVenta}
-                    onChange={(e) => setPrecioVenta(e.target.value)}
-                    className="text-xs h-9.5 bg-slate-50/20 font-mono font-bold text-gray-800"
-                  />
-                </div>
-
-                {/* Derived live margin feedback */}
-                <div className="p-3 bg-slate-50 border border-slate-150 rounded-xl flex flex-col justify-center">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Margen Bruto Estimado</span>
-                  {Number(precioVenta) && Number(precioCompra) ? (
-                    <div className="mt-1">
-                      <p className="text-sm font-bold text-slate-900 font-mono">
-                        {(Number(precioVenta) - Number(precioCompra)).toFixed(2)} €
-                      </p>
-                      <p className="text-[10px] text-emerald-600 font-bold">
-                        +{(((Number(precioVenta) - Number(precioCompra)) / Number(precioCompra)) * 100).toFixed(1)}% (Markup)
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="text-xs italic text-slate-400 mt-1">Introduzca precios para calcular</p>
-                  )}
                 </div>
               </div>
             </div>
@@ -462,7 +470,8 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
             </Button>
             <Button
               type="submit"
-              className="bg-gray-900 hover:bg-gray-800 text-white font-semibold text-xs h-9.5 px-4 gap-1.5 rounded-lg shadow-xs"
+              disabled={!!codigoError}
+              className={`bg-gray-900 hover:bg-gray-800 text-white font-semibold text-xs h-9.5 px-4 gap-1.5 rounded-lg shadow-xs ${codigoError ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Save className="h-4 w-4" />
               {productoToEdit ? 'Guardar Cambios' : 'Dar de Alta Producto'}
@@ -470,6 +479,148 @@ export default function ProductoForm({ productoToEdit, onSave, onCancel }: Produ
           </div>
         </Card>
       </form>
+
+      {/* NUEVA SECCIÓN: Proveedores (sólo visible al editar un producto) */}
+      {productoToEdit && (
+        <Card className="border border-slate-200 shadow-sm rounded-xl overflow-hidden bg-white">
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <h3 className="font-bold text-slate-900 text-xs">Proveedores de este Producto</h3>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setMostrarProveedores(!mostrarProveedores)}
+                className="h-8 text-[11px] gap-1 px-3 border-slate-200 hover:bg-slate-50"
+              >
+                <Plus className="h-3.5 w-3.5 text-slate-500" />
+                {mostrarProveedores ? 'Cerrar panel' : 'Asociar Proveedor'}
+              </Button>
+            </div>
+
+            {/* Formulario agregar proveedor */}
+            {mostrarProveedores && (
+              <div className="bg-slate-50 p-4 rounded-lg space-y-3 border border-slate-200 animate-in fade-in slide-in-from-top-1 duration-150">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Proveedor *</label>
+                    <select
+                      value={proveedorSeleccionado}
+                      onChange={(e) => setProveedorSeleccionado(e.target.value)}
+                      className="w-full h-8.5 text-xs rounded-lg border border-slate-200 bg-white px-2 outline-none focus:border-slate-400"
+                    >
+                      <option value="">-- Selecciona Proveedor --</option>
+                      {proveedores.map(p => (
+                        <option key={p.id} value={p.id}>{p.nombre} ({p.tipo})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Referencia Proveedor / SKU</label>
+                    <Input
+                      type="text"
+                      placeholder="ej. SKU-5049"
+                      value={referenciaProveedor}
+                      onChange={(e) => setReferenciaProveedor(e.target.value)}
+                      className="text-xs h-8.5 bg-white border-slate-200"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Precio Compra (€) *</label>
+                    <DecimalInput
+                      value={subPrecioCompra}
+                      onChange={(val) => setSubPrecioCompra(val)}
+                      className="text-xs h-8.5 bg-white border-slate-200 font-mono font-semibold"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Precio Venta PVP Sugerido (€)</label>
+                    <DecimalInput
+                      value={subPrecioVenta}
+                      onChange={(val) => setSubPrecioVenta(val)}
+                      className="text-xs h-8.5 bg-white border-slate-200 font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* Subform actions */}
+                <div className="flex gap-2 justify-end pt-2 border-t border-slate-200/60">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setMostrarProveedores(false)}
+                    className="text-xs h-8.5"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    type="button"
+                    onClick={handleAgregarProveedor}
+                    className="text-xs h-8.5 bg-slate-900 text-white hover:bg-slate-800 font-semibold"
+                  >
+                    Guardar Asociación
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Tabla proveedores actuales */}
+            {productosProveedorActuales.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {productosProveedorActuales.map((pp) => {
+                  const prov = proveedores.find(p => p.id === pp.proveedorId);
+                  const marginPct = pp.precioCompra > 0 
+                    ? (((pp.precioVenta - pp.precioCompra) / pp.precioCompra) * 100).toFixed(1)
+                    : '0.0';
+
+                  return (
+                    <div
+                      key={pp.id}
+                      className="flex items-center justify-between p-3.5 bg-slate-50/50 rounded-xl border border-slate-200/60 shadow-2xs hover:bg-slate-50 transition-colors"
+                    >
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="text-xs font-bold text-slate-900 truncate">
+                          {prov?.nombre || pp.proveedorId}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-semibold text-slate-500">
+                          <span className="font-mono text-slate-700 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">
+                            Compra: {pp.precioCompra.toFixed(2)} €
+                          </span>
+                          {pp.precioVenta > 0 && (
+                            <span className="font-mono text-emerald-700 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded">
+                              PVP: {pp.precioVenta.toFixed(2)} € (+{marginPct}%)
+                            </span>
+                          )}
+                        </div>
+                        {pp.referenciaProveedor && (
+                          <div className="text-[9px] text-slate-400 font-medium font-mono">
+                            Ref Proveedor: {pp.referenciaProveedor}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => onDeleteProveedor?.(pp.id)}
+                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors ml-2"
+                        title="Eliminar asociación de proveedor"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center text-xs text-slate-400 italic py-6 border border-dashed border-slate-200 rounded-xl">
+                No hay proveedores asociados a este producto aún.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

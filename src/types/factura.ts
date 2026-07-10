@@ -12,7 +12,7 @@ export interface Factura {
   id: string;
   numero: string;              // automático, patrón FAC-2026-0001
   clientId: string;            // cliente (MISMO id que módulo Clientes)
-  obraId: string;              // obra (MISMO id que módulo Obras)
+  obraId: string | null;              // obra (MISMO id que módulo Obras)
   fechaEmision: string;
   fechaVencimiento: string;
   lineas: LineaFactura[];

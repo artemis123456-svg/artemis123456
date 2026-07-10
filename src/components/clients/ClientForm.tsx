@@ -4,6 +4,7 @@ import { Button } from '@/src/components/ui/button';
 import { Input } from '@/src/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/src/components/ui/card';
 import { User, Building, Phone, Mail, MapPin, Landmark, FileText, ArrowLeft, Save } from 'lucide-react';
+import { getProvinceByPostalCode } from '../../lib/spainCodes';
 
 interface ClientFormProps {
   clientToEdit?: Client | null;
@@ -336,7 +337,16 @@ export default function ClientForm({ clientToEdit, onSave, onCancel }: ClientFor
                   <Input
                     placeholder="ej. 46021"
                     value={codigoPostal}
-                    onChange={(e) => setCodigoPostal(e.target.value)}
+                    onChange={(e) => {
+                      const cp = e.target.value;
+                      setCodigoPostal(cp);
+                      if (cp.length >= 2) {
+                        const prov = getProvinceByPostalCode(cp);
+                        if (prov) {
+                          setProvincia(prov);
+                        }
+                      }
+                    }}
                     className="text-xs h-9 font-mono"
                   />
                 </div>
