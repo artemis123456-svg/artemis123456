@@ -3,6 +3,7 @@ import { Obra } from '../../types/obra';
 import { Client } from '../../types/client';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { DecimalInput } from '../ui/DecimalInput';
 import { ArrowLeft, Sparkles, Building2, Calendar, Map, CheckCircle2 } from 'lucide-react';
 
 interface ObraFormProps {
@@ -187,14 +188,11 @@ export default function ObraForm({ obraToEdit, clients, onSave, onCancel }: Obra
               {/* Importe Obra */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-600">Importe de la Obra (€) *</label>
-                <Input
-                  type="number"
-                  placeholder="25000"
-                  min="0"
-                  required
-                  value={importe || ''}
-                  onChange={e => setImporte(Number(e.target.value) || 0)}
-                  className="text-xs h-9"
+                <DecimalInput
+                  value={importe}
+                  onChange={setImporte}
+                  placeholder="Importe total presupuestado"
+                  className="text-xs h-9 bg-white border-slate-200 focus-visible:ring-verini-black"
                 />
               </div>
 
