@@ -65,7 +65,8 @@ export default function PresupuestoForm({
         id: `lin_init_1`,
         descripcion: '',
         cantidad: 1,
-        precioUnitario: 0
+        precioUnitario: 0,
+        unidad: 'Ud'
       }
     ];
   });
@@ -127,7 +128,8 @@ export default function PresupuestoForm({
       cantidad: 1,
       precioUnitario: 0,
       ivaPorcentaje: 21,
-      tipo: 'libre'
+      tipo: 'libre',
+      unidad: 'Ud'
     };
     setLineas(prev => [...prev, newLine]);
   };
@@ -141,7 +143,8 @@ export default function PresupuestoForm({
           cantidad: 1,
           precioUnitario: 0,
           ivaPorcentaje: 21,
-          tipo: 'libre'
+          tipo: 'libre',
+          unidad: 'Ud'
         }
       ]);
       return;
@@ -475,7 +478,7 @@ export default function PresupuestoForm({
                   </div>
 
                   {/* Concepto / Descripción o Selector */}
-                  <div className="md:col-span-4 space-y-1">
+                  <div className="md:col-span-3 space-y-1">
                     <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
                       Concepto / Descripción <span className="text-red-500">*</span>
                     </label>
@@ -519,6 +522,23 @@ export default function PresupuestoForm({
                       onChange={(val) => handleUpdateLine(linea.id, 'cantidad', val)}
                       className="text-xs h-9 bg-white border-slate-200 focus-visible:ring-gray-900 font-semibold"
                     />
+                  </div>
+
+                  {/* Unidad de Medida */}
+                  <div className="md:col-span-1 space-y-1">
+                    <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
+                      Unidad
+                    </label>
+                    <select
+                      value={linea.unidad || 'Ud'}
+                      onChange={(e) => handleUpdateLine(linea.id, 'unidad', e.target.value as any)}
+                      className="w-full h-9 bg-white border border-slate-200 rounded-lg px-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-gray-900 font-semibold text-slate-800"
+                    >
+                      <option value="PA">PA</option>
+                      <option value="Ud">Ud</option>
+                      <option value="M2">M²</option>
+                      <option value="ML">ML</option>
+                    </select>
                   </div>
 
                   {/* Precio Unitario */}

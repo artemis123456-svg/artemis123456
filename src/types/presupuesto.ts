@@ -8,6 +8,7 @@ export interface LineaPresupuesto {
   productoId?: string;          // Added for task 4
   referenciaProducto?: string;  // Added for task 4
   fotoUrl?: string;             // Added for task 4
+  unidad?: 'PA' | 'Ud' | 'M2' | 'ML';
 }
 
 export interface PresupuestoNew {

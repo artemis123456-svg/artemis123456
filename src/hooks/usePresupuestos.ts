@@ -45,7 +45,8 @@ export function usePresupuestos() {
           tipo: row.tipo || 'libre',
           productoId: row.producto_id || undefined,
           referenciaProducto: row.referencia_producto || undefined,
-          fotoUrl: row.foto_url || undefined
+          fotoUrl: row.foto_url || undefined,
+          unidad: row.unidad || 'Ud'
         });
       });
 
@@ -203,7 +204,8 @@ export function usePresupuestos() {
           tipo: l.tipo || 'libre',
           producto_id: l.productoId || null,
           referencia_producto: l.referenciaProducto || null,
-          foto_url: l.fotoUrl || null
+          foto_url: l.fotoUrl || null,
+          unidad: l.unidad || 'Ud'
         }));
 
         const { error: linesErr } = await supabase
@@ -282,7 +284,8 @@ export function usePresupuestos() {
             tipo: l.tipo || 'libre',
             producto_id: l.productoId || null,
             referencia_producto: l.referenciaProducto || null,
-            foto_url: l.fotoUrl || null
+            foto_url: l.fotoUrl || null,
+            unidad: l.unidad || 'Ud'
           }));
 
           const { error: insErr } = await supabase

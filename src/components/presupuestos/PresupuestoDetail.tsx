@@ -330,7 +330,7 @@ export default function PresupuestoDetail({
                           {linea.descripcion}
                         </td>
                         <td className="py-3 px-4 text-center font-bold text-slate-750 font-mono">
-                          {linea.cantidad}
+                          {linea.cantidad} {linea.unidad || 'Ud'}
                         </td>
                         <td className="py-3 px-4 text-right font-semibold text-slate-650 font-mono">
                           {formatCurrency(linea.precioUnitario)}
