@@ -22,7 +22,7 @@ interface ProductoFormProps {
   productoToEdit?: Producto | null;
   proveedores: Proveedor[];
   productosProveedores?: Record<string, ProductoProveedor[]>;
-  onSave: (productoData: Omit<Producto, 'id'>) => void;
+  onSave: (productoData: Omit<Producto, 'id'>) => Promise<any> | void;
   onAddProveedor?: (
     productoId: string,
     proveedorId: string,
@@ -59,6 +59,7 @@ export default function ProductoForm({
   // State variables for product fields
   const [codigo, setCodigo] = useState('');
   const [codigoError, setCodigoError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [nombre, setNombre] = useState('');
   const [categoria, setCategoria] = useState('');
   const [descripcion, setDescripcion] = useState('');
@@ -225,7 +226,38 @@ export default function ProductoForm({
       imagenUrl: imagenUrl.trim() || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=600&q=80'
     };
 
-    onSave(prodData);
+    await onSave(prodData);
+
+    const producto = productoToEdit;
+    const rawPPs = productosProveedores as any;
+    const currentPPsList = Array.isArray(rawPPs)
+      ? rawPPs
+      : (producto && rawPPs && typeof rawPPs === 'object'
+          ? rawPPs[producto.id]
+          : []) || [];
+
+    if (producto && currentPPsList && currentPPsList.length > 0) {
+      const ppsToSave = currentPPsList;
+
+      const ppRows = ppsToSave.map(pp => ({
+        id: pp.id || `pp_${Date.now()}_${Math.random()}`,
+        producto_id: producto.id,
+        proveedor_id: pp.proveedorId,
+        precio_compra: Number(pp.precioCompra || 0),
+        precio_venta: Number(pp.precioVenta || 0),
+        referencia_proveedor: pp.referenciaProveedor || null,
+        activo: pp.activo !== false
+      }));
+
+      const { error: ppError } = await supabase
+        .from('producto_proveedor')
+        .upsert(ppRows, { onConflict: 'id' });
+
+      if (ppError) {
+        setError(`Error guardando proveedores: ${ppError.message}`);
+        return;
+      }
+    }
   };
 
   const productosProveedorActuales = productoToEdit
@@ -289,6 +321,11 @@ export default function ProductoForm({
           </CardHeader>
 
           <CardContent className="p-6 space-y-6">
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-150 text-red-700 text-xs rounded-lg font-semibold">
+                {error}
+              </div>
+            )}
             {/* Sección 1: Datos Identificativos */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
