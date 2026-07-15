@@ -15,7 +15,8 @@ import {
   Calculator, 
   FileCheck2,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Users
 } from 'lucide-react';
 
 interface PresupuestoFormProps {
@@ -70,6 +71,35 @@ export default function PresupuestoForm({
   });
 
   const [formError, setFormError] = useState<string | null>(null);
+
+  // Autocomplete cliente
+  const [clienteSearchQuery, setClienteSearchQuery] = useState('');
+  const [showClienteDropdown, setShowClienteDropdown] = useState(false);
+
+  // Sincronizar search query cuando se selecciona cliente
+  useEffect(() => {
+    if (clientId) {
+      const selected = clients.find(c => c.id === clientId);
+      if (selected) {
+        setClienteSearchQuery(`${selected.nombre} ${selected.apellidos || ''}`.trim());
+      }
+    } else {
+      setClienteSearchQuery('');
+    }
+  }, [clientId, clients]);
+
+  // Filtrar clientes basado en búsqueda
+  const filteredClientes = useMemo(() => {
+    const query = clienteSearchQuery.trim().toLowerCase();
+    if (!query) return clients;
+    
+    return clients.filter(c => 
+      c.nombre.toLowerCase().includes(query) ||
+      (c.apellidos && c.apellidos.toLowerCase().includes(query)) ||
+      (c.codigo && c.codigo.toLowerCase().includes(query)) ||
+      (c.empresa && c.empresa.toLowerCase().includes(query))
+    );
+  }, [clients, clienteSearchQuery]);
 
   const clientObras = useMemo(() => {
     if (!clientId) return [];
@@ -233,21 +263,48 @@ export default function PresupuestoForm({
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Cliente */}
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+              <div className="relative space-y-1">
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1">
+                  <Users className="h-3.5 w-3.5 text-slate-400" />
                   Cliente <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={clientId}
-                  onChange={(e) => setClientId(e.target.value)}
-                  className="w-full h-9.5 bg-slate-50/20 border border-slate-200 rounded-lg px-3 text-xs focus:outline-none focus:ring-1 focus:ring-gray-900 font-semibold"
-                  required
-                >
-                  <option value="">Selecciona un cliente</option>
-                  {clients.map(c => (
-                    <option key={c.id} value={c.id}>{c.nombre} {c.apellidos} {c.empresa ? `(${c.empresa})` : ''}</option>
-                  ))}
-                </select>
+                <Input
+                  placeholder="Busca cliente por nombre o código..."
+                  value={clienteSearchQuery}
+                  onChange={(e) => setClienteSearchQuery(e.target.value)}
+                  onFocus={() => setShowClienteDropdown(true)}
+                  onBlur={() => {
+                    setTimeout(() => setShowClienteDropdown(false), 150);
+                  }}
+                  className="text-xs h-9.5 bg-white border-slate-200 focus-visible:ring-gray-900 font-semibold"
+                />
+                
+                {showClienteDropdown && filteredClientes.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                    {filteredClientes.map((c) => (
+                      <div
+                        key={c.id}
+                        onClick={() => {
+                          setClientId(c.id);
+                          setClienteSearchQuery(`${c.nombre} ${c.apellidos || ''}`.trim());
+                          setShowClienteDropdown(false);
+                        }}
+                        className="px-3 py-2 hover:bg-slate-100 cursor-pointer text-xs font-semibold transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span>{c.nombre} {c.apellidos || ''} {c.empresa ? `(${c.empresa})` : ''}</span>
+                          {c.codigo && <span className="text-[10px] text-slate-400">({c.codigo})</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {showClienteDropdown && clienteSearchQuery.trim() && filteredClientes.length === 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 px-3 py-2">
+                    <p className="text-xs text-slate-400">No hay clientes que coincidan con "{clienteSearchQuery}"</p>
+                  </div>
+                )}
               </div>
 
               {/* Asignar a Obra */}
