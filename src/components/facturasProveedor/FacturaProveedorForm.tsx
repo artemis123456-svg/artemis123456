@@ -527,7 +527,7 @@ export default function FacturaProveedorForm({
                 </div>
 
                 {/* Referencia / Código */}
-                <div className="md:col-span-3 space-y-1">
+                <div className="md:col-span-2 space-y-1">
                   <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
                     <Search className="h-3 w-3 text-slate-450" />
                     Referencia / Código
@@ -552,13 +552,13 @@ export default function FacturaProveedorForm({
                 </div>
 
                 {/* Material / Descripción */}
-                <div className="md:col-span-3 space-y-1">
+                <div className="md:col-span-2 space-y-1">
                   <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
                     Material / Descripción
                   </label>
                   <Input
                     required
-                    placeholder="ej. Azulejo Porcelánico Crema, Mano de obra..."
+                    placeholder="ej. Azulejo Porcelánico..."
                     value={linea.concepto}
                     onChange={e => handleLineChange(index, 'concepto', e.target.value)}
                     readOnly={!!linea.productoId}
@@ -622,6 +622,14 @@ export default function FacturaProveedorForm({
                     <option value="10">10%</option>
                     <option value="0">0%</option>
                   </select>
+                </div>
+
+                {/* Total Línea */}
+                <div className="md:col-span-2 space-y-1">
+                  <label className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block text-right">Total</label>
+                  <div className="h-9 flex items-center justify-end font-bold text-xs font-mono text-slate-900 pr-1 select-none">
+                    {((linea.cantidad || 0) * (linea.precioUnitario || 0) * (1 + (linea.ivaPorcentaje || 0) / 100)).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                  </div>
                 </div>
 
                 {/* Eliminar Acción */}

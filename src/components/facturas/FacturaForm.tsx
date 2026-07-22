@@ -528,7 +528,7 @@ export default function FacturaForm({
               {/* Dynamic Table Input List */}
               <div className="space-y-4">
                 {lineas.map((linea, index) => {
-                  const subtotal = linea.cantidad * linea.precioUnitario;
+                  const lineTotal = (linea.cantidad || 0) * (linea.precioUnitario || 0) * (1 + (linea.ivaPorcentaje || 0) / 100);
                   const activeProducts = productos.filter(p => p.activo);
 
                   return (
@@ -561,7 +561,7 @@ export default function FacturaForm({
                       </div>
 
                       {/* Concept detail / Product Selector */}
-                      <div className="md:col-span-4 space-y-1">
+                      <div className="md:col-span-3 space-y-1">
                         {linea.tipo === 'producto' ? (
                           <div className="space-y-2">
                             <div>
@@ -602,7 +602,7 @@ export default function FacturaForm({
                       </div>
 
                       {/* Quantity */}
-                      <div className="md:col-span-1.5 space-y-1">
+                      <div className="md:col-span-1 space-y-1">
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest md:hidden">Cant</label>
                         {index === 0 && <label className="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cant</label>}
                         <DecimalInput
@@ -613,7 +613,7 @@ export default function FacturaForm({
                       </div>
 
                       {/* Unit Price */}
-                      <div className="md:col-span-1.5 space-y-1">
+                      <div className="md:col-span-2 space-y-1">
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest md:hidden">Precio</label>
                         {index === 0 && <label className="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Precio</label>}
                         <div className="relative">
@@ -642,10 +642,11 @@ export default function FacturaForm({
                       </div>
 
                       {/* Total line (Read only) */}
-                      <div className="md:col-span-1 space-y-1">
-                        {index === 0 && <label className="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Subtotal</label>}
-                        <div className={`h-9 flex items-center justify-end font-bold text-xs pr-1 select-none ${subtotal < 0 ? 'text-red-600' : 'text-slate-900'}`}>
-                          {subtotal.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                      <div className="md:col-span-2 space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest md:hidden">Total</label>
+                        {index === 0 && <label className="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Total</label>}
+                        <div className={`h-9 flex items-center justify-end font-bold text-xs pr-1 select-none ${lineTotal < 0 ? 'text-red-600' : 'text-slate-900'}`}>
+                          {lineTotal.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                         </div>
                       </div>
 
