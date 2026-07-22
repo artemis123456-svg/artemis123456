@@ -183,7 +183,7 @@ export default function PresupuestoForm({
 
   const handleSelectProductForLine = (lineId: string, p: any) => {
     const pps = productosProveedores[p.id] || [];
-    const sellingPrice = pps.length > 0 ? pps[0].precioVenta : 0;
+    const sellingPrice = p.precioVenta && p.precioVenta > 0 ? p.precioVenta : (pps.length > 0 ? pps[0].precioVenta : 0);
     
     setLineas(prev => prev.map(l => {
       if (l.id === lineId) {
@@ -194,6 +194,7 @@ export default function PresupuestoForm({
           referenciaProducto: p.codigo,
           descripcion: p.nombre,
           precioUnitario: sellingPrice,
+          ivaPorcentaje: p.ivaPorDefecto !== undefined ? p.ivaPorDefecto : (l.ivaPorcentaje || 21),
           fotoUrl: p.imagenUrl || ''
         };
       }

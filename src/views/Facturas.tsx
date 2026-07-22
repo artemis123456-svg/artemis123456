@@ -204,7 +204,7 @@ export default function Facturas() {
           <Card className="border-slate-200/80 shadow-xs bg-white hover:border-emerald-200/60 transition-colors">
             <CardContent className="p-5 flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cobrado Efectivo</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cobrado Contado</p>
                 <h4 className="text-xl font-black text-emerald-700 tracking-tight">{formatEuro(stats.cobradoTotal)}</h4>
                 <p className="text-[10px] font-medium text-emerald-600 flex items-center gap-1">
                   <CheckCircle2 className="h-3 w-3" />

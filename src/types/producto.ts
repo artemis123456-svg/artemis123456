@@ -7,6 +7,10 @@ export interface Producto {
   unidad: 'ud' | 'm2' | 'ml' | 'caja';  // unidad de medida
   activo: boolean;
   imagenUrl: string;         // URL de imagen (mock, puede ser un placeholder)
+  ivaPorDefecto?: number;    // 0, 10, 21
+  precioCoste?: number;      // Precio de coste
+  descuento?: number;        // Descuento % (0-100)
+  precioVenta?: number;      // Precio de venta
 }
 
 export interface ProductoProveedor {

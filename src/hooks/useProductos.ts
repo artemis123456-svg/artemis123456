@@ -11,7 +11,11 @@ function prodFromRow(row: any): Producto {
     descripcion: row.descripcion,
     unidad: row.unidad,
     activo: !!row.activo,
-    imagenUrl: row.imagen_url || ''
+    imagenUrl: row.imagen_url || '',
+    ivaPorDefecto: row.iva_por_defecto !== undefined && row.iva_por_defecto !== null ? Number(row.iva_por_defecto) : 21,
+    precioCoste: row.precio_coste !== undefined && row.precio_coste !== null ? Number(row.precio_coste) : 0,
+    descuento: row.descuento !== undefined && row.descuento !== null ? Number(row.descuento) : 0,
+    precioVenta: row.precio_venta !== undefined && row.precio_venta !== null ? Number(row.precio_venta) : 0
   };
 }
 
@@ -25,6 +29,10 @@ function prodToRow(prod: Partial<Producto>): any {
   if (prod.unidad !== undefined) row.unidad = prod.unidad;
   if (prod.activo !== undefined) row.activo = prod.activo;
   if (prod.imagenUrl !== undefined) row.imagen_url = prod.imagenUrl;
+  if (prod.ivaPorDefecto !== undefined) row.iva_por_defecto = prod.ivaPorDefecto;
+  if (prod.precioCoste !== undefined) row.precio_coste = prod.precioCoste;
+  if (prod.descuento !== undefined) row.descuento = prod.descuento;
+  if (prod.precioVenta !== undefined) row.precio_venta = prod.precioVenta;
   return row;
 }
 

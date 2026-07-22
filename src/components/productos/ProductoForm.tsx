@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Producto, ProductoProveedor } from '../../types/producto';
 import { Proveedor } from '../../types/proveedor';
 import { Button } from '../ui/button';
@@ -13,14 +13,12 @@ import {
   Tag, 
   Image as ImageIcon, 
   FileText,
-  Plus,
-  Trash2,
   DollarSign
 } from 'lucide-react';
 
 interface ProductoFormProps {
   productoToEdit?: Producto | null;
-  proveedores: Proveedor[];
+  proveedores?: Proveedor[];
   productosProveedores?: Record<string, ProductoProveedor[]>;
   onSave: (productoData: Omit<Producto, 'id'>) => Promise<any> | void;
   onAddProveedor?: (
@@ -49,11 +47,7 @@ const DEFAULT_CATEGORIES = [
 
 export default function ProductoForm({ 
   productoToEdit, 
-  proveedores,
-  productosProveedores,
   onSave, 
-  onAddProveedor,
-  onDeleteProveedor,
   onCancel 
 }: ProductoFormProps) {
   // State variables for product fields
@@ -67,12 +61,11 @@ export default function ProductoForm({
   const [activo, setActivo] = useState(true);
   const [imagenUrl, setImagenUrl] = useState('');
 
-  // Add Provider subform states
-  const [mostrarProveedores, setMostrarProveedores] = useState(false);
-  const [proveedorSeleccionado, setProveedorSeleccionado] = useState('');
-  const [subPrecioCompra, setSubPrecioCompra] = useState<number>(0);
-  const [subPrecioVenta, setSubPrecioVenta] = useState<number>(0);
-  const [referenciaProveedor, setReferenciaProveedor] = useState('');
+  // New fields: Price, Tax, Discount
+  const [precioCoste, setPrecioCoste] = useState<number>(0);
+  const [descuento, setDescuento] = useState<number>(0);
+  const [precioVenta, setPrecioVenta] = useState<number>(0);
+  const [ivaPorDefecto, setIvaPorDefecto] = useState<number>(21);
 
   // Load persistent custom product categories
   const [customCategories, setCustomCategories] = useState<string[]>(DEFAULT_CATEGORIES);
@@ -128,6 +121,10 @@ export default function ProductoForm({
       setUnidad(productoToEdit.unidad || 'ud');
       setActivo(productoToEdit.activo !== undefined ? productoToEdit.activo : true);
       setImagenUrl(productoToEdit.imagenUrl || '');
+      setIvaPorDefecto(productoToEdit.ivaPorDefecto !== undefined ? productoToEdit.ivaPorDefecto : 21);
+      setPrecioCoste(productoToEdit.precioCoste || 0);
+      setDescuento(productoToEdit.descuento || 0);
+      setPrecioVenta(productoToEdit.precioVenta || 0);
     } else {
       // Clear form for New Product Mode
       setCodigo('');
@@ -138,8 +135,18 @@ export default function ProductoForm({
       setUnidad('ud');
       setActivo(true);
       setImagenUrl('');
+      setIvaPorDefecto(21);
+      setPrecioCoste(0);
+      setDescuento(0);
+      setPrecioVenta(0);
     }
   }, [productoToEdit]);
+
+  // Real-time calculated margin
+  const margenCalculado = useMemo(() => {
+    if (!precioCoste || precioCoste <= 0) return 0;
+    return ((precioVenta - precioCoste) / precioCoste) * 100;
+  }, [precioCoste, precioVenta]);
 
   // Real-time duplicate verification
   const handleCodigoChange = async (value: string) => {
@@ -150,7 +157,6 @@ export default function ProductoForm({
       return;
     }
 
-    // Solo verificar si es código nuevo (no editando) o si ha cambiado el código original
     if (!productoToEdit || value.trim().toLowerCase() !== productoToEdit.codigo.trim().toLowerCase()) {
       try {
         const { data: existing } = await supabase
@@ -165,7 +171,6 @@ export default function ProductoForm({
           setCodigoError(null);
         }
       } catch (err: any) {
-        // No rows found = OK, sin duplicado
         if (err.code === 'PGRST116') {
           setCodigoError(null);
         }
@@ -202,12 +207,12 @@ export default function ProductoForm({
     if (trimmedCat && !exists) {
       try {
         const catId = `cat_${Date.now()}`;
-        const { error } = await supabase
+        const { error: catErr } = await supabase
           .from('categorias_producto')
           .insert([{ id: catId, nombre: trimmedCat }]);
         
-        if (error) {
-          console.error('Error inserting new category:', error);
+        if (catErr) {
+          console.error('Error inserting new category:', catErr);
         } else {
           setCustomCategories(prev => [...prev, trimmedCat].sort());
         }
@@ -223,77 +228,18 @@ export default function ProductoForm({
       descripcion: descripcion.trim(),
       unidad,
       activo,
-      imagenUrl: imagenUrl.trim() || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=600&q=80'
+      imagenUrl: imagenUrl.trim() || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=600&q=80',
+      ivaPorDefecto,
+      precioCoste,
+      descuento,
+      precioVenta
     };
 
-    await onSave(prodData);
-
-    const producto = productoToEdit;
-    const rawPPs = productosProveedores as any;
-    const currentPPsList = Array.isArray(rawPPs)
-      ? rawPPs
-      : (producto && rawPPs && typeof rawPPs === 'object'
-          ? rawPPs[producto.id]
-          : []) || [];
-
-    if (producto && currentPPsList && currentPPsList.length > 0) {
-      const ppsToSave = currentPPsList;
-
-      const ppRows = ppsToSave.map(pp => ({
-        id: pp.id || `pp_${Date.now()}_${Math.random()}`,
-        producto_id: producto.id,
-        proveedor_id: pp.proveedorId,
-        precio_compra: Number(pp.precioCompra || 0),
-        precio_venta: Number(pp.precioVenta || 0),
-        referencia_proveedor: pp.referenciaProveedor || null,
-        activo: pp.activo !== false
-      }));
-
-      const { error: ppError } = await supabase
-        .from('producto_proveedor')
-        .upsert(ppRows, { onConflict: 'id' });
-
-      if (ppError) {
-        setError(`Error guardando proveedores: ${ppError.message}`);
-        return;
-      }
+    try {
+      await onSave(prodData);
+    } catch (err: any) {
+      setError(err.message || 'Error al guardar el producto');
     }
-  };
-
-  const productosProveedorActuales = productoToEdit
-    ? productosProveedores?.[productoToEdit.id] || []
-    : [];
-
-  const handleAgregarProveedor = async () => {
-    if (!productoToEdit || !proveedorSeleccionado || subPrecioCompra === 0) {
-      alert('Completa los campos requeridos (Proveedor y Precio Compra)');
-      return;
-    }
-
-    const compVal = subPrecioCompra;
-    const ventVal = subPrecioVenta;
-
-    if (compVal <= 0) {
-      alert('El precio de compra debe ser un número positivo');
-      return;
-    }
-
-    if (onAddProveedor) {
-      await onAddProveedor(
-        productoToEdit.id,
-        proveedorSeleccionado,
-        compVal,
-        ventVal,
-        referenciaProveedor.trim() || undefined
-      );
-    }
-
-    // Reset subform
-    setProveedorSeleccionado('');
-    setSubPrecioCompra(0);
-    setSubPrecioVenta(0);
-    setReferenciaProveedor('');
-    setMostrarProveedores(false);
   };
 
   return (
@@ -326,6 +272,7 @@ export default function ProductoForm({
                 {error}
               </div>
             )}
+
             {/* Sección 1: Datos Identificativos */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
@@ -412,7 +359,80 @@ export default function ProductoForm({
               </div>
             </div>
 
-            {/* Sección 4: Imagen e Ilustraciones */}
+            {/* Sección 2: Precios, Descuento y Fiscalidad */}
+            <div className="space-y-4">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
+                <DollarSign className="h-4 w-4 text-gray-700" />
+                Precios, Descuento y Margen
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+                    Precio Coste (€)
+                  </label>
+                  <DecimalInput
+                    value={precioCoste}
+                    onChange={(val) => setPrecioCoste(val)}
+                    className="text-xs h-9.5 bg-slate-50/20 font-mono font-bold text-slate-900"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+                    Descuento (%)
+                  </label>
+                  <DecimalInput
+                    value={descuento}
+                    onChange={(val) => setDescuento(val)}
+                    className="text-xs h-9.5 bg-slate-50/20 font-mono font-bold text-slate-900"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+                    Precio Venta (€)
+                  </label>
+                  <DecimalInput
+                    value={precioVenta}
+                    onChange={(val) => setPrecioVenta(val)}
+                    className="text-xs h-9.5 bg-slate-50/20 font-mono font-bold text-slate-900"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+                    IVA por Defecto
+                  </label>
+                  <select
+                    value={ivaPorDefecto}
+                    onChange={(e) => setIvaPorDefecto(Number(e.target.value))}
+                    className="w-full text-xs h-9.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-slate-700 outline-none focus:border-gray-700 font-medium"
+                  >
+                    <option value={21}>21% (General)</option>
+                    <option value={10}>10% (Reducido)</option>
+                    <option value={0}>0% (Exento)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide">
+                    Margen Calculado
+                  </label>
+                  <div className={`h-9.5 flex items-center px-3 rounded-lg border font-mono font-bold text-xs ${
+                    margenCalculado > 0 
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+                      : margenCalculado < 0 
+                      ? 'bg-red-50 border-red-200 text-red-700' 
+                      : 'bg-slate-50 border-slate-200 text-slate-600'
+                  }`}>
+                    {margenCalculado.toFixed(2)}%
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sección 3: Imagen e Ilustraciones */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
                 <ImageIcon className="h-4 w-4 text-gray-700" />
@@ -476,7 +496,7 @@ export default function ProductoForm({
               </div>
             </div>
 
-            {/* Sección 5: Ficha Técnica */}
+            {/* Sección 4: Ficha Técnica */}
             <div className="space-y-4">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
                 <FileText className="h-4 w-4 text-gray-700" />
@@ -516,148 +536,6 @@ export default function ProductoForm({
           </div>
         </Card>
       </form>
-
-      {/* NUEVA SECCIÓN: Proveedores (sólo visible al editar un producto) */}
-      {productoToEdit && (
-        <Card className="border border-slate-200 shadow-sm rounded-xl overflow-hidden bg-white">
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-              <h3 className="font-bold text-slate-900 text-xs">Proveedores de este Producto</h3>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setMostrarProveedores(!mostrarProveedores)}
-                className="h-8 text-[11px] gap-1 px-3 border-slate-200 hover:bg-slate-50"
-              >
-                <Plus className="h-3.5 w-3.5 text-slate-500" />
-                {mostrarProveedores ? 'Cerrar panel' : 'Asociar Proveedor'}
-              </Button>
-            </div>
-
-            {/* Formulario agregar proveedor */}
-            {mostrarProveedores && (
-              <div className="bg-slate-50 p-4 rounded-lg space-y-3 border border-slate-200 animate-in fade-in slide-in-from-top-1 duration-150">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Proveedor *</label>
-                    <select
-                      value={proveedorSeleccionado}
-                      onChange={(e) => setProveedorSeleccionado(e.target.value)}
-                      className="w-full h-8.5 text-xs rounded-lg border border-slate-200 bg-white px-2 outline-none focus:border-slate-400"
-                    >
-                      <option value="">-- Selecciona Proveedor --</option>
-                      {proveedores.map(p => (
-                        <option key={p.id} value={p.id}>{p.nombre} ({p.tipo})</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Referencia Proveedor / SKU</label>
-                    <Input
-                      type="text"
-                      placeholder="ej. SKU-5049"
-                      value={referenciaProveedor}
-                      onChange={(e) => setReferenciaProveedor(e.target.value)}
-                      className="text-xs h-8.5 bg-white border-slate-200"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Precio Compra (€) *</label>
-                    <DecimalInput
-                      value={subPrecioCompra}
-                      onChange={(val) => setSubPrecioCompra(val)}
-                      className="text-xs h-8.5 bg-white border-slate-200 font-mono font-semibold"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Precio Venta PVP Sugerido (€)</label>
-                    <DecimalInput
-                      value={subPrecioVenta}
-                      onChange={(val) => setSubPrecioVenta(val)}
-                      className="text-xs h-8.5 bg-white border-slate-200 font-mono"
-                    />
-                  </div>
-                </div>
-
-                {/* Subform actions */}
-                <div className="flex gap-2 justify-end pt-2 border-t border-slate-200/60">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => setMostrarProveedores(false)}
-                    className="text-xs h-8.5"
-                  >
-                    Cancelar
-                  </Button>
-                  <Button 
-                    type="button"
-                    onClick={handleAgregarProveedor}
-                    className="text-xs h-8.5 bg-slate-900 text-white hover:bg-slate-800 font-semibold"
-                  >
-                    Guardar Asociación
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Tabla proveedores actuales */}
-            {productosProveedorActuales.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {productosProveedorActuales.map((pp) => {
-                  const prov = proveedores.find(p => p.id === pp.proveedorId);
-                  const marginPct = pp.precioCompra > 0 
-                    ? (((pp.precioVenta - pp.precioCompra) / pp.precioCompra) * 100).toFixed(1)
-                    : '0.0';
-
-                  return (
-                    <div
-                      key={pp.id}
-                      className="flex items-center justify-between p-3.5 bg-slate-50/50 rounded-xl border border-slate-200/60 shadow-2xs hover:bg-slate-50 transition-colors"
-                    >
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <div className="text-xs font-bold text-slate-900 truncate">
-                          {prov?.nombre || pp.proveedorId}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-semibold text-slate-500">
-                          <span className="font-mono text-slate-700 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">
-                            Compra: {pp.precioCompra.toFixed(2)} €
-                          </span>
-                          {pp.precioVenta > 0 && (
-                            <span className="font-mono text-emerald-700 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded">
-                              PVP: {pp.precioVenta.toFixed(2)} € (+{marginPct}%)
-                            </span>
-                          )}
-                        </div>
-                        {pp.referenciaProveedor && (
-                          <div className="text-[9px] text-slate-400 font-medium font-mono">
-                            Ref Proveedor: {pp.referenciaProveedor}
-                          </div>
-                        )}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => onDeleteProveedor?.(pp.id)}
-                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors ml-2"
-                        title="Eliminar asociación de proveedor"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center text-xs text-slate-400 italic py-6 border border-dashed border-slate-200 rounded-xl">
-                No hay proveedores asociados a este producto aún.
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

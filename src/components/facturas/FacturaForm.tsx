@@ -214,7 +214,10 @@ export default function FacturaForm({
                 updated.productoId = p.id;
                 updated.concepto = p.nombre;
                 const pps = productosProveedores[p.id] || [];
-                updated.precioUnitario = pps.length > 0 ? pps[0].precioVenta : 0;
+                updated.precioUnitario = p.precioVenta && p.precioVenta > 0 ? p.precioVenta : (pps.length > 0 ? pps[0].precioVenta : 0);
+                if (p.ivaPorDefecto !== undefined) {
+                  updated.ivaPorcentaje = p.ivaPorDefecto as 21 | 10 | 0;
+                }
               }
             }
           }
@@ -225,7 +228,10 @@ export default function FacturaForm({
             if (p) {
               updated.concepto = p.nombre;
               const pps = productosProveedores[p.id] || [];
-              updated.precioUnitario = pps.length > 0 ? pps[0].precioVenta : 0;
+              updated.precioUnitario = p.precioVenta && p.precioVenta > 0 ? p.precioVenta : (pps.length > 0 ? pps[0].precioVenta : 0);
+              if (p.ivaPorDefecto !== undefined) {
+                updated.ivaPorcentaje = p.ivaPorDefecto as 21 | 10 | 0;
+              }
             }
           }
 
@@ -464,7 +470,7 @@ export default function FacturaForm({
                     >
                       <option value="Transferencia">Transferencia</option>
                       <option value="Tarjeta">Tarjeta</option>
-                      <option value="Efectivo">Efectivo</option>
+                      <option value="Contado">Contado</option>
                       <option value="Giro Bancario">Giro Bancario</option>
                     </select>
                   </div>

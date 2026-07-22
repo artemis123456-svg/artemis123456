@@ -53,7 +53,7 @@ export default function FacturaProveedorForm({
   const [observaciones, setObservaciones] = useState('');
 
   // Payment Options state
-  const [metodoPago, setMetodoPago] = useState<'Transferencia' | 'Tarjeta' | 'Efectivo' | 'Giro Bancario'>('Transferencia');
+  const [metodoPago, setMetodoPago] = useState<'Transferencia' | 'Tarjeta' | 'Contado' | 'Giro Bancario'>('Transferencia');
   const [plazosDias, setPlazosDias] = useState<number>(0);
   const [referenciaBancaria, setReferenciaBancaria] = useState('');
 
@@ -184,8 +184,14 @@ export default function FacturaProveedorForm({
         } else if (pps.length > 0) {
           // Fallback to first associated supplier if selected supplier doesn't match
           targetLine.precioUnitario = pps[0].precioCompra;
+        } else if (found.precioCoste && found.precioCoste > 0) {
+          targetLine.precioUnitario = found.precioCoste;
         } else {
           targetLine.precioUnitario = 0;
+        }
+
+        if (found.ivaPorDefecto !== undefined) {
+          targetLine.ivaPorcentaje = found.ivaPorDefecto as 21 | 10 | 0;
         }
       } else {
         // No matching product found, becomes editable free text line
@@ -463,7 +469,7 @@ export default function FacturaProveedorForm({
             >
               <option value="Transferencia">Transferencia</option>
               <option value="Tarjeta">Tarjeta</option>
-              <option value="Efectivo">Efectivo</option>
+              <option value="Contado">Contado</option>
               <option value="Giro Bancario">Giro Bancario</option>
             </select>
           </div>

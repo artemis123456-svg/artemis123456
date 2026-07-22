@@ -362,6 +362,13 @@ export default function ProductoTable({
                     costDisplay = minCompra === maxCompra 
                       ? `P.C: ${minCompra.toLocaleString('es-ES')} €`
                       : `P.C: ${minCompra.toLocaleString('es-ES')} - ${maxCompra.toLocaleString('es-ES')} €`;
+                  } else {
+                    if (prod.precioVenta !== undefined && prod.precioVenta !== null && prod.precioVenta > 0) {
+                      priceDisplay = `${prod.precioVenta.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+                    }
+                    if (prod.precioCoste !== undefined && prod.precioCoste !== null && prod.precioCoste > 0) {
+                      costDisplay = `P.C: ${prod.precioCoste.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+                    }
                   }
 
                   return (

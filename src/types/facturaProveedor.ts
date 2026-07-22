@@ -22,7 +22,7 @@ export interface FacturaProveedor {
   observaciones: string;
   entregadoGestoria?: boolean;
   lineas: LineaFacturaProveedor[];
-  metodoPago?: 'Transferencia' | 'Tarjeta' | 'Efectivo' | 'Giro Bancario';
+  metodoPago?: 'Transferencia' | 'Tarjeta' | 'Contado' | 'Giro Bancario';
   plazosDias?: number;
   referenciaBancaria?: string;
 }
