@@ -537,6 +537,22 @@ export function useClients() {
     }
   };
 
+  const deleteDocumento = async (id: string) => {
+    try {
+      const { error: err } = await supabase
+        .from('documentos_cliente')
+        .delete()
+        .eq('id', id);
+      if (err) throw err;
+
+      await fetchAllData();
+    } catch (err: any) {
+      console.error('Error deleting client document:', err);
+      setError(err.message || 'Error al eliminar el documento');
+      throw err;
+    }
+  };
+
   const addNota = async (clientId: string, contenido: string, autor: string) => {
     try {
       const newId = `not_${Date.now()}`;
@@ -628,6 +644,7 @@ export function useClients() {
     addObra,
     addPresupuesto,
     addDocumento,
+    deleteDocumento,
     addNota,
     updateObraStatus,
     updatePresupuestoStatus,

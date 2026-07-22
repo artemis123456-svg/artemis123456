@@ -25,6 +25,7 @@ import {
   ReceiptText,
   AlertCircle
 } from 'lucide-react';
+import { useClients } from '../../hooks/useClients';
 import { useProveedores } from '../../hooks/useProveedores';
 import { useFacturasProveedor } from '../../hooks/useFacturasProveedor';
 import { useFacturas, calculateFacturaTotals } from '../../hooks/useFacturas';
@@ -74,7 +75,8 @@ export default function ObraDetail({
 }: ObraDetailProps) {
   const [activeTab, setActiveTab] = useState<TabType>('generales');
 
-  const { proveedores } = useProveedores();
+  const { documentos: clientDocs, addDocumento, deleteDocumento } = useClients();
+  const { proveedores, documentos: providerDocs, deleteDocumento: deleteProveedorDoc } = useProveedores();
   const { getMaterialLinesByObraId } = useFacturasProveedor();
   const [materialLines, setMaterialLines] = useState<any[]>([]);
   const [materialLinesLoading, setMaterialLinesLoading] = useState(false);
@@ -100,22 +102,48 @@ export default function ObraDetail({
     }
   ]);
 
-  const [localDocs, setLocalDocs] = useState<MockDocument[]>([
-    {
-      id: 'd_1',
-      nombre: `Planos_Instalaciones_${obra.codigo}.pdf`,
-      tipo: 'PDF',
-      tamano: '2.8 MB',
-      fechaSubida: obra.fechaInicioPrevista || '2026-05-15'
-    },
-    {
-      id: 'd_2',
-      nombre: `Contrato_Obra_Firmado_${obra.codigo}.pdf`,
-      tipo: 'PDF',
-      tamano: '3.1 MB',
-      fechaSubida: obra.fechaInicioPrevista || '2026-05-18'
-    }
-  ]);
+  const [localDocs, setLocalDocs] = useState<MockDocument[]>([]);
+
+  // Filter documents that belong to this Obra's client or associated providers
+  const realClientDocs = useMemo(() => {
+    if (!obra.clientId) return [];
+    return clientDocs.filter(d => d.clientId === obra.clientId);
+  }, [clientDocs, obra.clientId]);
+
+  const obraProveedorIds = useMemo(() => {
+    return new Set(materialLines.map(m => m.proveedorId).filter(Boolean));
+  }, [materialLines]);
+
+  const realProveedorDocs = useMemo(() => {
+    return providerDocs.filter(d => obraProveedorIds.has(d.proveedorId));
+  }, [providerDocs, obraProveedorIds]);
+
+  const allDocs = useMemo(() => {
+    const mappedClientDocs = realClientDocs.map(d => ({
+      id: d.id,
+      nombre: d.nombre,
+      tipo: d.tipo || 'PDF',
+      tamano: d.tamano || '1.0 MB',
+      fechaSubida: d.fechaSubida,
+      source: 'client' as const
+    }));
+
+    const mappedProveedorDocs = realProveedorDocs.map(d => ({
+      id: d.id,
+      nombre: d.nombre,
+      tipo: d.tipo || 'PDF',
+      tamano: d.tamano || '1.0 MB',
+      fechaSubida: d.fechaSubida,
+      source: 'proveedor' as const
+    }));
+
+    const mappedLocalDocs = localDocs.map(d => ({
+      ...d,
+      source: 'local' as const
+    }));
+
+    return [...mappedClientDocs, ...mappedProveedorDocs, ...mappedLocalDocs];
+  }, [realClientDocs, realProveedorDocs, localDocs]);
 
   const [newNote, setNewNote] = useState('');
   const [newDocName, setNewDocName] = useState('');
@@ -271,19 +299,34 @@ export default function ObraDetail({
     setNewNote('');
   };
 
-  const handleAddDoc = (e: React.FormEvent) => {
+  const handleAddDoc = async (e: React.FormEvent) => {
     e.preventDefault();
     const finalName = newDocName.trim() || 'Ficha_Tecnica_Material.pdf';
+    const docName = finalName.endsWith('.pdf') ? finalName : `${finalName}.pdf`;
+
+    if (obra.clientId) {
+      try {
+        await addDocumento(obra.clientId, {
+          nombre: docName,
+          tipo: 'PDF',
+          tamano: '1.4 MB'
+        });
+        setNewDocName('');
+        return;
+      } catch (err) {
+        console.error('Error adding client doc:', err);
+      }
+    }
 
     const added: MockDocument = {
       id: `d_added_${Date.now()}`,
-      nombre: finalName.endsWith('.pdf') ? finalName : `${finalName}.pdf`,
+      nombre: docName,
       tipo: 'PDF',
       tamano: '1.4 MB',
       fechaSubida: new Date().toISOString().split('T')[0]
     };
 
-    setLocalDocs([added, ...localDocs]);
+    setLocalDocs(prev => [added, ...prev]);
     setNewDocName('');
   };
 
@@ -297,19 +340,51 @@ export default function ObraDetail({
     setIsDragging(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
+      const docName = file.name;
+      const fileType = file.name.split('.').pop()?.toUpperCase() || 'DOCUMENTO';
+      const fileSize = `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+
+      if (obra.clientId) {
+        try {
+          await addDocumento(obra.clientId, {
+            nombre: docName,
+            tipo: fileType,
+            tamano: fileSize
+          });
+          return;
+        } catch (err) {
+          console.error('Error adding client doc on drop:', err);
+        }
+      }
+
       const added: MockDocument = {
         id: `d_drop_${Date.now()}`,
-        nombre: file.name,
-        tipo: file.name.split('.').pop()?.toUpperCase() || 'DOCUMENTO',
-        tamano: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+        nombre: docName,
+        tipo: fileType,
+        tamano: fileSize,
         fechaSubida: new Date().toISOString().split('T')[0]
       };
-      setLocalDocs([added, ...localDocs]);
+      setLocalDocs(prev => [added, ...prev]);
+    }
+  };
+
+  const handleDeleteDoc = async (doc: { id: string; source: 'client' | 'proveedor' | 'local' }) => {
+    try {
+      if (doc.source === 'client') {
+        await deleteDocumento(doc.id);
+      } else if (doc.source === 'proveedor') {
+        await deleteProveedorDoc(doc.id);
+      } else {
+        setLocalDocs(prev => prev.filter(d => d.id !== doc.id));
+      }
+    } catch (err) {
+      console.error('Error deleting document:', err);
+      setLocalDocs(prev => prev.filter(d => d.id !== doc.id));
     }
   };
 
@@ -436,7 +511,7 @@ export default function ObraDetail({
               { id: 'horas', label: `Control de Horas (${horasObraList.length})`, icon: Clock, show: true },
               { id: 'materiales', label: `Gastos de Materiales (${materialLines.length})`, icon: Package, show: true },
               { id: 'materiales_escogidos', label: 'Materiales Escogidos', icon: Wrench, show: true },
-              { id: 'documentos', label: `Documentación (${localDocs.length})`, icon: Upload, show: true },
+              { id: 'documentos', label: `Documentación (${allDocs.length})`, icon: Upload, show: true },
               { id: 'notas', label: `Notas de Bitácora (${notasDeObra.length})`, icon: StickyNote, show: true }
             ]
           ).filter(tab => tab.show).map((tab) => {
@@ -710,29 +785,38 @@ export default function ObraDetail({
               </form>
 
               {/* Document rows */}
-              <div className="border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-100">
-                {localDocs.map(doc => (
-                  <div key={doc.id} className="flex items-center justify-between p-3 bg-white text-xs hover:bg-slate-50">
-                    <div className="flex items-center gap-2.5">
-                      <div className="p-2 rounded bg-slate-100 text-slate-800 font-bold font-mono text-[10px]">
-                        {doc.tipo}
+              {allDocs.length > 0 ? (
+                <div className="border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-100">
+                  {allDocs.map(doc => (
+                    <div key={doc.id} className="flex items-center justify-between p-3 bg-white text-xs hover:bg-slate-50">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2 rounded bg-slate-100 text-slate-800 font-bold font-mono text-[10px]">
+                          {doc.tipo}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-slate-900 leading-tight">{doc.nombre}</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">Tamaño: {doc.tamano} • Subido: {new Date(doc.fechaSubida).toLocaleDateString('es-ES')}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-semibold text-slate-900 leading-tight">{doc.nombre}</p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">Tamaño: {doc.tamano} • Subido: {new Date(doc.fechaSubida).toLocaleDateString('es-ES')}</p>
-                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteDoc(doc)}
+                        title="Eliminar documento"
+                        className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setLocalDocs(localDocs.filter(d => d.id !== doc.id))}
-                      className="h-8 w-8 text-slate-400 hover:text-red-600 rounded-lg"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-10 text-center rounded-xl border border-dashed border-slate-200 bg-white">
+                  <Upload className="h-8 w-8 text-slate-300 mb-2" />
+                  <p className="text-xs font-semibold text-slate-600">No hay documentos subidos para esta obra</p>
+                  <p className="text-[10px] text-slate-400 mt-1">Arrastra un archivo o escribe el nombre arriba para añadirlo.</p>
+                </div>
+              )}
             </div>
           )}
 
