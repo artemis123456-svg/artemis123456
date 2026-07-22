@@ -68,7 +68,11 @@ export default function FacturaProveedorForm({
   const filteredProveedores = useMemo(() => {
     const query = provSearchQuery.trim().toLowerCase();
     if (!query) return proveedores;
-    return proveedores.filter(p => p.nombre.toLowerCase().includes(query));
+    return proveedores.filter(p => 
+      p.nombre.toLowerCase().includes(query) ||
+      (p.codigo && p.codigo.toLowerCase().includes(query)) ||
+      (p.nifCif && p.nifCif.toLowerCase().includes(query))
+    );
   }, [proveedores, provSearchQuery]);
 
   // Synchronize search query when editing or supplier selected
@@ -121,7 +125,8 @@ export default function FacturaProveedorForm({
       const vencimiento = nextMonth.toISOString().split('T')[0];
 
       setNumero('');
-      setProveedorId(proveedores[0]?.id || '');
+      setProveedorId('');
+      setProvSearchQuery('');
       setFechaEmision(today);
       setFechaVencimiento(vencimiento);
       setEstado('Pendiente');
@@ -179,11 +184,6 @@ export default function FacturaProveedorForm({
         } else if (pps.length > 0) {
           // Fallback to first associated supplier if selected supplier doesn't match
           targetLine.precioUnitario = pps[0].precioCompra;
-
-          // Auto-select provider of the product if none is selected
-          if (!proveedorId) {
-            setProveedorId(pps[0].proveedorId);
-          }
         } else {
           targetLine.precioUnitario = 0;
         }
@@ -333,7 +333,7 @@ export default function FacturaProveedorForm({
           <div className="relative">
             <Input
               required
-              placeholder="Escribe para buscar proveedor..."
+              placeholder="Busca proveedor por nombre, código o CIF/NIF..."
               value={provSearchQuery}
               onChange={e => {
                 setProvSearchQuery(e.target.value);
@@ -346,6 +346,9 @@ export default function FacturaProveedorForm({
                 }
               }}
               onFocus={() => setShowProvDropdown(true)}
+              onBlur={() => {
+                setTimeout(() => setShowProvDropdown(false), 150);
+              }}
               className="text-xs h-9 font-semibold text-slate-800 pr-8 border-slate-200 focus-visible:ring-verini-black"
             />
             <button
@@ -357,40 +360,31 @@ export default function FacturaProveedorForm({
             </button>
           </div>
 
-          {showProvDropdown && (
-            <>
-              <div 
-                className="fixed inset-0 z-10" 
-                onClick={() => setShowProvDropdown(false)} 
-              />
-              <div className="absolute left-0 right-0 top-[54px] z-20 max-h-56 overflow-y-auto bg-white border border-slate-200 rounded-lg shadow-lg py-1 divide-y divide-slate-50">
-                {filteredProveedores.length > 0 ? (
-                  filteredProveedores.map(p => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => {
-                        setProveedorId(p.id);
-                        setProvSearchQuery(p.nombre);
-                        setShowProvDropdown(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 text-xs font-semibold hover:bg-slate-50 transition-colors flex items-center justify-between ${
-                        p.id === proveedorId ? 'bg-slate-50 text-verini-black font-bold' : 'text-slate-700'
-                      }`}
-                    >
-                      <span>{p.nombre}</span>
-                      <span className="text-[9px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                        {p.codigo}
-                      </span>
-                    </button>
-                  ))
-                ) : (
-                  <div className="px-3 py-2 text-xs text-slate-400 italic">
-                    Ningún proveedor coincide
-                  </div>
-                )}
-              </div>
-            </>
+          {showProvDropdown && filteredProveedores.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+              {filteredProveedores.map((p) => (
+                <div
+                  key={p.id}
+                  onClick={() => {
+                    setProveedorId(p.id);
+                    setProvSearchQuery(p.nombre);
+                    setShowProvDropdown(false);
+                  }}
+                  className={`px-3 py-2 hover:bg-slate-100 cursor-pointer text-xs font-semibold transition-colors flex items-center justify-between ${
+                    p.id === proveedorId ? 'bg-slate-50 text-verini-black font-bold' : 'text-slate-700'
+                  }`}
+                >
+                  <span>{p.nombre} {p.nifCif ? `(${p.nifCif})` : ''}</span>
+                  {p.codigo && <span className="text-[10px] font-mono text-slate-400">({p.codigo})</span>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {showProvDropdown && provSearchQuery.trim() && filteredProveedores.length === 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 px-3 py-2">
+              <p className="text-xs text-slate-400">No hay proveedores que coincidan con "{provSearchQuery}"</p>
+            </div>
           )}
         </div>
 
