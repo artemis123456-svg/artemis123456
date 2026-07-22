@@ -133,6 +133,11 @@ export default function FacturaForm({
 
   const [formError, setFormError] = useState<string | null>(null);
 
+  // Get selected client object
+  const selectedClient = useMemo(() => {
+    return clients.find(c => c.id === clientId);
+  }, [clients, clientId]);
+
   // Filter obras based on selected client
   const clientObras = useMemo(() => {
     if (!clientId) return [];
@@ -479,9 +484,20 @@ export default function FacturaForm({
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Referencia Bancaria / Cuenta IBAN</label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Referencia Bancaria / Cuenta IBAN</label>
+                      {selectedClient?.iban && !referenciaBancaria && (
+                        <button
+                          type="button"
+                          onClick={() => setReferenciaBancaria(selectedClient.iban)}
+                          className="text-[10px] text-blue-600 hover:underline font-semibold cursor-pointer"
+                        >
+                          Usar IBAN del cliente
+                        </button>
+                      )}
+                    </div>
                     <Input
-                      placeholder="ES00 0000 0000 0000 0000 0000"
+                      placeholder="ES00 0000 0000 0000 0000 0000 (Opcional)"
                       value={referenciaBancaria}
                       onChange={(e) => setReferenciaBancaria(e.target.value)}
                       className="h-9 text-xs border-slate-200 focus:ring-2 focus:ring-verini-black/20 focus:border-verini-black text-slate-800 font-semibold"

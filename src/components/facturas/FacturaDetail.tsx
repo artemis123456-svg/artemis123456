@@ -237,8 +237,10 @@ export default function FacturaDetail({
                 <p><span className="font-semibold text-slate-800">Fecha Emisión:</span> {factura.fechaEmision}</p>
                 <p><span className="font-semibold text-slate-800">Fecha Vencimiento:</span> {factura.fechaVencimiento}</p>
                 <p><span className="font-semibold text-slate-800">Entregado a gestoría:</span> {factura.entregadoGestoria ? 'Sí' : 'No'}</p>
-                <p><span className="font-semibold text-slate-800">Método de Pago:</span> Transferencia Bancaria</p>
-                <p><span className="font-semibold text-slate-800">IBAN:</span> ES21 0049 1500 0512 3456 7890</p>
+                <p><span className="font-semibold text-slate-800">Método de Pago:</span> {factura.metodoPago || 'Transferencia'}</p>
+                {factura.referenciaBancaria && (
+                  <p><span className="font-semibold text-slate-800">IBAN / Cuenta:</span> {factura.referenciaBancaria}</p>
+                )}
               </div>
             </div>
 
