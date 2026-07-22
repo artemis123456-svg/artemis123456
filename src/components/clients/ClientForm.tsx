@@ -337,13 +337,30 @@ export default function ClientForm({ clientToEdit, onSave, onCancel }: ClientFor
                   <Input
                     placeholder="ej. 46021"
                     value={codigoPostal}
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const cp = e.target.value;
                       setCodigoPostal(cp);
-                      if (cp.length >= 2) {
-                        const prov = getProvinceByPostalCode(cp);
+                      const cleanCP = cp.trim();
+                      if (cleanCP.length >= 2) {
+                        const prov = getProvinceByPostalCode(cleanCP);
                         if (prov) {
                           setProvincia(prov);
+                        }
+                      }
+                      if (cleanCP.length === 5) {
+                        try {
+                          const res = await fetch(`https://api.zippopotam.us/es/${cleanCP}`);
+                          if (res.ok) {
+                            const data = await res.json();
+                            if (data && data.places && data.places.length > 0) {
+                              const place = data.places[0];
+                              if (place['place name']) {
+                                setCiudad(place['place name']);
+                              }
+                            }
+                          }
+                        } catch (err) {
+                          console.error("Error fetching Spanish zip code:", err);
                         }
                       }
                     }}

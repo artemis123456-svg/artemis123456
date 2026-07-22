@@ -4,6 +4,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { User, Phone, Mail, MapPin, Landmark, FileText, ArrowLeft, Save, Truck, Briefcase, Plus, Trash2, Globe } from 'lucide-react';
+import { getProvinceByPostalCode } from '../../lib/spainCodes';
 
 interface ProveedorFormProps {
   proveedorToEdit?: Proveedor | null;
@@ -94,6 +95,12 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
   const handleCPChange = async (val: string) => {
     setCodigoPostal(val);
     const cleanCP = val.trim();
+    if (cleanCP.length >= 2) {
+      const prov = getProvinceByPostalCode(cleanCP);
+      if (prov) {
+        setProvincia(prov);
+      }
+    }
     if (cleanCP.length === 5) {
       try {
         const res = await fetch(`https://api.zippopotam.us/es/${cleanCP}`);
@@ -101,8 +108,9 @@ export default function ProveedorForm({ proveedorToEdit, onSave, onCancel }: Pro
           const data = await res.json();
           if (data && data.places && data.places.length > 0) {
             const place = data.places[0];
-            setCiudad(place['place name'] || '');
-            setProvincia(place['state'] || '');
+            if (place['place name']) {
+              setCiudad(place['place name']);
+            }
           }
         }
       } catch (err) {
